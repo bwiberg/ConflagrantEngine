@@ -19,44 +19,58 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
 ### setup external dependencies ###
 ###################################
 
-function(use_package name found_variable include_dirs_name library_name)
+macro (cfl_use_include_dir include_dir)
+    set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${include_dir})
+endmacro()
+
+macro (cfl_use_library library_name)
+    set(EXTERNAL_LIBRARIES ${EXTERNAL_LIBRARIES} ${library_name})
+endmacro()
+
+macro(cfl_use_package name found_variable include_dir library_name)
     find_package(${name})
-    if (${found_variable})
+    if (${${found_variable}})
         message(STATUS "${name} found.")
-    else (${found_variable})
+    else ()
         message(FATAL_ERROR "${name} not found.")
-    endif (${found_variable})
+    endif ()
 
     if (${library_name})
-        set(EXTERNAL_LIBRARIES ${EXTERNAL_LIBRARIES})
-    endif (${library_name})
-    if (${include_dirs_name})
-        set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${include_dirs_name})
-    else (${include_dirs_name})
-        message(AUTHOR_WARNING "use_package(${name}) called with empty 'include_dirs_name' string")
-    endif (${include_dirs_name})
-endfunction()
+        cfl_use_library(${${library_name}})
+    endif ()
 
-use_package(OpenGL OPENGL_FOUND OPENGL_INCLUDE_DIR OPENGL_LIBRARIES)
-use_package(GLM GLM_FOUND GLM_INCLUDE_DIRS "")
+    if (${include_dir})
+        cfl_use_include_dir(${${include_dir}})
+    else ()
+        message(AUTHOR_WARNING "cfl_use_package(${name}) called with empty 'include_dir' string")
+    endif ()
+endmacro()
+
+cfl_use_package(OpenGL OPENGL_FOUND OPENGL_INCLUDE_DIR OPENGL_LIBRARIES)
+cfl_use_package(GLM GLM_FOUND GLM_INCLUDE_DIRS "")
 if (NOT APPLE)
-    use_package(GLEW GLEW_FOUND GLEW_INCLUDE_DIRS GLEW_LIBRARIES)
+    cfl_use_package(GLEW GLEW_FOUND GLEW_INCLUDE_DIRS GLEW_LIBRARIES)
 endif ()
-use_package(OpenCL OpenCL_FOUND OpenCL_INCLUDE_DIRS OpenCL_LIBRARIES)
+cfl_use_package(OpenCL OpenCL_FOUND OpenCL_INCLUDE_DIRS OpenCL_LIBRARIES)
 
 #############
 #### GLM ####
 #############
 
 include_directories(${EXTERNAL_INCLUDE_DIRS})
+include_directories(external)
 
 ################################################
 ### gather all source files and header files ###
 ### export them to parent scope              ###
 ################################################
 
-file(GLOB_RECURSE HH_FILES "src/*.hh")
-file(GLOB_RECURSE CC_FILES "src/*.cc")
+set(HH_FILES
+        src/conflagrant/conflagrant.hh
+        )
+set(CC_FILES
+        src/conflagrant/conflagrant.cc
+        )
 
 #######################################################################
 ### decide if creating a library target, and if so shared or static ###
@@ -67,11 +81,11 @@ set(BUILD_SHARED_LIBRARY OFF CACHE BOOL "Build conflagrant-core as a shared libr
 if (BUILD_SHARED_LIBRARY)
     add_library(conflagrant SHARED ${HH_FILES} ${CC_FILES})
 else ()
-    add_library(conflagrant STATIC ${CC_FILES} ${CC_FILES})
+    add_library(conflagrant STATIC ${HH_FILES} ${CC_FILES})
 endif ()
 
 target_link_libraries(conflagrant ${EXTERNAL_LIBRARIES})
-set(CONFLAGRANT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(CONFLAGRANT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(CONFLAGRANT_LIBRARIES conflagrant)
 
 ######################

@@ -3,8 +3,9 @@
 //
 
 #include <iostream>
+#include <conflagrant/conflagrant.hh>
 
 int main() {
-    std::cout << "Hello from conflagrant:example2" << std::endl;
+    std::cout << cfl::SayHelloFromExample(2) << std::endl;
     return 0;
 }

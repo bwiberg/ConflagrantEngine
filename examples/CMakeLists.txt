@@ -18,7 +18,7 @@ set(examples
         example2)
 
 foreach (example ${examples})
-    include_directories(${CONFLAGRANT_INCLUDE_DIR})
+    include_directories(${CONFLAGRANT_INCLUDE_DIRS})
     add_executable(${example} ${example}.cc)
     target_link_libraries(${example} ${CONFLAGRANT_LIBRARIES})
 endforeach ()
