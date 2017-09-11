@@ -1,2 +1,3 @@
-# conflagrant-core
-Core module of the Conflagrant engine.
+# conflagrant
+The Conflagrant graphics engine (OpenGL 4.0+).
+    
