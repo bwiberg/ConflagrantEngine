@@ -1,6 +1,6 @@
-//
-// Created by bwiberg on 9/11/17.
-//
+/**
+ * Created by bwiberg on 9/11/17.
+ */
 
 #include "conflagrant.hh"
 

@@ -53,12 +53,11 @@ if (NOT APPLE)
 endif ()
 cfl_use_package(OpenCL OpenCL_FOUND OpenCL_INCLUDE_DIRS OpenCL_LIBRARIES)
 
-#############
-#### GLM ####
-#############
-
 include_directories(${EXTERNAL_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 include_directories(external)
+
+include(cmake/EcsConfig.cmake)
 
 ################################################
 ### gather all source files and header files ###
@@ -67,9 +66,26 @@ include_directories(external)
 
 set(HH_FILES
         src/conflagrant/conflagrant.hh
+        src/conflagrant/types.hh
+        src/conflagrant/ecs/Component.hh
+        src/conflagrant/ecs/ComponentFilter.hh
+        src/conflagrant/ecs/EcsManager.hh
+        src/conflagrant/ecs/EcsTypes.hh
+        src/conflagrant/ecs/System.hh
+        src/conflagrant/ecs/internal/ClassType.hh
+        src/conflagrant/ecs/internal/ComponentType.hh
+        src/conflagrant/ecs/internal/EcsAssert.hh
+        src/conflagrant/ecs/internal/EntityStorage.hh
+        src/conflagrant/ecs/internal/InternalEcsTypes.hh
+        src/conflagrant/ecs/internal/SystemType.hh
         )
 set(CC_FILES
         src/conflagrant/conflagrant.cc
+        src/conflagrant/ecs/EcsManager.cc
+        src/conflagrant/ecs/Entity.cc
+        src/conflagrant/ecs/System.cc
+        src/conflagrant/ecs/internal/ComponentType.cc
+        src/conflagrant/ecs/internal/EntityStorage.cc
         )
 
 #######################################################################
@@ -88,8 +104,9 @@ target_link_libraries(conflagrant ${EXTERNAL_LIBRARIES})
 set(CONFLAGRANT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(CONFLAGRANT_LIBRARIES conflagrant)
 
-######################
-### build examples ###
-######################
+################################
+### build examples and tests ###
+################################
 
 add_subdirectory(examples)
+add_subdirectory(test)
