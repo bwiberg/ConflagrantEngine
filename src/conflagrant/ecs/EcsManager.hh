@@ -142,7 +142,7 @@ class cfl::ecs::EcsManager final {
     void resizeToFitEntityIndex(entity_index_t entity_index);
 
 public:
-    EcsManager(entity_index_t initial_entities_capacity = DEFAULT_INITIAL_ENTITIES_CAPACITY);
+    EcsManager(entity_index_t initial_entities_capacity = CFL_DEFAULT_INITIAL_ENTITIES_CAPACITY);
 
     ~EcsManager();
 

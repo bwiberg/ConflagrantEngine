@@ -11,8 +11,8 @@ namespace ecs {
 EcsManager::EcsManager(entity_index_t initial_entities_capacity)
         : NullEntity(this, std::numeric_limits<entity_id_t>::max(), std::numeric_limits<entity_index_t>::max()),
           entityStorage(),
-          systemsByTypeId(MAX_SYSTEM_TYPES),
-          systemStatesByTypeId(MAX_SYSTEM_TYPES, SystemState::NoSystem),
+          systemsByTypeId(CFL_MAX_SYSTEM_TYPES),
+          systemStatesByTypeId(CFL_MAX_SYSTEM_TYPES, SystemState::NoSystem),
           maxEntityIndex(0) {
     resizeToFitEntityIndex(initial_entities_capacity);
 }

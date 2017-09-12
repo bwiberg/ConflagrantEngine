@@ -8,7 +8,7 @@ macro(create_test filename_without_extension)
 
     include_directories(${gtest_SOURCE_DIR}/include
             ${gtest_SOURCE_DIR}
-            ${CONFLAGRANT_INCLUDE_DIRS}
+            ${CFL_INCLUDE_DIRS}
             helpers)
 
     set(ALL_TESTS_CC ${ALL_TESTS_CC} ${file_name})
@@ -17,7 +17,7 @@ macro(create_test filename_without_extension)
     target_link_libraries(${exe_name}
             gtest
             gtest_main
-            ${CONFLAGRANT_LIBRARIES}
+            ${CFL_LIBRARIES}
             )
 endmacro()
 
@@ -30,12 +30,12 @@ create_test(test_System)
 include_directories(
         ${gtest_SOURCE_DIR}/include
         ${gtest_SOURCE_DIR}
-        ${CONFLAGRANT_INCLUDE_DIRS}
+        ${CFL_INCLUDE_DIRS}
 )
 
 add_executable(all_tests ${ALL_TESTS_CC})
 target_link_libraries(all_tests
         gtest
         gtest_main
-        ${CONFLAGRANT_LIBRARIES}
+        ${CFL_LIBRARIES}
         )

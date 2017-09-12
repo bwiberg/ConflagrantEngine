@@ -12,7 +12,7 @@ namespace ecs {
 namespace internal {
 typedef uint32_t entity_id_t;
 
-typedef std::bitset<MAX_COMPONENT_TYPES> component_bitmask_t;
+typedef std::bitset<CFL_MAX_COMPONENT_TYPES> component_bitmask_t;
 
 typedef uint32_t component_id_t;
 

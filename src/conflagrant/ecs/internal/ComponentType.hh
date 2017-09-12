@@ -26,7 +26,7 @@ class ComponentType : public ClassType<component_id_t, Component> {
         std::string name;
     };
 
-    static std::array<Data, MAX_COMPONENT_TYPES> ComponentData;
+    static std::array<Data, CFL_MAX_COMPONENT_TYPES> ComponentData;
 
     static component_id_t NumRegisteredTypes;
 

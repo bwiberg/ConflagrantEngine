@@ -95,8 +95,8 @@ class EntityStorage {
     void storeEntityData(Entity const &entity);
 
 public:
-    EntityStorage(size_t initialMemory = DEFAULT_COMPONENTSTORAGE_MEMORY,
-                  entity_index_t initial_entities_capacity = DEFAULT_INITIAL_ENTITIES_CAPACITY);
+    EntityStorage(size_t initialMemory = CFL_DEFAULT_COMPONENTSTORAGE_MEMORY,
+                  entity_index_t initial_entities_capacity = CFL_DEFAULT_INITIAL_ENTITIES_CAPACITY);
 
     void reserveComponentMemory(Entity &entity,
                                 component_bitmask_t const &component_bitmask);

@@ -19,11 +19,11 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
 ### setup external dependencies ###
 ###################################
 
-macro (cfl_use_include_dir include_dir)
+macro(cfl_use_include_dir include_dir)
     set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${include_dir})
 endmacro()
 
-macro (cfl_use_library library_name)
+macro(cfl_use_library library_name)
     set(EXTERNAL_LIBRARIES ${EXTERNAL_LIBRARIES} ${library_name})
 endmacro()
 
@@ -57,6 +57,11 @@ cfl_use_package(JsonCpp JSONCPP_FOUND JSONCPP_INCLUDE_DIRS JSONCPP_LIBRARY)
 include_directories(${EXTERNAL_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 include_directories(external)
+
+################################
+### configure Conflagrant    ###
+### set base asset directory ###
+################################
 
 include(cmake/EcsConfig.cmake)
 
@@ -102,8 +107,8 @@ else ()
 endif ()
 
 target_link_libraries(conflagrant ${EXTERNAL_LIBRARIES})
-set(CONFLAGRANT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src)
-set(CONFLAGRANT_LIBRARIES conflagrant)
+set(CFL_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(CFL_LIBRARIES conflagrant)
 
 ################################
 ### build examples and tests ###
