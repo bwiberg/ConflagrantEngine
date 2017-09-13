@@ -9,4 +9,6 @@
 
 namespace cfl {
 std::string const SayHelloFromExample(int exampleNumber);
+
+int TestGLFW3();
 }

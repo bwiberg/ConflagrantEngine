@@ -6,6 +6,5 @@
 #include <conflagrant/conflagrant.hh>
 
 int main() {
-    std::cout << cfl::SayHelloFromExample(2) << std::endl;
-    return 0;
+    return cfl::TestGLFW3();
 }
