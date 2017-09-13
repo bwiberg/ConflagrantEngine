@@ -13,6 +13,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 ### set CMake custom module directory ###
 #########################################
 
+# set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
 
 ###################################
@@ -46,7 +47,12 @@ macro(cfl_use_package name found_variable include_dir library_name)
     endif ()
 endmacro()
 
-cfl_use_package(OpenGL OPENGL_FOUND OPENGL_INCLUDE_DIR OPENGL_LIBRARIES)
+cfl_use_package(GLFW3 GLFW3_FOUND GLFW3_INCLUDE_DIR GLFW3_LIBRARY)
+
+cfl_use_package(OpenGL OPENGL_FOUND OPENGL_INCLUDE_DIR "")
+cfl_use_library(${OPENGL_gl_LIBRARY})
+cfl_use_library(${OPENGL_glu_LIBRARY})
+
 cfl_use_package(GLM GLM_FOUND GLM_INCLUDE_DIRS "")
 if (NOT APPLE)
     cfl_use_package(GLEW GLEW_FOUND GLEW_INCLUDE_DIRS GLEW_LIBRARIES)
@@ -88,6 +94,7 @@ set(HH_FILES
         )
 set(CC_FILES
         src/conflagrant/conflagrant.cc
+        src/conflagrant/TestGLFW3.cc
         src/conflagrant/ecs/EcsManager.cc
         src/conflagrant/ecs/Entity.cc
         src/conflagrant/ecs/System.cc
