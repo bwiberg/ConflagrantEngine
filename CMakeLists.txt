@@ -53,6 +53,7 @@ if (NOT APPLE)
 endif ()
 cfl_use_package(OpenCL OpenCL_FOUND OpenCL_INCLUDE_DIRS OpenCL_LIBRARIES)
 cfl_use_package(JsonCpp JSONCPP_FOUND JSONCPP_INCLUDE_DIRS JSONCPP_LIBRARY)
+cfl_use_package(assimp assimp_FOUND assimp_INCLUDE_DIRS assimp_LIBRARIES)
 
 include_directories(${EXTERNAL_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
