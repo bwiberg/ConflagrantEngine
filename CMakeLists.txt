@@ -79,6 +79,7 @@ include(cmake/EcsConfig.cmake)
 
 set(HH_FILES
         src/conflagrant/conflagrant.hh
+        src/conflagrant/Mesh.hh
         src/conflagrant/types.hh
         src/conflagrant/ecs/Component.hh
         src/conflagrant/ecs/ComponentFilter.hh
@@ -91,7 +92,7 @@ set(HH_FILES
         src/conflagrant/ecs/internal/EntityStorage.hh
         src/conflagrant/ecs/internal/InternalEcsTypes.hh
         src/conflagrant/ecs/internal/SystemType.hh
-        )
+        src/conflagrant/components/MeshComponent.hh)
 set(CC_FILES
         src/conflagrant/conflagrant.cc
         src/conflagrant/TestGLFW3.cc
