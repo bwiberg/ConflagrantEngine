@@ -5,7 +5,7 @@
 #pragma once
 
 #include <conflagrant/ecs/Component.hh>
-#include <GL/gl.h>
+#include <conflagrant/GL.hh>
 
 namespace cfl {
 /**

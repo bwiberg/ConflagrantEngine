@@ -1,6 +1,6 @@
 #include "conflagrant.hh"
 
-#include <GL/glew.h>
+#include <conflagrant/GL.hh>
 #include <GLFW/glfw3.h>
 
 #include <iostream>
@@ -32,12 +32,12 @@ int TestGLFW3() {
     // glfw: initialize and configure
     // ------------------------------
     glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 #ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // uncomment this statement to fix compilation on OS X
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
     // glfw window creation
@@ -51,9 +51,11 @@ int TestGLFW3() {
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+#ifndef __APPLE__
     if (glewInit() != GLEW_OK) {
         return -1;
     }
+#endif
 
     // build and compile our shader program
     // ------------------------------------

@@ -2,12 +2,27 @@ cmake_minimum_required(VERSION 3.4)
 project(conflagrant)
 
 #####################################################
-### force C++11 compliant compiler w/o extensions ###
+### force C++14 compliant compiler w/o extensions ###
 #####################################################
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+################################
+### pass build type variable ###
+################################
+
+if ((${CMAKE_BUILD_TYPE} STREQUAL Debug) OR (${CMAKE_BUILD_TYPE} STREQUAL RelWithDebInfo))
+    message(WARNING "Debug")
+    set(CFL_DEBUG 1)
+elseif (${CMAKE_BUILD_TYPE} STREQUAL Release)
+    message(WARNING "Release")
+    set(CFL_DEBUG 0)
+else ()
+    message(AUTHOR_WARNING "Could not make out build type.")
+endif ()
+add_definitions(-DCFL_DEBUG=${CFL_DEBUG})
 
 #########################################
 ### set CMake custom module directory ###
@@ -92,7 +107,7 @@ set(HH_FILES
         src/conflagrant/ecs/internal/EntityStorage.hh
         src/conflagrant/ecs/internal/InternalEcsTypes.hh
         src/conflagrant/ecs/internal/SystemType.hh
-        src/conflagrant/components/MeshComponent.hh)
+        src/conflagrant/components/MeshComponent.hh src/conflagrant/GL.hh)
 set(CC_FILES
         src/conflagrant/conflagrant.cc
         src/conflagrant/TestGLFW3.cc
@@ -101,7 +116,7 @@ set(CC_FILES
         src/conflagrant/ecs/System.cc
         src/conflagrant/ecs/internal/ComponentType.cc
         src/conflagrant/ecs/internal/EntityStorage.cc
-        )
+        src/conflagrant/CL.hh src/conflagrant/CL.cc src/conflagrant/GL.cc)
 
 #######################################################################
 ### decide if creating a library target, and if so shared or static ###
