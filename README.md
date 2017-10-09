@@ -29,7 +29,13 @@ make
 
 ### Windows...
 
-Y u no Linux or MacOS?!
+Install these libraries (preferred way is to build from source). Add their base directories to the [Path](https://stackoverflow.com/a/28545224) env. variable.
+* [GLEW](http://glew.sourceforge.net/index.html)
+* [GLFW3](http://www.glfw.org/)
+* [GLM](https://glm.g-truc.net/0.9.8/index.html)
+* [Assimp](http://assimp.sourceforge.net/main_downloads.html) - needs to be built from source
+* [json-cpp](https://github.com/open-source-parsers/jsoncpp/releases) - needs to be built from source
+
 
 ## Running examples
 

@@ -25,6 +25,7 @@ if (WIN32)
             PATHS
             $ENV{PROGRAMFILES}/include
             ${GLM_ROOT_DIR}/include
+            C:/glm/include
             DOC "The directory where glm/glm.hpp resides")
 else ()
     # Find include files

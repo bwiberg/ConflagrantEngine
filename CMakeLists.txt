@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.4)
+cmake_minimum_required(VERSION 3.8.2)
 project(conflagrant)
 
 #####################################################
@@ -58,7 +58,7 @@ macro(cfl_use_package name found_variable include_dir library_name)
     if (${include_dir})
         cfl_use_include_dir(${${include_dir}})
     else ()
-        message(AUTHOR_WARNING "cfl_use_package(${name}) called with empty 'include_dir' string")
+        message(STATUS "NOT AN ERROR: cfl_use_package(${name}) called with empty 'include_dir' string")
     endif ()
 endmacro()
 
@@ -73,8 +73,8 @@ if (NOT APPLE)
     cfl_use_package(GLEW GLEW_FOUND GLEW_INCLUDE_DIRS GLEW_LIBRARIES)
 endif ()
 cfl_use_package(OpenCL OpenCL_FOUND OpenCL_INCLUDE_DIRS OpenCL_LIBRARIES)
+cfl_use_package(Assimp ASSIMP_FOUND ASSIMP_INCLUDE_DIR ASSIMP_LIBRARIES)
 cfl_use_package(JsonCpp JSONCPP_FOUND JSONCPP_INCLUDE_DIRS JSONCPP_LIBRARY)
-cfl_use_package(assimp assimp_FOUND assimp_INCLUDE_DIRS assimp_LIBRARIES)
 
 include_directories(${EXTERNAL_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
