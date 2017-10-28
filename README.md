@@ -5,8 +5,14 @@ The Conflagrant graphics engine (OpenGL 4.0+).
 
 ### Linux (Arch)
 
+Depending on your GPU you first need to run one of these commands:
+* NVIDIA - `pacaur -S cuda`
+* Intel - `pacaur -S intel-opencl-sdk`
+* AMD - `pacaur -S amdapp-sdk`
+
+
 ```shell
-pacman -S glew ocl-icd glm jsoncpp assimp
+pacaur -S ocl-icd opencl-headers glew glm jsoncpp assimp
 git clone https://github.com/bwiberg/conflagrant.git
 cd conflagrant
 mkdir build && cd build
