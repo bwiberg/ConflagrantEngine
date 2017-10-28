@@ -63,7 +63,7 @@ TEST_F(ComponentTest, ComponentTypesDiffer) {
     EXPECT_NE(comp_id_name, comp_id_color) << "System IDs of different types should not be equal";
 }
 
-TEST_F(ComponentTest, HasComponentReturnsFalseBeforeAddingComponent) {
+TEST_F(ComponentTest, HasComponent_ReturnsFalseBeforeAddingComponent) {
     auto entity1 = manager->createEntity();
     ASSERT_FALSE(entity1.hasComponent<Name>());
 
@@ -72,7 +72,7 @@ TEST_F(ComponentTest, HasComponentReturnsFalseBeforeAddingComponent) {
     ASSERT_FALSE(entity2.hasComponent<Color>());
 }
 
-TEST_F(ComponentTest, AddComponentWorksForHintedEntity) {
+TEST_F(ComponentTest, AddComponent_WorksForHintedEntity) {
     auto e = manager->createEntity<Name, Color>();
     e.addComponent<Name>();
     EXPECT_TRUE(e.hasComponent<Name>());
@@ -80,19 +80,19 @@ TEST_F(ComponentTest, AddComponentWorksForHintedEntity) {
     EXPECT_TRUE(e.hasComponent<Color>());
 }
 
-TEST_F(ComponentTest, AddComponentDoesNotWorkForUnhintedEntity) {
+TEST_F(ComponentTest, AddComponent_DoesNotWorkForUnhintedEntity) {
     auto e = manager->createEntity();
     ASSERT_DEATH({e.addComponent<Name>();}, "");
 }
 
-TEST_F(ComponentTest, AddComponentWithParametersWorks) {
+TEST_F(ComponentTest, AddComponent_WithParametersWorks) {
     auto e = manager->createEntity<Name>();
     e.addComponent<Name>("__test__");
 
     EXPECT_EQ("__test__", e.getComponent<Name>().name);
 }
 
-TEST_F(ComponentTest, RemoveComponentWorks) {
+TEST_F(ComponentTest, RemoveComponent_Works) {
     auto e = manager->createEntity<Name>();
     e.addComponent<Name>();
     e.removeComponent<Name>();
@@ -100,7 +100,7 @@ TEST_F(ComponentTest, RemoveComponentWorks) {
     EXPECT_FALSE(e.hasComponent<Name>());
 }
 
-TEST_F(ComponentTest, ReaddingRemovedComponentWorks) {
+TEST_F(ComponentTest, AddRemoveComponent_ReaddingRemovedComponentWorks) {
     auto e = manager->createEntity<Name>();
     e.addComponent<Name>();
     e.removeComponent<Name>();
@@ -109,7 +109,7 @@ TEST_F(ComponentTest, ReaddingRemovedComponentWorks) {
     EXPECT_TRUE(e.hasComponent<Name>());
 }
 
-TEST_F(ComponentTest, AddingComponentTwiceAsserts) {
+TEST_F(ComponentTest, AddComponent_AddingComponentTwiceAsserts) {
     auto e = manager->createEntity<Name>();
     e.addComponent<Name>();
 

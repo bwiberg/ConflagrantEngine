@@ -93,13 +93,13 @@ TEST_F(SystemTest, SystemTypesDiffer) {
     EXPECT_NE(sysid_name, sysid_color) << "System IDs of different types should not be equal";
 }
 
-TEST_F(SystemTest, HasSystemReturnsFalseBeforeAddingSystem) {
+TEST_F(SystemTest, HasSystem_ReturnsFalse_BeforeAddingSystem) {
     EXPECT_FALSE(manager->hasSystem<System_NameColor>());
     EXPECT_FALSE(manager->hasSystem<System_Name>());
     EXPECT_FALSE(manager->hasSystem<System_Color>());
 }
 
-TEST_F(SystemTest, AddSystemWorks) {
+TEST_F(SystemTest, AddSystem_Works) {
     manager->addSystem<System_NameColor>();
     manager->addSystem<System_Name>();
     manager->addSystem<System_Color>();
@@ -109,31 +109,31 @@ TEST_F(SystemTest, AddSystemWorks) {
     EXPECT_TRUE(manager->hasSystem<System_Color>());
 }
 
-TEST_F(SystemTest, AddSystemWithParametersWorks) {
+TEST_F(SystemTest, AddSystem_WithParametersWorks) {
     auto system = manager->addSystem<System_Name>("test");
 
     EXPECT_EQ("test", system->name);
 }
 
-TEST_F(SystemTest, AddAndGetHasSamePointers) {
+TEST_F(SystemTest, AddAndGet_HasSamePointers) {
     auto ptr1 = manager->addSystem<System_Color>();
 
     EXPECT_EQ(ptr1, manager->getSystem<System_Color>());
 }
 
-TEST_F(SystemTest, RemoveSelfWorks) {
+TEST_F(SystemTest, RemoveSelf_Works) {
     auto system = manager->addSystem<System_NameColor>();
     system->removeSelf();
 
     EXPECT_FALSE(manager->hasSystem<System_NameColor>());
 }
 
-TEST_F(SystemTest, AddingSystemTwiceAsserts) {
+TEST_F(SystemTest, AddSystem_Twice_Asserts) {
     manager->addSystem<System_NameColor>();
     ASSERT_DEATH({ manager->addSystem<System_NameColor>(); }, "Can't add a duplicate system.");
 }
 
-TEST_F(SystemTest, UpdatesAllAddedEntities) {
+TEST_F(SystemTest, UpdateSystems_UpdatesAllAddedEntities) {
     createTestEntities();
 
     auto sys_nc = manager->addSystem<System_NameColor>();
@@ -152,7 +152,7 @@ TEST_F(SystemTest, UpdatesAllAddedEntities) {
                                     sys_c->entities.cbegin())) << "System did not update the correct entities.";
 }
 
-TEST_F(SystemTest, DoesNotUpdateEntitiesWithoutRequirements) {
+TEST_F(SystemTest, UpdateSystems_DoesNotUpdateEntitiesWithoutRequirements) {
     for (auto& entity : manager->createEntities<Name>(3)) {
         entity.addComponent<Name>();
         testEntities_n.push_back(entity);
@@ -172,7 +172,7 @@ TEST_F(SystemTest, DoesNotUpdateEntitiesWithoutRequirements) {
     EXPECT_FALSE(utility::containsAtLeastOne(testEntities_n, sys_c->entities));
 }
 
-TEST_F(SystemTest, UpdatedEntitiesHaveRequiredComponents) {
+TEST_F(SystemTest, UpdateSystems_UpdatedEntitiesHaveRequiredComponents) {
     createTestEntities();
 
     auto sys_nc = manager->addSystem<System_NameColor>();
@@ -195,7 +195,7 @@ TEST_F(SystemTest, UpdatedEntitiesHaveRequiredComponents) {
     }
 }
 
-TEST_F(SystemTest, EntityWithRemovedRequiredComponentIsNotUpdated) {
+TEST_F(SystemTest, UpdateSystems_EntityWithRemovedRequiredComponentIsNotUpdated) {
     auto sys_n = manager->addSystem<System_Name>();
     auto e = manager->createEntity<Name>();
     e.addComponent<Name>();
@@ -206,7 +206,7 @@ TEST_F(SystemTest, EntityWithRemovedRequiredComponentIsNotUpdated) {
     EXPECT_TRUE(sys_n->entities.empty());
 }
 
-TEST_F(SystemTest, EntityWithReaddedRequiredComponentIsUpdated) {
+TEST_F(SystemTest, UpdateSystems_EntityWithReaddedRequiredComponentIsUpdated) {
     auto sys_n = manager->addSystem<System_Name>();
     auto e = manager->createEntity<Name>();
     e.addComponent<Name>();
@@ -219,7 +219,7 @@ TEST_F(SystemTest, EntityWithReaddedRequiredComponentIsUpdated) {
     EXPECT_EQ(e, sys_n->entities[0]);
 }
 
-TEST_F(SystemTest, DisabledEntitiesAreNotUpdated) {
+TEST_F(SystemTest, UpdateSystems_DisabledEntitiesAreNotUpdated) {
     auto sys_n = manager->addSystem<System_Name>();
     auto e_disabled = manager->createEntity<Name>();
     e_disabled.addComponent<Name>();
@@ -233,7 +233,7 @@ TEST_F(SystemTest, DisabledEntitiesAreNotUpdated) {
     EXPECT_FALSE(utility::contains(sys_n->entities, e_disabled));
 }
 
-TEST_F(SystemTest, DisabledSystemDoesNotUpdate) {
+TEST_F(SystemTest, UpdateSystems_DisabledSystemDoesNotUpdate) {
     createTestEntities();
 
     auto sys = manager->addSystem<System_NameColor>();
@@ -244,7 +244,7 @@ TEST_F(SystemTest, DisabledSystemDoesNotUpdate) {
     EXPECT_TRUE(sys->entities.empty()) << "System should not receive updateEntity calls when disabled.";
 }
 
-TEST_F(SystemTest, DisabledReenabledSystemDoesUpdate) {
+TEST_F(SystemTest, UpdateSystems_DisabledReenabledSystemDoesUpdate) {
     createTestEntities();
 
     auto sys = manager->addSystem<System_NameColor>();
@@ -256,7 +256,7 @@ TEST_F(SystemTest, DisabledReenabledSystemDoesUpdate) {
     EXPECT_FALSE(sys->entities.empty()) << "System should receive updateEntity calls when disabled.";
 }
 
-TEST_F(SystemTest, ReaddingRemovedSystemWorks) {
+TEST_F(SystemTest, UpdateSystems_ReaddingRemovedSystemWorks) {
     auto sys = manager->addSystem<System_NameColor>();
     sys->removeSelf();
     sys = manager->addSystem<System_NameColor>();
