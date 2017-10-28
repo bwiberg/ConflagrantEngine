@@ -25,6 +25,7 @@ endmacro()
 create_test(test_Entity)
 create_test(test_Component)
 create_test(test_System)
+create_test(test_EcsManager)
 
 #### Create executable with all tests
 include_directories(

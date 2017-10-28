@@ -14,15 +14,15 @@ EcsManager::EcsManager(entity_index_t initial_entities_capacity)
           systemsByTypeId(CFL_MAX_SYSTEM_TYPES),
           systemStatesByTypeId(CFL_MAX_SYSTEM_TYPES, SystemState::NoSystem),
           maxEntityIndex(0) {
-    resizeToFitEntityIndex(initial_entities_capacity);
+    ResizeToFitEntityIndex(initial_entities_capacity);
 }
 
 EcsManager::~EcsManager() {
 
 }
 
-void EcsManager::updateSystems() {
-    auto const num_systems = numSystems();
+void EcsManager::UpdateSystems() {
+    auto const num_systems = NumSystems();
     auto const num_components = ComponentType::GetNumTypes();
 
     std::shared_ptr<System> system;
@@ -50,14 +50,14 @@ void EcsManager::updateSystems() {
                 }
 
                 if (should_process_entity) {
-                    system->updateEntity(entitiesByIndex[entity_index]);
+                    system->UpdateEntity(entitiesByIndex[entity_index]);
                 }
             }
         }
     }
 }
 
-void EcsManager::log(std::ostream &os) const {
+void EcsManager::Log(std::ostream &os) const {
     size_t num_enabled_systems = 0, num_disabled_systems = 0;
     for (auto &system_state : systemStatesByTypeId) {
         if (system_state == SystemState::Enabled) ++num_enabled_systems;
@@ -78,7 +78,7 @@ void EcsManager::log(std::ostream &os) const {
        << " disabled(" << num_disabled_entities << ")" << std::endl;
 }
 
-void EcsManager::resizeToFitEntityIndex(entity_index_t entity_index) {
+void EcsManager::ResizeToFitEntityIndex(entity_index_t entity_index) {
     if (entity_index < entitiesByIndex.size()) {
         return;
     }
@@ -88,12 +88,12 @@ void EcsManager::resizeToFitEntityIndex(entity_index_t entity_index) {
     entitiesByIndex.resize(new_size, NullEntity);
 }
 
-Entity EcsManager::createEntity(component_filter_t component_filter) {
+Entity EcsManager::CreateEntity(component_filter_t component_filter) {
     Entity entity(NullEntity);
 
-    entityStorage.reserveComponentMemory(entity, component_filter);
+    entityStorage.ReserveComponentMemory(entity, component_filter);
     entityStorage.entityData[entity.index].state = EntityState::Enabled;
-    resizeToFitEntityIndex(entity.index);
+    ResizeToFitEntityIndex(entity.index);
     entitiesByIndex[entity.index] = entity;
 
     maxEntityIndex = std::max(maxEntityIndex, entity.index);
@@ -101,11 +101,11 @@ Entity EcsManager::createEntity(component_filter_t component_filter) {
     return entity;
 }
 
-std::vector<Entity> EcsManager::createEntities(component_filter_t component_filter, entity_index_t num_entities) {
+std::vector<Entity> EcsManager::CreateEntities(component_filter_t component_filter, entity_index_t num_entities) {
     std::vector<Entity> entities(num_entities, NullEntity);
 
-    entityStorage.reserveComponentMemory(entities, component_filter);
-    resizeToFitEntityIndex(entities[entities.size() - 1].index);
+    entityStorage.ReserveComponentMemory(entities, component_filter);
+    ResizeToFitEntityIndex(entities[entities.size() - 1].index);
 
     for (Entity &entity : entities) {
         entitiesByIndex[entity.index] = entity;
@@ -117,11 +117,11 @@ std::vector<Entity> EcsManager::createEntities(component_filter_t component_filt
     return entities;
 }
 
-system_id_t EcsManager::numSystems() const {
+system_id_t EcsManager::NumSystems() const {
     return static_cast<system_id_t>(systemsByTypeId.size());
 }
 
-entity_index_t EcsManager::numEntities() const {
+entity_index_t EcsManager::NumEntities() const {
     assert(false && "numEntities not implemented");
 }
 } // namespace ecs

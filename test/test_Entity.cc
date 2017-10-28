@@ -27,41 +27,41 @@ protected:
 };
 
 TEST_F(EntityTest, IsValidInitially) {
-    auto entity = manager->createEntity<Name, Color>();
-    EXPECT_TRUE(entity.isValid());
+    auto entity = manager->CreateEntity<Name, Color>();
+    EXPECT_TRUE(entity.IsValid());
 
-    auto entities = manager->createEntities<Name, Color>(10);
+    auto entities = manager->CreateEntities<Name, Color>(10);
     for (auto entity : entities) {
-        EXPECT_TRUE(entity.isValid());
+        EXPECT_TRUE(entity.IsValid());
     }
 }
 
 TEST_F(EntityTest, IsInvalidAfterDestruction) {
-    auto entity = manager->createEntity<Name, Color>();
-    entity.destroy();
-    EXPECT_FALSE(entity.isValid());
+    auto entity = manager->CreateEntity<Name, Color>();
+    entity.Destroy();
+    EXPECT_FALSE(entity.IsValid());
     
-    auto entities = manager->createEntities<Name, Color>(10);
+    auto entities = manager->CreateEntities<Name, Color>(10);
     for (auto entity : entities) {
-        entity.destroy();
-        EXPECT_FALSE(entity.isValid());
+        entity.Destroy();
+        EXPECT_FALSE(entity.IsValid());
     }
 }
 
 TEST_F(EntityTest, ClonedEntitiesAreEqual) {
-    auto entity = manager->createEntity();
+    auto entity = manager->CreateEntity();
     Entity entity_copy(entity);
 
     EXPECT_EQ(entity, entity_copy);
 
-    Entity entity2 = manager->createEntity();
+    Entity entity2 = manager->CreateEntity();
     entity2 = entity;
     EXPECT_EQ(entity, entity2);
 }
 
 TEST_F(EntityTest, DifferentEntitiesAreNotEqual) {
-    auto entity1 = manager->createEntity();
-    auto entity2 = manager->createEntity();
+    auto entity1 = manager->CreateEntity();
+    auto entity2 = manager->CreateEntity();
 
     EXPECT_FALSE(entity1 == entity2);
 }

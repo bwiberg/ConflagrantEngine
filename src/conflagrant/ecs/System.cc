@@ -9,7 +9,7 @@
 
 namespace cfl {
 namespace ecs {
-auto System::findSystemIndex() const {
+auto System::FindSystemIndex() const {
     assert(manager);
     auto &systems = manager->systemsByTypeId;
 
@@ -18,27 +18,27 @@ auto System::findSystemIndex() const {
     }) - systems.cbegin();
 }
 
-bool System::isValid() const {
-    auto index = findSystemIndex();
+bool System::IsValid() const {
+    auto index = FindSystemIndex();
     return static_cast<size_t>(index) < manager->systemsByTypeId.size() &&
            manager->systemStatesByTypeId[index] != EcsManager::SystemState::NoSystem;
 }
 
-void System::enable() {
-    assert(isValid());
-    auto index = findSystemIndex();
+void System::Enable() {
+    assert(IsValid());
+    auto index = FindSystemIndex();
     manager->systemStatesByTypeId[index] = EcsManager::SystemState::Enabled;
 }
 
-void System::disable() {
-    assert(isValid());
-    auto index = findSystemIndex();
+void System::Disable() {
+    assert(IsValid());
+    auto index = FindSystemIndex();
     manager->systemStatesByTypeId[index] = EcsManager::SystemState::Disabled;
 }
 
-void System::removeSelf() {
-    assert(isValid());
-    auto index = findSystemIndex();
+void System::RemoveSelf() {
+    assert(IsValid());
+    auto index = FindSystemIndex();
     manager->systemsByTypeId[index] = nullptr;
     manager->systemStatesByTypeId[index] = EcsManager::SystemState::NoSystem;
 }

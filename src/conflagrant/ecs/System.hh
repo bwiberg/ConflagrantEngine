@@ -19,7 +19,7 @@ class System {
 
     component_bitmask_t const componentBitmask;
 
-    auto findSystemIndex() const;
+    auto FindSystemIndex() const;
 
 protected:
     System(component_filter_t const &component_filter);
@@ -29,16 +29,16 @@ protected:
      */
     virtual ~System() = 0;
 
-    virtual void updateEntity(Entity &entity) = 0;
+    virtual void UpdateEntity(Entity &entity) = 0;
 
 public:
-    bool isValid() const;
+    bool IsValid() const;
 
-    void enable();
+    void Enable();
 
-    void disable();
+    void Disable();
 
-    void removeSelf();
+    void RemoveSelf();
 };
 
 template<typename ...RequiredComponents>
@@ -51,6 +51,6 @@ inline System::System(component_filter_t const &component_filter) : componentBit
 inline System::~System() {}
 
 template<typename ...RequiredComponents>
-BaseSystem<RequiredComponents...>::BaseSystem() : System(ComponentFilter<RequiredComponents...>::get()) {}
+BaseSystem<RequiredComponents...>::BaseSystem() : System(ComponentFilter<RequiredComponents...>::Get()) {}
 } // namespace ecs
 } // namespace cfl

@@ -27,7 +27,7 @@ template<typename ...TComponents>
 struct TestSystem : public BaseSystem<TComponents...> {
     std::vector<Entity> entities;
 
-    void updateEntity(Entity &entity) override {
+    void UpdateEntity(Entity &entity) override {
         entities.push_back(entity);
     }
 };
@@ -68,19 +68,19 @@ protected:
 
     void createTestEntities() {
         for (size_t i = 0; i < 3; ++i) {
-            Entity e = manager->createEntity<Name, Color>();
-            e.addComponent<Name>();
-            e.addComponent<Color>();
+            Entity e = manager->CreateEntity<Name, Color>();
+            e.AddComponent<Name>();
+            e.AddComponent<Color>();
             testEntities_nc.push_back(e);
             testEntities_n.push_back(e);
             testEntities_c.push_back(e);
 
-            e = manager->createEntity<Name>();
-            e.addComponent<Name>();
+            e = manager->CreateEntity<Name>();
+            e.AddComponent<Name>();
             testEntities_n.push_back(e);
 
-            e = manager->createEntity<Color>();
-            e.addComponent<Color>();
+            e = manager->CreateEntity<Color>();
+            e.AddComponent<Color>();
             testEntities_c.push_back(e);
         }
     }
@@ -94,53 +94,53 @@ TEST_F(SystemTest, SystemTypesDiffer) {
 }
 
 TEST_F(SystemTest, HasSystem_ReturnsFalse_BeforeAddingSystem) {
-    EXPECT_FALSE(manager->hasSystem<System_NameColor>());
-    EXPECT_FALSE(manager->hasSystem<System_Name>());
-    EXPECT_FALSE(manager->hasSystem<System_Color>());
+    EXPECT_FALSE(manager->HasSystem<System_NameColor>());
+    EXPECT_FALSE(manager->HasSystem<System_Name>());
+    EXPECT_FALSE(manager->HasSystem<System_Color>());
 }
 
 TEST_F(SystemTest, AddSystem_Works) {
-    manager->addSystem<System_NameColor>();
-    manager->addSystem<System_Name>();
-    manager->addSystem<System_Color>();
+    manager->AddSystem<System_NameColor>();
+    manager->AddSystem<System_Name>();
+    manager->AddSystem<System_Color>();
 
-    EXPECT_TRUE(manager->hasSystem<System_NameColor>());
-    EXPECT_TRUE(manager->hasSystem<System_Name>());
-    EXPECT_TRUE(manager->hasSystem<System_Color>());
+    EXPECT_TRUE(manager->HasSystem<System_NameColor>());
+    EXPECT_TRUE(manager->HasSystem<System_Name>());
+    EXPECT_TRUE(manager->HasSystem<System_Color>());
 }
 
 TEST_F(SystemTest, AddSystem_WithParametersWorks) {
-    auto system = manager->addSystem<System_Name>("test");
+    auto system = manager->AddSystem<System_Name>("test");
 
     EXPECT_EQ("test", system->name);
 }
 
 TEST_F(SystemTest, AddAndGet_HasSamePointers) {
-    auto ptr1 = manager->addSystem<System_Color>();
+    auto ptr1 = manager->AddSystem<System_Color>();
 
-    EXPECT_EQ(ptr1, manager->getSystem<System_Color>());
+    EXPECT_EQ(ptr1, manager->GetSystem<System_Color>());
 }
 
 TEST_F(SystemTest, RemoveSelf_Works) {
-    auto system = manager->addSystem<System_NameColor>();
-    system->removeSelf();
+    auto system = manager->AddSystem<System_NameColor>();
+    system->RemoveSelf();
 
-    EXPECT_FALSE(manager->hasSystem<System_NameColor>());
+    EXPECT_FALSE(manager->HasSystem<System_NameColor>());
 }
 
 TEST_F(SystemTest, AddSystem_Twice_Asserts) {
-    manager->addSystem<System_NameColor>();
-    ASSERT_DEATH({ manager->addSystem<System_NameColor>(); }, "Can't add a duplicate system.");
+    manager->AddSystem<System_NameColor>();
+    ASSERT_DEATH({ manager->AddSystem<System_NameColor>(); }, "Can't add a duplicate system.");
 }
 
 TEST_F(SystemTest, UpdateSystems_UpdatesAllAddedEntities) {
     createTestEntities();
 
-    auto sys_nc = manager->addSystem<System_NameColor>();
-    auto sys_n = manager->addSystem<System_Name>();
-    auto sys_c = manager->addSystem<System_Color>();
+    auto sys_nc = manager->AddSystem<System_NameColor>();
+    auto sys_n = manager->AddSystem<System_Name>();
+    auto sys_c = manager->AddSystem<System_Color>();
 
-    manager->updateSystems();
+    manager->UpdateSystems();
 
     ASSERT_TRUE(std::is_permutation(testEntities_nc.cbegin(), testEntities_nc.cend(),
                                     sys_nc->entities.cbegin())) << "System did not update the correct entities.";
@@ -153,20 +153,20 @@ TEST_F(SystemTest, UpdateSystems_UpdatesAllAddedEntities) {
 }
 
 TEST_F(SystemTest, UpdateSystems_DoesNotUpdateEntitiesWithoutRequirements) {
-    for (auto& entity : manager->createEntities<Name>(3)) {
-        entity.addComponent<Name>();
+    for (auto& entity : manager->CreateEntities<Name>(3)) {
+        entity.AddComponent<Name>();
         testEntities_n.push_back(entity);
     }
 
-    for (auto& entity : manager->createEntities<Color>(3)) {
-        entity.addComponent<Color>();
+    for (auto& entity : manager->CreateEntities<Color>(3)) {
+        entity.AddComponent<Color>();
         testEntities_c.push_back(entity);
     }
 
-    auto sys_n = manager->addSystem<System_Name>();
-    auto sys_c = manager->addSystem<System_Color>();
+    auto sys_n = manager->AddSystem<System_Name>();
+    auto sys_c = manager->AddSystem<System_Color>();
 
-    manager->updateSystems();
+    manager->UpdateSystems();
 
     EXPECT_FALSE(utility::containsAtLeastOne(testEntities_c, sys_n->entities));
     EXPECT_FALSE(utility::containsAtLeastOne(testEntities_n, sys_c->entities));
@@ -175,59 +175,59 @@ TEST_F(SystemTest, UpdateSystems_DoesNotUpdateEntitiesWithoutRequirements) {
 TEST_F(SystemTest, UpdateSystems_UpdatedEntitiesHaveRequiredComponents) {
     createTestEntities();
 
-    auto sys_nc = manager->addSystem<System_NameColor>();
-    auto sys_n = manager->addSystem<System_Name>();
-    auto sys_c = manager->addSystem<System_Color>();
+    auto sys_nc = manager->AddSystem<System_NameColor>();
+    auto sys_n = manager->AddSystem<System_Name>();
+    auto sys_c = manager->AddSystem<System_Color>();
 
-    manager->updateSystems();
+    manager->UpdateSystems();
 
     for (Entity e : sys_nc->entities) {
-        EXPECT_TRUE(e.hasComponent<Name>()) << "Updated entity did not have required component";
-        EXPECT_TRUE(e.hasComponent<Color>()) << "Updated entity did not have required component";
+        EXPECT_TRUE(e.HasComponent<Name>()) << "Updated entity did not have required component";
+        EXPECT_TRUE(e.HasComponent<Color>()) << "Updated entity did not have required component";
     }
 
     for (Entity e : sys_n->entities) {
-        EXPECT_TRUE(e.hasComponent<Name>()) << "Updated entity did not have required component";
+        EXPECT_TRUE(e.HasComponent<Name>()) << "Updated entity did not have required component";
     }
 
     for (Entity e : sys_c->entities) {
-        EXPECT_TRUE(e.hasComponent<Color>()) << "Updated entity did not have required component";
+        EXPECT_TRUE(e.HasComponent<Color>()) << "Updated entity did not have required component";
     }
 }
 
 TEST_F(SystemTest, UpdateSystems_EntityWithRemovedRequiredComponentIsNotUpdated) {
-    auto sys_n = manager->addSystem<System_Name>();
-    auto e = manager->createEntity<Name>();
-    e.addComponent<Name>();
-    e.removeComponent<Name>();
+    auto sys_n = manager->AddSystem<System_Name>();
+    auto e = manager->CreateEntity<Name>();
+    e.AddComponent<Name>();
+    e.RemoveComponent<Name>();
 
-    manager->updateSystems();
+    manager->UpdateSystems();
 
     EXPECT_TRUE(sys_n->entities.empty());
 }
 
 TEST_F(SystemTest, UpdateSystems_EntityWithReaddedRequiredComponentIsUpdated) {
-    auto sys_n = manager->addSystem<System_Name>();
-    auto e = manager->createEntity<Name>();
-    e.addComponent<Name>();
-    e.removeComponent<Name>();
-    e.addComponent<Name>();
+    auto sys_n = manager->AddSystem<System_Name>();
+    auto e = manager->CreateEntity<Name>();
+    e.AddComponent<Name>();
+    e.RemoveComponent<Name>();
+    e.AddComponent<Name>();
 
-    manager->updateSystems();
+    manager->UpdateSystems();
 
     EXPECT_EQ(size_t(1), sys_n->entities.size());
     EXPECT_EQ(e, sys_n->entities[0]);
 }
 
 TEST_F(SystemTest, UpdateSystems_DisabledEntitiesAreNotUpdated) {
-    auto sys_n = manager->addSystem<System_Name>();
-    auto e_disabled = manager->createEntity<Name>();
-    e_disabled.addComponent<Name>();
-    e_disabled.disable();
+    auto sys_n = manager->AddSystem<System_Name>();
+    auto e_disabled = manager->CreateEntity<Name>();
+    e_disabled.AddComponent<Name>();
+    e_disabled.Disable();
 
-    auto e_enabled = manager->createEntity<Name>();
-    e_enabled.addComponent<Name>();
-    manager->updateSystems();
+    auto e_enabled = manager->CreateEntity<Name>();
+    e_enabled.AddComponent<Name>();
+    manager->UpdateSystems();
 
     EXPECT_TRUE(utility::contains(sys_n->entities, e_enabled));
     EXPECT_FALSE(utility::contains(sys_n->entities, e_disabled));
@@ -236,10 +236,10 @@ TEST_F(SystemTest, UpdateSystems_DisabledEntitiesAreNotUpdated) {
 TEST_F(SystemTest, UpdateSystems_DisabledSystemDoesNotUpdate) {
     createTestEntities();
 
-    auto sys = manager->addSystem<System_NameColor>();
-    sys->disable();
+    auto sys = manager->AddSystem<System_NameColor>();
+    sys->Disable();
 
-    manager->updateSystems();
+    manager->UpdateSystems();
 
     EXPECT_TRUE(sys->entities.empty()) << "System should not receive updateEntity calls when disabled.";
 }
@@ -247,19 +247,19 @@ TEST_F(SystemTest, UpdateSystems_DisabledSystemDoesNotUpdate) {
 TEST_F(SystemTest, UpdateSystems_DisabledReenabledSystemDoesUpdate) {
     createTestEntities();
 
-    auto sys = manager->addSystem<System_NameColor>();
-    sys->disable();
-    sys->enable();
+    auto sys = manager->AddSystem<System_NameColor>();
+    sys->Disable();
+    sys->Enable();
 
-    manager->updateSystems();
+    manager->UpdateSystems();
 
     EXPECT_FALSE(sys->entities.empty()) << "System should receive updateEntity calls when disabled.";
 }
 
 TEST_F(SystemTest, UpdateSystems_ReaddingRemovedSystemWorks) {
-    auto sys = manager->addSystem<System_NameColor>();
-    sys->removeSelf();
-    sys = manager->addSystem<System_NameColor>();
+    auto sys = manager->AddSystem<System_NameColor>();
+    sys->RemoveSelf();
+    sys = manager->AddSystem<System_NameColor>();
 
-    EXPECT_TRUE(manager->hasSystem<System_NameColor>());
+    EXPECT_TRUE(manager->HasSystem<System_NameColor>());
 }

@@ -34,7 +34,7 @@ template<typename ...TComponents>
 struct TestSystem : public BaseSystem<TComponents...> {
     std::vector<Entity> entities;
 
-    void updateEntity(Entity &entity) override {
+    void UpdateEntity(Entity &entity) override {
         entities.push_back(entity);
     }
 };
@@ -64,54 +64,54 @@ TEST_F(ComponentTest, ComponentTypesDiffer) {
 }
 
 TEST_F(ComponentTest, HasComponent_ReturnsFalseBeforeAddingComponent) {
-    auto entity1 = manager->createEntity();
-    ASSERT_FALSE(entity1.hasComponent<Name>());
+    auto entity1 = manager->CreateEntity();
+    ASSERT_FALSE(entity1.HasComponent<Name>());
 
-    auto entity2 = manager->createEntity<Name, Color>();
-    ASSERT_FALSE(entity2.hasComponent<Name>());
-    ASSERT_FALSE(entity2.hasComponent<Color>());
+    auto entity2 = manager->CreateEntity<Name, Color>();
+    ASSERT_FALSE(entity2.HasComponent<Name>());
+    ASSERT_FALSE(entity2.HasComponent<Color>());
 }
 
 TEST_F(ComponentTest, AddComponent_WorksForHintedEntity) {
-    auto e = manager->createEntity<Name, Color>();
-    e.addComponent<Name>();
-    EXPECT_TRUE(e.hasComponent<Name>());
-    e.addComponent<Color>();
-    EXPECT_TRUE(e.hasComponent<Color>());
+    auto e = manager->CreateEntity<Name, Color>();
+    e.AddComponent<Name>();
+    EXPECT_TRUE(e.HasComponent<Name>());
+    e.AddComponent<Color>();
+    EXPECT_TRUE(e.HasComponent<Color>());
 }
 
 TEST_F(ComponentTest, AddComponent_DoesNotWorkForUnhintedEntity) {
-    auto e = manager->createEntity();
-    ASSERT_DEATH({e.addComponent<Name>();}, "");
+    auto e = manager->CreateEntity();
+    ASSERT_DEATH({e.AddComponent<Name>();}, "");
 }
 
 TEST_F(ComponentTest, AddComponent_WithParametersWorks) {
-    auto e = manager->createEntity<Name>();
-    e.addComponent<Name>("__test__");
+    auto e = manager->CreateEntity<Name>();
+    e.AddComponent<Name>("__test__");
 
-    EXPECT_EQ("__test__", e.getComponent<Name>().name);
+    EXPECT_EQ("__test__", e.GetComponent<Name>().name);
 }
 
 TEST_F(ComponentTest, RemoveComponent_Works) {
-    auto e = manager->createEntity<Name>();
-    e.addComponent<Name>();
-    e.removeComponent<Name>();
+    auto e = manager->CreateEntity<Name>();
+    e.AddComponent<Name>();
+    e.RemoveComponent<Name>();
 
-    EXPECT_FALSE(e.hasComponent<Name>());
+    EXPECT_FALSE(e.HasComponent<Name>());
 }
 
 TEST_F(ComponentTest, AddRemoveComponent_ReaddingRemovedComponentWorks) {
-    auto e = manager->createEntity<Name>();
-    e.addComponent<Name>();
-    e.removeComponent<Name>();
-    e.addComponent<Name>();
+    auto e = manager->CreateEntity<Name>();
+    e.AddComponent<Name>();
+    e.RemoveComponent<Name>();
+    e.AddComponent<Name>();
 
-    EXPECT_TRUE(e.hasComponent<Name>());
+    EXPECT_TRUE(e.HasComponent<Name>());
 }
 
 TEST_F(ComponentTest, AddComponent_AddingComponentTwiceAsserts) {
-    auto e = manager->createEntity<Name>();
-    e.addComponent<Name>();
+    auto e = manager->CreateEntity<Name>();
+    e.AddComponent<Name>();
 
-    ASSERT_DEATH({e.addComponent<Name>();}, "");
+    ASSERT_DEATH({e.AddComponent<Name>();}, "");
 }

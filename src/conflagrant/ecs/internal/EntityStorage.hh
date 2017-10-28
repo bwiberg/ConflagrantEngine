@@ -88,37 +88,37 @@ class EntityStorage {
 
     std::unordered_map<component_bitmask_t, std::queue<entity_index_t>> freeEntityIndicesByComponentBitmask;
 
-    void reserveTablesForEntityIndex(entity_index_t index);
+    void ReserveTablesForEntityIndex(entity_index_t index);
 
-    void reuseReservedComponentMemory(Entity &e, std::queue<entity_index_t> &freeEntityIndices);
+    void ReuseReservedComponentMemory(Entity &e, std::queue<entity_index_t> &freeEntityIndices);
 
-    void storeEntityData(Entity const &entity);
+    void StoreEntityData(Entity const &entity);
 
 public:
     EntityStorage(size_t initialMemory = CFL_DEFAULT_COMPONENTSTORAGE_MEMORY,
                   entity_index_t initial_entities_capacity = CFL_DEFAULT_INITIAL_ENTITIES_CAPACITY);
 
-    void reserveComponentMemory(Entity &entity,
+    void ReserveComponentMemory(Entity &entity,
                                 component_bitmask_t const &component_bitmask);
 
-    void reserveComponentMemory(std::vector<Entity> &entities,
+    void ReserveComponentMemory(std::vector<Entity> &entities,
                                 component_bitmask_t const &component_bitmask);
 
-    void freeEntityMemory(Entity &e);
+    void FreeEntityMemory(Entity &e);
 
     template<typename TComponent, typename ...Args>
-    TComponent &initializeComponent(entity_index_t entity_index, Args &&...args);
+    TComponent &InitializeComponent(entity_index_t entity_index, Args &&...args);
 
     template<typename TComponent>
-    TComponent &getComponent(entity_index_t entity_index);
+    TComponent &GetComponent(entity_index_t entity_index);
 
-    bool hasComponent(entity_index_t entity_index, component_id_t component_id);
+    bool HasComponent(entity_index_t entity_index, component_id_t component_id);
 
-    void removeComponent(entity_index_t entity_index, component_id_t component_id);
+    void RemoveComponent(entity_index_t entity_index, component_id_t component_id);
 };
 
 template<typename TComponent, typename ...Args>
-TComponent &EntityStorage::initializeComponent(entity_index_t entity_index, Args &&...args) {
+TComponent &EntityStorage::InitializeComponent(entity_index_t entity_index, Args &&...args) {
     component_id_t component_id = ComponentType::TypeId<TComponent>();
     entityData[entity_index].componentBitmask.set(component_id, true);
 
@@ -131,7 +131,7 @@ TComponent &EntityStorage::initializeComponent(entity_index_t entity_index, Args
 };
 
 template<typename TComponent>
-TComponent &EntityStorage::getComponent(entity_index_t entity_index) {
+TComponent &EntityStorage::GetComponent(entity_index_t entity_index) {
     component_id_t component_id = ComponentType::TypeId<TComponent>();
     Assert(entityData[entity_index].componentBitmask.test(component_id),
            "Tried to get component that entity did not have.");
@@ -144,15 +144,15 @@ TComponent &EntityStorage::getComponent(entity_index_t entity_index) {
     return *reinterpret_cast<TComponent *>(&megaArray[component_address]);
 };
 
-inline bool EntityStorage::hasComponent(entity_index_t entity_index, component_id_t component_id) {
+inline bool EntityStorage::HasComponent(entity_index_t entity_index, component_id_t component_id) {
     bool hasMemoryForComponent = componentOffsetsByType[component_id][entity_index] != storage::InvalidComponentOffset;
     bool componentIsActive = entityData[entity_index].componentBitmask.test(component_id);
 
     return hasMemoryForComponent && componentIsActive;
 }
 
-inline void EntityStorage::removeComponent(entity_index_t entity_index, component_id_t component_id) {
-    Assert(hasComponent(entity_index, component_id), "Trying to remove component that entity does not have.");
+inline void EntityStorage::RemoveComponent(entity_index_t entity_index, component_id_t component_id) {
+    Assert(HasComponent(entity_index, component_id), "Trying to remove component that entity does not have.");
     entityData[entity_index].componentBitmask.set(component_id, false);
 }
 } // namespace internal

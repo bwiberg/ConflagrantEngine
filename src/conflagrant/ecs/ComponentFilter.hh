@@ -25,7 +25,7 @@ public:
     /**
      * Create a filter with the given components.
      */
-    static component_filter_t const get() {
+    static component_filter_t const Get() {
         auto constexpr num_components = sizeof...(TComponents);
         internal::component_id_t component_ids[] = {internal::ComponentType::TypeId<TComponents>()...};
 

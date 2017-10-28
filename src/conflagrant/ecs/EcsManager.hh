@@ -56,50 +56,50 @@ public:
 
     bool operator==(Entity const &other) const;
 
-    inline entity_id_t getId() const { return id; }
+    inline entity_id_t Id() const { return id; }
 
-    inline entity_index_t getIndex() const { return index; }
+    inline entity_index_t Index() const { return index; }
 
     /**
      * Adds a component of the given type to this entity. TODO what to do if already has?
      * @return the added component
      */
     template<typename T, typename ...Args>
-    T &addComponent(Args &&...args);
+    T &AddComponent(Args &&...args);
 
     /**
      * Gets the component of the given type attached to this entity.
      */
     template<typename T>
-    T &getComponent();
+    T &GetComponent();
 
     /**
      * Checks if the entity has a component of the given type.
      */
     template<typename T>
-    bool hasComponent();
+    bool HasComponent();
 
     /**
      * Removes the component of the given type if it has it.
      */
     template<typename T>
-    void removeComponent();
+    void RemoveComponent();
 
     /**
      * Activates this entity to be processed by systems.
      */
-    void enable();
+    void Enable();
 
     /**
      * Deactivates this entity to not be processed by systems.
      */
-    void disable();
+    void Disable();
 
-    void destroy();
+    void Destroy();
 
-    bool isValid() const;
+    bool IsValid() const;
 
-    bool isEnabled() const;
+    bool IsEnabled() const;
 
     friend std::ostream &operator<<(std::ostream &os, const Entity &entity);
 };
@@ -137,41 +137,41 @@ class cfl::ecs::EcsManager final {
     entity_index_t maxEntityIndex;
 
     template<typename T>
-    std::shared_ptr<T> internalGetSystem(system_id_t system_id);
+    std::shared_ptr<T> InternalGetSystem(system_id_t system_id);
 
-    void resizeToFitEntityIndex(entity_index_t entity_index);
+    void ResizeToFitEntityIndex(entity_index_t entity_index);
 
 public:
     EcsManager(entity_index_t initial_entities_capacity = CFL_DEFAULT_INITIAL_ENTITIES_CAPACITY);
 
     ~EcsManager();
 
-    void updateSystems();
+    void UpdateSystems();
 
-    void log(std::ostream &os) const;
-
-    template<typename ...TComponents>
-    Entity createEntity();
-
-    Entity createEntity(component_filter_t component_filter);
+    void Log(std::ostream &os) const;
 
     template<typename ...TComponents>
-    std::vector<Entity> createEntities(entity_index_t num_entities);
+    Entity CreateEntity();
 
-    std::vector<Entity> createEntities(component_filter_t component_filter, entity_index_t num_entities);
+    Entity CreateEntity(component_filter_t component_filter);
+
+    template<typename ...TComponents>
+    std::vector<Entity> CreateEntities(entity_index_t num_entities);
+
+    std::vector<Entity> CreateEntities(component_filter_t component_filter, entity_index_t num_entities);
 
     template<typename T, typename ...Args>
-    std::shared_ptr<T> addSystem(Args &&...args);
+    std::shared_ptr<T> AddSystem(Args &&...args);
 
     template<typename T>
-    std::shared_ptr<T> getSystem();
+    std::shared_ptr<T> GetSystem();
 
     template<typename T>
-    bool hasSystem();
+    bool HasSystem();
 
-    system_id_t numSystems() const;
+    system_id_t NumSystems() const;
 
-    entity_index_t numEntities() const;
+    entity_index_t NumEntities() const;
 };
 
 namespace cfl {
@@ -181,40 +181,40 @@ namespace ecs {
 ///////////////////////////////////////////////////////////////////
 
 template<typename T, typename ...Args>
-T &Entity::addComponent(Args &&...args) {
+T &Entity::AddComponent(Args &&...args) {
     AssertDerivesComponent<T>();
-    Assert(isValid(), "Entity invalid.");
-    Assert(!hasComponent<T>(), "Entity already has component.");
+    Assert(IsValid(), "Entity invalid.");
+    Assert(!HasComponent<T>(), "Entity already has component.");
 
-    return manager->entityStorage.initializeComponent<T>(index, std::forward<Args>(args)...);
+    return manager->entityStorage.InitializeComponent<T>(index, std::forward<Args>(args)...);
 };
 
 template<typename T>
-T &Entity::getComponent() {
+T &Entity::GetComponent() {
     AssertDerivesComponent<T>();
-    Assert(isValid(), "Entity invalid.");
-    Assert(hasComponent<T>(), "Entity does not have component.");
+    Assert(IsValid(), "Entity invalid.");
+    Assert(HasComponent<T>(), "Entity does not have component.");
 
-    return manager->entityStorage.getComponent<T>(index);
+    return manager->entityStorage.GetComponent<T>(index);
 };
 
 template<typename T>
-bool Entity::hasComponent() {
+bool Entity::HasComponent() {
     AssertDerivesComponent<T>();
-    Assert(isValid(), "Entity invalid.");
+    Assert(IsValid(), "Entity invalid.");
 
     component_id_t component_id = ComponentType::TypeId<T>();
-    return manager->entityStorage.hasComponent(index, component_id);
+    return manager->entityStorage.HasComponent(index, component_id);
 };
 
 template<typename T>
-void Entity::removeComponent() {
+void Entity::RemoveComponent() {
     AssertDerivesComponent<T>();
-    Assert(isValid(), "Entity invalid.");
-    Assert(hasComponent<T>(), "Entity does not have component.");
+    Assert(IsValid(), "Entity invalid.");
+    Assert(HasComponent<T>(), "Entity does not have component.");
 
     component_id_t component_id = ComponentType::TypeId<T>();
-    manager->entityStorage.removeComponent(index, component_id);
+    manager->entityStorage.RemoveComponent(index, component_id);
 }
 
 
@@ -223,17 +223,17 @@ void Entity::removeComponent() {
 ///////////////////////////////////////////////////////////////////////
 
 template<typename ...TComponents>
-Entity EcsManager::createEntity() {
-    return createEntity(ComponentFilter<TComponents...>::get());
+Entity EcsManager::CreateEntity() {
+    return CreateEntity(ComponentFilter<TComponents...>::Get());
 }
 
 template<typename ...TComponents>
-std::vector<Entity> EcsManager::createEntities(entity_index_t num_entities) {
-    return createEntities(ComponentFilter<TComponents...>::get(), num_entities);
+std::vector<Entity> EcsManager::CreateEntities(entity_index_t num_entities) {
+    return CreateEntities(ComponentFilter<TComponents...>::Get(), num_entities);
 }
 
 template<typename TSystem, typename ...Args>
-std::shared_ptr<TSystem> EcsManager::addSystem(Args &&...args) {
+std::shared_ptr<TSystem> EcsManager::AddSystem(Args &&...args) {
     AssertDerivesSystem<TSystem>();
 
     auto system_id = SystemType::TypeId<TSystem>();
@@ -242,21 +242,21 @@ std::shared_ptr<TSystem> EcsManager::addSystem(Args &&...args) {
     systemsByTypeId[system_id] = std::make_shared<TSystem>(std::forward<Args>(args)...);
     systemsByTypeId[system_id]->manager = this;
     systemStatesByTypeId[system_id] = SystemState::Enabled;
-    return internalGetSystem<TSystem>(system_id);
+    return InternalGetSystem<TSystem>(system_id);
 }
 
 template<typename TSystem>
-std::shared_ptr<TSystem> EcsManager::getSystem() {
+std::shared_ptr<TSystem> EcsManager::GetSystem() {
     AssertDerivesSystem<TSystem>();
 
     auto system_id = SystemType::TypeId<TSystem>();
     assert(systemsByTypeId[system_id]);
 
-    return internalGetSystem<TSystem>(system_id);
+    return InternalGetSystem<TSystem>(system_id);
 }
 
 template<typename TSystem>
-bool EcsManager::hasSystem() {
+bool EcsManager::HasSystem() {
     AssertDerivesSystem<TSystem>();
 
     auto system_id = SystemType::TypeId<TSystem>();
@@ -265,7 +265,7 @@ bool EcsManager::hasSystem() {
 }
 
 template<typename TSystem>
-std::shared_ptr<TSystem> EcsManager::internalGetSystem(system_id_t system_id) {
+std::shared_ptr<TSystem> EcsManager::InternalGetSystem(system_id_t system_id) {
     return std::static_pointer_cast<TSystem>(systemsByTypeId[system_id]);
 }
 } // namespace ecs

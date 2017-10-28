@@ -30,26 +30,26 @@ bool Entity::operator==(Entity const &other) const {
     return index == other.index && id == other.id;
 }
 
-void Entity::enable() {
+void Entity::Enable() {
     manager->entityStorage.entityData[index].state = EntityState::Enabled;
 }
 
-void Entity::disable() {
+void Entity::Disable() {
     manager->entityStorage.entityData[index].state = EntityState::Disabled;
 }
 
-void Entity::destroy() {
+void Entity::Destroy() {
     manager->entityStorage.entityData[index].state = EntityState::Destroyed;
-    manager->entityStorage.freeEntityMemory(*this);
+    manager->entityStorage.FreeEntityMemory(*this);
 }
 
-bool Entity::isValid() const {
+bool Entity::IsValid() const {
     return manager->entityStorage.entityData[index].state != EntityState::Destroyed &&
            id == manager->entityStorage.entityData[index].id;
 }
 
-bool Entity::isEnabled() const {
-    Assert(isValid(), "isEnabled called on invalid Entity handle");
+bool Entity::IsEnabled() const {
+    Assert(IsValid(), "isEnabled called on invalid Entity handle");
     return manager->entityStorage.entityData[index].state == EntityState::Enabled;
 }
 
