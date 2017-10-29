@@ -6,12 +6,29 @@
 
 #include <glm/glm.hpp>
 
+// common STL includes
+
+#include <memory>
+#include <string>
+#include <array>
+#include <vector>
+#include <list>
+
+#include <filesystem/path.h>
+#include <filesystem/resolver.h>
+
 #ifdef __linux__
 #include <bits/stdint-uintn.h>
 #include <bits/stdint-intn.h>
 #endif
 
 namespace cfl {
+typedef unsigned char uchar;
+typedef unsigned int uint;
+typedef unsigned long ulong;
+
+typedef std::string string;
+
 typedef glm::vec2 vec2;
 typedef glm::vec3 vec3;
 typedef glm::vec4 vec4;
@@ -35,4 +52,9 @@ typedef glm::bvec4 bvec4;
 typedef glm::mat2 mat2;
 typedef glm::mat3 mat3;
 typedef glm::mat4 mat4;
+
+// external/filesystem
+
+typedef filesystem::path Path;
+typedef filesystem::resolver PathResolver;
 }

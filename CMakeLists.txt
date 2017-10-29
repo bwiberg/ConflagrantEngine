@@ -14,10 +14,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 ################################
 
 if ((${CMAKE_BUILD_TYPE} STREQUAL Debug) OR (${CMAKE_BUILD_TYPE} STREQUAL RelWithDebInfo))
-    message(WARNING "Debug")
+    message(STATUS "Build type: Debug")
     set(CFL_DEBUG 1)
 elseif (${CMAKE_BUILD_TYPE} STREQUAL Release)
-    message(WARNING "Release")
+    message(STATUS "Build type: Release")
     set(CFL_DEBUG 0)
 else ()
     message(AUTHOR_WARNING "Could not make out build type.")
@@ -55,10 +55,10 @@ macro(cfl_use_package name found_variable include_dir library_name)
         cfl_use_library(${${library_name}})
     endif ()
 
-    if (${include_dir})
+    if (NOT "${include_dir}" STREQUAL "")
         cfl_use_include_dir(${${include_dir}})
     else ()
-        message(STATUS "NOT AN ERROR: cfl_use_package(${name}) called with empty 'include_dir' string")
+        message(STATUS "MAYBE AN ERROR: cfl_use_package(${name}) called with empty 'include_dir' string")
     endif ()
 endmacro()
 
@@ -73,10 +73,13 @@ if (NOT APPLE)
     cfl_use_package(GLEW GLEW_FOUND GLEW_INCLUDE_DIRS GLEW_LIBRARIES)
 endif ()
 cfl_use_package(OpenCL OpenCL_FOUND OpenCL_INCLUDE_DIRS OpenCL_LIBRARIES)
-cfl_use_package(Assimp ASSIMP_FOUND ASSIMP_INCLUDE_DIR ASSIMP_LIBRARIES)
+cfl_use_package(Assimp ASSIMP_FOUND assimp_INCLUDE_DIRS ASSIMP_LIBRARIES)
 cfl_use_package(JsonCpp JSONCPP_FOUND JSONCPP_INCLUDE_DIRS JSONCPP_LIBRARY)
 
 include_directories(${EXTERNAL_INCLUDE_DIRS})
+foreach (dir ${EXTERNAL_INCLUDE_DIRS})
+    message(STATUS ${dir})
+endforeach ()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 include_directories(external)
 
@@ -94,8 +97,15 @@ include(cmake/EcsConfig.cmake)
 
 set(HH_FILES
         src/conflagrant/conflagrant.hh
-        src/conflagrant/Mesh.hh
         src/conflagrant/types.hh
+        src/conflagrant/GL.hh
+        src/conflagrant/CL.hh
+        src/conflagrant/assets/Asset.hh
+        src/conflagrant/assets/AssetLoader.hh
+        src/conflagrant/assets/AssetManager.hh
+        src/conflagrant/assets/Image.hh
+        src/conflagrant/assets/loaders/MeshLoader.hh
+        src/conflagrant/components/MeshComponent.hh
         src/conflagrant/ecs/Component.hh
         src/conflagrant/ecs/ComponentFilter.hh
         src/conflagrant/ecs/EcsManager.hh
@@ -107,16 +117,23 @@ set(HH_FILES
         src/conflagrant/ecs/internal/EntityStorage.hh
         src/conflagrant/ecs/internal/InternalEcsTypes.hh
         src/conflagrant/ecs/internal/SystemType.hh
-        src/conflagrant/components/MeshComponent.hh src/conflagrant/GL.hh)
+        src/conflagrant/geometry/Mesh.hh
+        src/conflagrant/serialization/ReadStream.hh
+        src/conflagrant/serialization/Serializable.hh
+        src/conflagrant/serialization/WriteStream.hh
+        )
 set(CC_FILES
+        src/conflagrant/assets/AssetManager.cc
         src/conflagrant/conflagrant.cc
         src/conflagrant/TestGLFW3.cc
+        src/conflagrant/CL.cc
+        src/conflagrant/GL.cc
         src/conflagrant/ecs/EcsManager.cc
         src/conflagrant/ecs/Entity.cc
         src/conflagrant/ecs/System.cc
         src/conflagrant/ecs/internal/ComponentType.cc
         src/conflagrant/ecs/internal/EntityStorage.cc
-        src/conflagrant/CL.hh src/conflagrant/CL.cc src/conflagrant/GL.cc)
+        )
 
 #######################################################################
 ### decide if creating a library target, and if so shared or static ###
