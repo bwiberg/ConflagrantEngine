@@ -106,18 +106,9 @@ set(HH_FILES
         src/conflagrant/assets/Image.hh
         src/conflagrant/assets/loaders/MeshLoader.hh
         src/conflagrant/components/MeshComponent.hh
-        src/conflagrant/ecs/Component.hh
-        src/conflagrant/ecs/ComponentFilter.hh
-        src/conflagrant/ecs/EcsManager.hh
-        src/conflagrant/ecs/EcsTypes.hh
-        src/conflagrant/ecs/System.hh
-        src/conflagrant/ecs/internal/ClassType.hh
-        src/conflagrant/ecs/internal/ComponentType.hh
-        src/conflagrant/ecs/internal/EcsAssert.hh
-        src/conflagrant/ecs/internal/EntityStorage.hh
-        src/conflagrant/ecs/internal/InternalEcsTypes.hh
-        src/conflagrant/ecs/internal/SystemType.hh
         src/conflagrant/geometry/Mesh.hh
+        src/conflagrant/gl/GLObject.hh
+        src/conflagrant/gl/StateGroup.hh
         src/conflagrant/serialization/ReadStream.hh
         src/conflagrant/serialization/Serializable.hh
         src/conflagrant/serialization/WriteStream.hh
@@ -128,11 +119,6 @@ set(CC_FILES
         src/conflagrant/TestGLFW3.cc
         src/conflagrant/CL.cc
         src/conflagrant/GL.cc
-        src/conflagrant/ecs/EcsManager.cc
-        src/conflagrant/ecs/Entity.cc
-        src/conflagrant/ecs/System.cc
-        src/conflagrant/ecs/internal/ComponentType.cc
-        src/conflagrant/ecs/internal/EntityStorage.cc
         )
 
 #######################################################################
