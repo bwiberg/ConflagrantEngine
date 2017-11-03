@@ -22,10 +22,7 @@ macro(create_test filename_without_extension)
 endmacro()
 
 #### Create test suites
-create_test(test_Entity)
-create_test(test_Component)
-create_test(test_System)
-create_test(test_EcsManager)
+# create_test(test_XYZ)
 
 #### Create executable with all tests
 include_directories(
@@ -34,9 +31,11 @@ include_directories(
         ${CFL_INCLUDE_DIRS}
 )
 
-add_executable(all_tests ${ALL_TESTS_CC})
-target_link_libraries(all_tests
-        gtest
-        gtest_main
-        ${CFL_LIBRARIES}
-        )
+if (${ALL_TESTS_CC})
+    add_executable(all_tests ${ALL_TESTS_CC})
+    target_link_libraries(all_tests
+            gtest
+            gtest_main
+            ${CFL_LIBRARIES}
+            )
+endif ()
