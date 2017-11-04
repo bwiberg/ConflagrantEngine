@@ -5,6 +5,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 // common STL includes
 
@@ -18,8 +19,10 @@
 #include <filesystem/resolver.h>
 
 #ifdef __linux__
+
 #include <bits/stdint-uintn.h>
 #include <bits/stdint-intn.h>
+
 #endif
 
 namespace cfl {

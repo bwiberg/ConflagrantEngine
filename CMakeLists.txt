@@ -107,11 +107,18 @@ set(HH_FILES
         src/conflagrant/assets/loaders/MeshLoader.hh
         src/conflagrant/components/MeshComponent.hh
         src/conflagrant/geometry/Mesh.hh
-        src/conflagrant/gl/GLObject.hh
         src/conflagrant/gl/StateGroup.hh
         src/conflagrant/serialization/ReadStream.hh
         src/conflagrant/serialization/Serializable.hh
         src/conflagrant/serialization/WriteStream.hh
+        src/conflagrant/gl/GlObject.hh
+        src/conflagrant/gl/Buffer.hh
+        src/conflagrant/gl/Framebuffer.hh
+        src/conflagrant/gl/Renderbuffer.hh
+        src/conflagrant/gl/Texture.hh
+        src/conflagrant/gl/Mesh.hh
+        src/conflagrant/gl/VertexArray.hh
+        src/conflagrant/gl/Shader.hh
         )
 set(CC_FILES
         src/conflagrant/assets/AssetManager.cc
