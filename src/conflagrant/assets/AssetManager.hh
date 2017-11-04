@@ -5,7 +5,7 @@
 #include <conflagrant/geometry/Mesh.hh>
 #include <conflagrant/assets/Asset.hh>
 #include <conflagrant/assets/AssetLoader.hh>
-#include <conflagrant/assets/Image.hh>
+#include <conflagrant/assets/Texture2D.hh>
 
 #include <unordered_map>
 #include <initializer_list>
@@ -14,7 +14,6 @@ namespace cfl {
 namespace assets {
 
 using geometry::Mesh;
-using assets::Image2D;
 
 /**
  * @brief //todo add brief description

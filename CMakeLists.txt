@@ -103,14 +103,15 @@ set(HH_FILES
         src/conflagrant/assets/Asset.hh
         src/conflagrant/assets/AssetLoader.hh
         src/conflagrant/assets/AssetManager.hh
-        src/conflagrant/assets/Image.hh
-        src/conflagrant/assets/loaders/MeshLoader.hh
+        src/conflagrant/assets/Texture2D.hh
         src/conflagrant/components/MeshComponent.hh
         src/conflagrant/geometry/Mesh.hh
+        src/conflagrant/gl/GlObject.hh
         src/conflagrant/gl/StateGroup.hh
         src/conflagrant/serialization/ReadStream.hh
         src/conflagrant/serialization/Serializable.hh
         src/conflagrant/serialization/WriteStream.hh
+        src/conflagrant/assets/loaders/AssimpGlmConvert.hh
         src/conflagrant/gl/GlObject.hh
         src/conflagrant/gl/Buffer.hh
         src/conflagrant/gl/Framebuffer.hh

@@ -6,7 +6,7 @@
 namespace cfl {
 namespace assets {
 template<size_t NumChannels>
-struct Image2D {
+struct CpuTexture2D {
     /**
      * The raw pixels of the image
      */
