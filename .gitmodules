@@ -1,3 +1,6 @@
 [submodule "external/entityx"]
 	path = external/entityx
 	url = https://github.com/alecthomas/entityx.git
+[submodule "external/crossguid"]
+	path = external/crossguid
+	url = https://github.com/graeme-hill/crossguid.git
