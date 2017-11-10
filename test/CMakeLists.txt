@@ -22,7 +22,7 @@ macro(create_test filename_without_extension)
 endmacro()
 
 #### Create test suites
-# create_test(test_XYZ)
+create_test(test_Serialization)
 
 #### Create executable with all tests
 include_directories(

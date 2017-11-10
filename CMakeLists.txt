@@ -89,12 +89,20 @@ cfl_use_package(OpenCL OpenCL_FOUND OpenCL_INCLUDE_DIRS OpenCL_LIBRARIES)
 cfl_use_package(Assimp ASSIMP_FOUND assimp_INCLUDE_DIRS ASSIMP_LIBRARIES)
 cfl_use_package(JsonCpp JSONCPP_FOUND JSONCPP_INCLUDE_DIRS JSONCPP_LIBRARY)
 
+add_subdirectory(external/entityx)
+cfl_use_library(entityx)
+cfl_use_include_dir(${CMAKE_CURRENT_SOURCE_DIR}/external/entityx)
+
+add_subdirectory(external/crossguid)
+cfl_use_library(xg)
+
+cfl_use_include_dir(external)
+
 include_directories(${EXTERNAL_INCLUDE_DIRS})
 foreach (dir ${EXTERNAL_INCLUDE_DIRS})
     message(STATUS ${dir})
 endforeach ()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
-include_directories(external)
 
 ################################
 ### configure Conflagrant    ###
@@ -110,6 +118,7 @@ include(cmake/EcsConfig.cmake)
 
 set(HH_FILES
         src/conflagrant/conflagrant.hh
+        src/conflagrant/Engine.hh
         src/conflagrant/types.hh
         src/conflagrant/GL.hh
         src/conflagrant/CL.hh
@@ -120,14 +129,13 @@ set(HH_FILES
         src/conflagrant/assets/loaders/ModelLoader.hh
         src/conflagrant/assets/loaders/TextureLoader.hh
         src/conflagrant/components/MeshComponent.hh
+        src/conflagrant/components/Name.hh
+        src/conflagrant/components/Guid.hh
         src/conflagrant/Mesh.hh
         src/conflagrant/Model.hh
         src/conflagrant/Material.hh
         src/conflagrant/gl/GlObject.hh
         src/conflagrant/gl/StateGroup.hh
-        src/conflagrant/serialization/ReadStream.hh
-        src/conflagrant/serialization/Serializable.hh
-        src/conflagrant/serialization/WriteStream.hh
         src/conflagrant/assets/loaders/AssimpGlmConvert.hh
         src/conflagrant/gl/GlObject.hh
         src/conflagrant/gl/Buffer.hh
@@ -137,8 +145,14 @@ set(HH_FILES
         src/conflagrant/gl/Mesh.hh
         src/conflagrant/gl/VertexArray.hh
         src/conflagrant/gl/Shader.hh
+        src/conflagrant/serialization/Serialize.hh
+        src/conflagrant/serialization/array.hh
+        src/conflagrant/serialization/vector.hh
+        src/conflagrant/serialization/crossguid.hh
+        src/conflagrant/serialization/glm.hh
         )
 set(CC_FILES
+        src/conflagrant/Engine.cc
         src/conflagrant/assets/AssetManager.cc
         src/conflagrant/assets/loaders/ModelLoader.cc
         src/conflagrant/assets/loaders/TextureLoader.cc

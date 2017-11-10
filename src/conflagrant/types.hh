@@ -6,6 +6,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <json/json.h>
 
 // common STL includes
 
@@ -60,4 +61,8 @@ typedef glm::mat4 mat4;
 
 typedef filesystem::path Path;
 typedef filesystem::resolver PathResolver;
+
+// jsoncpp
+
+typedef Json::Value SceneDescription;
 }
