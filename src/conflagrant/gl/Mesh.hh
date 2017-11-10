@@ -18,6 +18,11 @@ class Mesh {
 public:
     inline Mesh() = default;
 
+    inline Mesh(Mesh &&o) noexcept
+            : vao(std::move(o.vao)),
+              vertexBuffer(std::move(o.vertexBuffer)), indexBuffer(std::move(o.indexBuffer)),
+              drawMode(o.drawMode), indexType(o.indexType), vertexStride(o.vertexStride), indexCount(o.indexCount) {}
+
     inline Mesh(const Mesh &r) = delete;
 
     inline ~Mesh() = default;

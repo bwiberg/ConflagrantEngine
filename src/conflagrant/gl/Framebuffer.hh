@@ -17,6 +17,11 @@ struct Framebuffer : public GlObject<GlFramebufferFactory> {
     Texture2D colorTexture;
     Renderbuffer depthStencilRb; // depth and stencil renderbuffer (will NOT be sampled => renderbuffer > texture)
 
+    inline Framebuffer(Framebuffer &&o) noexcept
+            : GlObject<GlFramebufferFactory>(std::move(o)),
+              width(o.width), height(o.height), colorTexture(std::move(colorTexture)),
+              depthStencilRb(std::move(depthStencilRb)) {}
+
     inline Framebuffer(GLsizei width, GLsizei height)
             : width(width), height(height),
               colorTexture(width, height, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, NULL, false, false),

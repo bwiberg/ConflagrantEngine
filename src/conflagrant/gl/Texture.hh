@@ -14,6 +14,11 @@ struct GlTextureBase : public GlObject<GlTextureFactory> {
     GLenum const internalFormat, format, type, target;
     bool const hasMipmap;
 
+    inline GlTextureBase(GlTextureBase &&o) noexcept
+            : GlObject<GlTextureFactory>(std::move(o)),
+              target(o.target), internalFormat(o.internalFormat), format(o.format), type(o.type),
+              hasMipmap(o.hasMipmap) {}
+
     inline GlTextureBase(GLenum target, GLenum internalFormat, GLenum format, GLenum type, bool createMipmap = false)
             : target(target), internalFormat(internalFormat), format(format), type(type),
               hasMipmap(createMipmap) {}
@@ -46,6 +51,9 @@ struct GlTextureBase : public GlObject<GlTextureFactory> {
 struct Texture1D : public GlTextureBase {
     GLsizei const size;
 
+    inline Texture1D(Texture1D &&o) noexcept
+            : GlTextureBase(std::move(o)), size(size) {}
+
     inline Texture1D(GLsizei size,
                      GLenum internalFormat, GLenum format, GLenum type,
                      GLvoid const *pixels,
@@ -69,6 +77,9 @@ struct Texture1D : public GlTextureBase {
 
 struct Texture2D : public GlTextureBase {
     GLsizei const width, height;
+
+    inline Texture2D(Texture2D &&o) noexcept
+            : GlTextureBase(std::move(o)), width(width), height(height) {}
 
     inline Texture2D(GLsizei width, GLsizei height,
                      GLenum internalFormat, GLenum format, GLenum type,
@@ -113,6 +124,9 @@ struct Texture2D : public GlTextureBase {
 
 struct Texture3D : public GlTextureBase {
     GLsizei const width, height, depth;
+
+    inline Texture3D(Texture3D &&o) noexcept
+            : GlTextureBase(std::move(o)), width(width), height(height), depth(depth) {}
 
     inline Texture3D(GLsizei width, GLsizei height, GLsizei depth,
                      GLenum internalFormat, GLenum format, GLenum type,

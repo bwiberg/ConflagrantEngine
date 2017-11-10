@@ -21,6 +21,9 @@ struct GlObject {
 
     GlObject &operator=(GlObject<TFactory> const &other) = delete;
 
+    inline GlObject(GlObject &&other) noexcept
+            : id(other.id) { other.id = 0; }
+
     inline ~GlObject() {
         TFactory::Destroy(id);
     }

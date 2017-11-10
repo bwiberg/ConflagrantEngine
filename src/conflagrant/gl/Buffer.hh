@@ -16,6 +16,9 @@ class Buffer : public GlObject<GlBufferFactory> {
 public:
     inline Buffer() = default;
 
+    inline Buffer(Buffer &&o) noexcept
+            : GlObject<GlBufferFactory>(std::move(o)), size(o.size) {}
+
     inline void Bind(GLenum target) const {
         OGL(glBindBuffer(target, id));
     }
@@ -28,11 +31,11 @@ public:
         return size;
     }
 
-    inline void BufferData(GLsizeiptr size, GLvoid const* data, GLenum usage) {
+    inline void BufferData(GLsizeiptr size, GLvoid const *data, GLenum usage) {
         OGL(glNamedBufferData(id, this->size = size, data, usage));
     }
 
-    inline void BufferSubData(GLintptr offset, GLsizeiptr size, GLvoid const* data) {
+    inline void BufferSubData(GLintptr offset, GLsizeiptr size, GLvoid const *data) {
         OGL(glNamedBufferSubData(id, offset, size, data));
     }
 };

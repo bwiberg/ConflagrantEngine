@@ -1,3 +1,16 @@
+####################################################################################################################
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+#                                                                                                                 ##
+##    e88~-_    ,88~-_   888b    | 888~~  888          e       e88~~\  888~-_        e      888b    | ~~~888~~~    #
+#    d888   \  d888   \  |Y88b   | 888___ 888         d8b     d888     888   \      d8b     |Y88b   |    888      ##
+##   8888     88888    | | Y88b  | 888    888        /Y88b    8888 __  888    |    /Y88b    | Y88b  |    888       #
+#    8888     88888    | |  Y88b | 888    888       /  Y88b   8888   | 888   /    /  Y88b   |  Y88b |    888      ##
+##   Y888   /  Y888   /  |   Y88b| 888    888      /____Y88b  Y888   | 888_-~    /____Y88b  |   Y88b|    888       #
+#     "88_-~    `88_-~   |    Y888 888    888____ /      Y88b  "88__/  888 ~-_  /      Y88b |    Y888    888      ##
+##                                                                                                                 #
+## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+####################################################################################################################
+
 cmake_minimum_required(VERSION 3.8.2)
 project(conflagrant)
 
@@ -103,9 +116,13 @@ set(HH_FILES
         src/conflagrant/assets/Asset.hh
         src/conflagrant/assets/AssetLoader.hh
         src/conflagrant/assets/AssetManager.hh
-        src/conflagrant/assets/Texture2D.hh
+        src/conflagrant/assets/Texture.hh
+        src/conflagrant/assets/loaders/ModelLoader.hh
+        src/conflagrant/assets/loaders/TextureLoader.hh
         src/conflagrant/components/MeshComponent.hh
-        src/conflagrant/geometry/Mesh.hh
+        src/conflagrant/Mesh.hh
+        src/conflagrant/Model.hh
+        src/conflagrant/Material.hh
         src/conflagrant/gl/GlObject.hh
         src/conflagrant/gl/StateGroup.hh
         src/conflagrant/serialization/ReadStream.hh
@@ -123,6 +140,8 @@ set(HH_FILES
         )
 set(CC_FILES
         src/conflagrant/assets/AssetManager.cc
+        src/conflagrant/assets/loaders/ModelLoader.cc
+        src/conflagrant/assets/loaders/TextureLoader.cc
         src/conflagrant/conflagrant.cc
         src/conflagrant/TestGLFW3.cc
         src/conflagrant/CL.cc

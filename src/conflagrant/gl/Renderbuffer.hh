@@ -14,6 +14,10 @@ struct Renderbuffer : public GlObject<GlRenderbufferFactory> {
     GLsizei const width{0}, height{0};
     GLenum const internalFormat;
 
+    inline Renderbuffer(Renderbuffer &&o) noexcept
+            : GlObject<GlRenderbufferFactory>(std::move(o)),
+              width(o.width), height(o.height), internalFormat(o.internalFormat) {}
+
     inline Renderbuffer(GLenum internalFormat, GLsizei width, GLsizei height)
             : width(width), height(height), internalFormat(internalFormat) {
         OGL(glNamedRenderbufferStorage(id, internalFormat, width, height));

@@ -11,11 +11,16 @@ struct GlVertexArrayFactory {
 };
 
 struct VertexArray : public GlObject<GlVertexArrayFactory> {
-    void Bind() const {
+    VertexArray() = default;
+
+    inline VertexArray(VertexArray &&o) noexcept
+            : GlObject<GlVertexArrayFactory>(std::move(o)) {}
+
+    inline void Bind() const {
         OGL(glBindVertexArray(id));
     }
 
-    static void Unbind() const {
+    inline static void Unbind() const {
         OGL(glBindVertexArray(0));
     }
 };

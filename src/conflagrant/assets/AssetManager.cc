@@ -19,7 +19,7 @@ std::shared_ptr<const Asset> AssetManager::InternalLoadAsset(std::string const &
     if ((asset = GetPreloadedAsset(path_)))
         return asset;
 
-    asset = assetLoadersByExtension[extension](path);
+    asset = assetLoadersByExtension[extension](path, *this);
     return loadedAssetsByPath[path_] = asset;
 }
 
