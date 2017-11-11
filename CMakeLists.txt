@@ -119,6 +119,8 @@ include(cmake/EcsConfig.cmake)
 set(HH_FILES
         src/conflagrant/conflagrant.hh
         src/conflagrant/Engine.hh
+        src/conflagrant/ComponentFactory.hh
+        src/conflagrant/SystemFactory.hh
         src/conflagrant/types.hh
         src/conflagrant/GL.hh
         src/conflagrant/CL.hh
@@ -153,6 +155,8 @@ set(HH_FILES
         )
 set(CC_FILES
         src/conflagrant/Engine.cc
+        src/conflagrant/ComponentFactory.cc
+        src/conflagrant/SystemFactory.cc
         src/conflagrant/assets/AssetManager.cc
         src/conflagrant/assets/loaders/ModelLoader.cc
         src/conflagrant/assets/loaders/TextureLoader.cc

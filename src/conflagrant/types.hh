@@ -61,8 +61,4 @@ typedef glm::mat4 mat4;
 
 typedef filesystem::path Path;
 typedef filesystem::resolver PathResolver;
-
-// jsoncpp
-
-typedef Json::Value SceneDescription;
 }

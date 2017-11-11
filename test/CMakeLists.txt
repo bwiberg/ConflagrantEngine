@@ -22,6 +22,7 @@ macro(create_test filename_without_extension)
 endmacro()
 
 #### Create test suites
+create_test(test_Engine)
 create_test(test_Serialization)
 
 #### Create executable with all tests
@@ -31,7 +32,7 @@ include_directories(
         ${CFL_INCLUDE_DIRS}
 )
 
-if (${ALL_TESTS_CC})
+if (ALL_TESTS_CC)
     add_executable(all_tests ${ALL_TESTS_CC})
     target_link_libraries(all_tests
             gtest
