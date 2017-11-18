@@ -7,8 +7,7 @@
 #include <vector>
 
 namespace cfl {
-using assets::Asset;
-
+namespace assets {
 /**
  * @brief CPU representation of a vertex.
  */
@@ -38,4 +37,5 @@ struct Mesh : public Asset {
      */
     std::vector<uvec3> triangles;
 };
+} // namespace assets
 } // namespace cfl

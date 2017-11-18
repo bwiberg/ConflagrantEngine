@@ -23,7 +23,7 @@ public:
         OGL(glBindBuffer(target, id));
     }
 
-    inline static void Unbind(GLenum target) const {
+    inline static void Unbind(GLenum target) {
         OGL(glBindBuffer(target, 0));
     }
 

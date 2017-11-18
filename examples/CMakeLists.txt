@@ -14,8 +14,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 ######################
 
 set(examples
-        example1
-        example2)
+        editor)
 
 foreach (example ${examples})
     if (IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${example}")

@@ -3,6 +3,7 @@
 #include <conflagrant/types.hh>
 #include <conflagrant/GL.hh>
 #include <json/json.h>
+#include <conflagrant/logging.hh>
 
 namespace cfl {
 
@@ -69,5 +70,13 @@ struct Deserializer final {
 
 #define DEFINE_DESERIALIZER(type) template<> bool Serialize<Deserializer>(Json::Value &json, type &value)
 
-#define SERIALIZE(JsonValue, Value) if (!TSerializer::Serialize(JsonValue, Value)) return false
+#define SERIALIZE(JsonValue, Value) if (!TSerializer::Serialize(JsonValue, Value)) { \
+LOG_ERROR(cfl) << "Failed to serialize " << #Value << std::endl; \
+return false; \
+}
+
+#define SERIALIZE_CUSTOM(JsonValue, Value) if (!cfl::Serialize<TSerializer>(JsonValue, Value)) { \
+LOG_ERROR(cfl) << "Failed to serialize " << #Value << std::endl; \
+return false; \
+}
 } // namespace cfl

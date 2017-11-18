@@ -21,7 +21,7 @@ inline void CompileShader(GLuint program, GLenum type, const char *source) {
         std::vector<GLchar> buffer((ulong) length);
         OGL(glGetShaderInfoLog(shader, (GLsizei) buffer.size(), nullptr, buffer.data()));
         OGL(glDeleteShader(shader));
-        std::cerr << "cfl::gl::CompileShader error: " << buffer.data() << std::endl;
+        LOG_ERROR(cfl::gl::CompileShader()) << buffer.data() << std::endl;
         throw std::runtime_error("GLSL failed to compile");
     }
 
@@ -63,7 +63,7 @@ public:
             OGL(glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length));
             std::vector<GLchar> buffer(static_cast<ulong>(length));
             OGL(glGetProgramInfoLog(program, (GLsizei) buffer.size(), nullptr, buffer.data()));
-            std::cerr << "GLSL linkage error: " << buffer.data() << std::endl;
+            LOG_ERROR(cfl::gl::Shader::Shader()) << "GLSL linkage error: " << buffer.data() << std::endl;
             throw std::runtime_error("GLSL linkage failure");
         }
     }

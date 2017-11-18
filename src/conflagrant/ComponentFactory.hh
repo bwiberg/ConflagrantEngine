@@ -33,7 +33,5 @@ struct ConcreteComponentFactory : public ComponentFactory {
 extern std::unordered_map<string, std::shared_ptr<ComponentFactory>> ComponentFactoriesByName;
 
 #define REGISTER_COMPONENT(component_t) cfl::ComponentFactoriesByName[component_t::GetName()] = \
-std::make_shared<cfl::ConcreteComponentFactory<component_t>>()
-
-#define CLEAR_REGISTERED_COMPONENTS() cfl::ComponentFactoriesByName.clear()
+std::static_pointer_cast<cfl::ComponentFactory>(std::make_shared<cfl::ConcreteComponentFactory<component_t>>())
 } // namespace cfl

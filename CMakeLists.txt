@@ -53,6 +53,7 @@ macro(cfl_use_include_dir include_dir)
 endmacro()
 
 macro(cfl_use_library library_name)
+    message(STATUS ${library_name})
     set(EXTERNAL_LIBRARIES ${EXTERNAL_LIBRARIES} ${library_name})
 endmacro()
 
@@ -86,7 +87,7 @@ if (NOT APPLE)
     cfl_use_package(GLEW GLEW_FOUND GLEW_INCLUDE_DIRS GLEW_LIBRARIES)
 endif ()
 cfl_use_package(OpenCL OpenCL_FOUND OpenCL_INCLUDE_DIRS OpenCL_LIBRARIES)
-cfl_use_package(Assimp ASSIMP_FOUND assimp_INCLUDE_DIRS ASSIMP_LIBRARIES)
+cfl_use_package(Assimp ASSIMP_FOUND assimp_INCLUDE_DIRS assimp_LIBRARIES)
 cfl_use_package(JsonCpp JSONCPP_FOUND JSONCPP_INCLUDE_DIRS JSONCPP_LIBRARY)
 
 add_subdirectory(external/entityx)
@@ -118,24 +119,37 @@ include(cmake/EcsConfig.cmake)
 
 set(HH_FILES
         src/conflagrant/conflagrant.hh
+        src/conflagrant/logging.hh
         src/conflagrant/Engine.hh
+        src/conflagrant/Time.hh
         src/conflagrant/ComponentFactory.hh
         src/conflagrant/SystemFactory.hh
         src/conflagrant/types.hh
+        src/conflagrant/events.hh
         src/conflagrant/GL.hh
         src/conflagrant/CL.hh
+        src/conflagrant/Window.hh
+        src/conflagrant/Singleton.hh
         src/conflagrant/assets/Asset.hh
         src/conflagrant/assets/AssetLoader.hh
         src/conflagrant/assets/AssetManager.hh
         src/conflagrant/assets/Texture.hh
         src/conflagrant/assets/loaders/ModelLoader.hh
         src/conflagrant/assets/loaders/TextureLoader.hh
-        src/conflagrant/components/MeshComponent.hh
+        src/conflagrant/components/Mesh.hh
         src/conflagrant/components/Name.hh
         src/conflagrant/components/Guid.hh
-        src/conflagrant/Mesh.hh
-        src/conflagrant/Model.hh
-        src/conflagrant/Material.hh
+        src/conflagrant/components/Model.hh
+        src/conflagrant/components/Transform.hh
+        src/conflagrant/components/PerspectiveCamera.hh
+        src/conflagrant/components/OrthographicCamera.hh
+        src/conflagrant/System.hh
+        src/conflagrant/systems/ForwardRenderer.hh
+        src/conflagrant/systems/CameraController.hh
+        src/conflagrant/systems/TransformUpdater.hh
+        src/conflagrant/assets/Mesh.hh
+        src/conflagrant/assets/Model.hh
+        src/conflagrant/assets/Material.hh
         src/conflagrant/gl/GlObject.hh
         src/conflagrant/gl/StateGroup.hh
         src/conflagrant/assets/loaders/AssimpGlmConvert.hh
@@ -152,18 +166,23 @@ set(HH_FILES
         src/conflagrant/serialization/vector.hh
         src/conflagrant/serialization/crossguid.hh
         src/conflagrant/serialization/glm.hh
+        src/conflagrant/serialization/path.hh
+        src/conflagrant/input.hh
+        src/conflagrant/Input.hh
+        src/conflagrant/glfw/GlfwWindow.hh
         )
 set(CC_FILES
         src/conflagrant/Engine.cc
-        src/conflagrant/ComponentFactory.cc
-        src/conflagrant/SystemFactory.cc
+        src/conflagrant/Time.cc
         src/conflagrant/assets/AssetManager.cc
         src/conflagrant/assets/loaders/ModelLoader.cc
         src/conflagrant/assets/loaders/TextureLoader.cc
         src/conflagrant/conflagrant.cc
-        src/conflagrant/TestGLFW3.cc
         src/conflagrant/CL.cc
         src/conflagrant/GL.cc
+        src/conflagrant/glfw/GlfwWindow.cc
+        src/conflagrant/Input.cc
+        src/conflagrant/Factory.cc
         )
 
 #######################################################################

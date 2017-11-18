@@ -4,11 +4,8 @@
 
 #pragma once
 
-#include <string>
-#include <sstream>
+#include <conflagrant/Engine.hh>
 
 namespace cfl {
-std::string const SayHelloFromExample(int exampleNumber);
-
-int TestGLFW3();
+bool InitDefaults();
 }

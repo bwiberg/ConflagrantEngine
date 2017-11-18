@@ -5,7 +5,8 @@
 #include <conflagrant/assets/Texture.hh>
 
 namespace cfl {
-struct Material : public assets::Asset {
+namespace assets {
+struct Material : public Asset {
     /**
      * The material's diffuse texture. If nullptr, uses a constant #diffuseColor instead.
      */
@@ -29,4 +30,5 @@ struct Material : public assets::Asset {
      */
     float shininess{0};
 };
+} // namespace assets
 } // namespace cfl

@@ -9,14 +9,15 @@ namespace comp {
 struct Name {
     string value;
 
-    friend
+    inline static string const GetName() {
+        return "Name";
+    }
+
     template<typename TSerializer>
-    bool Serialize(Json::Value &json, comp::Name &value);
+    static bool Serialize(Json::Value &json, Name &name) {
+        SERIALIZE(json, name.value);
+        return true;
+    }
 };
 } // namespace comp
-
-template<typename TSerializer>
-bool Serialize(Json::Value &json, comp::Name &name) {
-    SERIALIZE(json, value.value);
-}
 } // namespace cfl

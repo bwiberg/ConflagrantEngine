@@ -6,8 +6,9 @@
 #include "TextureLoader.hh"
 #include "AssimpGlmConvert.hh"
 #include <conflagrant/assets/AssetManager.hh>
-#include <conflagrant/Model.hh>
-#include <conflagrant/Material.hh>
+#include <conflagrant/assets/Model.hh>
+#include <conflagrant/assets/Material.hh>
+#include <conflagrant/logging.hh>
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -17,39 +18,38 @@ namespace cfl {
 namespace assets {
 unsigned int const AssimpFlags = aiProcessPreset_TargetRealtime_MaxQuality;
 
-void ProcessNode(aiNode const *node, aiScene const *scene, Model &model, AssetManager &manager);
+void ProcessNode(aiNode const *node, aiScene const *scene,
+                 std::vector<std::shared_ptr<Material>> const &materials,
+                 Model &model,
+                 Path const &path);
 
 std::shared_ptr<Mesh> LoadMesh(aiMesh const *mesh, aiScene const *scene,
-                               Path const &path,
-                               AssetManager &manager);
+                               Path const &path);
 
 std::shared_ptr<Material> LoadMaterial(aiMaterial const *material, aiScene const *scene,
-                                       Path const &path,
-                                       AssetManager &manager);
+                                       Path const &path);
 
 void ProcessNode(aiNode const *node, aiScene const *scene,
                  std::vector<std::shared_ptr<Material>> const &materials,
                  Model &model,
-                 Path const &path,
-                 AssetManager &manager) {
+                 Path const &path) {
     for (uint i = 0; i < node->mNumMeshes; i++) {
         aiMesh const *aimesh = scene->mMeshes[node->mMeshes[i]];
 
-        auto mesh = LoadMesh(aimesh, scene, path, manager);
+        auto mesh = LoadMesh(aimesh, scene, path);
         auto &material = materials[aimesh->mMaterialIndex];
 
-        model.meshes.emplace_back(mesh, material);
+        model.parts.emplace_back(mesh, material);
     }
 
     // After we've processed all of the meshes (if any) we then recursively process each of the children nodes
     for (GLuint i = 0; i < node->mNumChildren; i++) {
-        ProcessNode(node->mChildren[i], scene, model, manager);
+        ProcessNode(node->mChildren[i], scene, materials, model, path);
     }
 }
 
 std::shared_ptr<Mesh> LoadMesh(aiMesh const *mesh, aiScene const *scene,
-                               Path const &path,
-                               AssetManager &manager) {
+                               Path const &path) {
     std::vector<std::shared_ptr<Texture2D>> textures;
 
     bool const hasTangents = mesh->HasTangentsAndBitangents();
@@ -80,7 +80,7 @@ std::shared_ptr<Mesh> LoadMesh(aiMesh const *mesh, aiScene const *scene,
         aiFace const &face = mesh->mFaces[i];
 
         if (face.mNumIndices != 3) {
-            std::cerr << "cfl::assets::LoadMesh: " << "ERROR" << std::endl;
+            LOG_ERROR(cfl::assets::LoadMesh) << "ERROR" << std::endl;
             return nullptr;
         }
 
@@ -93,11 +93,10 @@ std::shared_ptr<Mesh> LoadMesh(aiMesh const *mesh, aiScene const *scene,
 }
 
 bool TryLoadMaterialProperty(std::shared_ptr<assets::Texture2D> &textureTarget, vec3 &colorTarget,
-                             AssetManager &manager,
                              aiMaterial const *aimtl, aiTextureType const type,
                              char const *propKey, uint const ttype, uint const idx,
                              std::string const typeName) {
-#define RETURN_ERROR(x, y) std::cerr << "cfl::assets::TryLoadMaterialProperty(" << typeName << "): " << (x) << std::endl; \
+#define RETURN_ERROR(x, y) LOG_ERROR(cfl::assets::TryLoadMaterialProperty())<< "typeName=" << typeName << (x) << std::endl; \
     return false;
 
     aiString str;
@@ -115,7 +114,7 @@ bool TryLoadMaterialProperty(std::shared_ptr<assets::Texture2D> &textureTarget, 
             RETURN_ERROR("aiMaterial->GetTexture failed with return value ", ret);
         };
 
-        textureTarget = std::dynamic_pointer_cast<Texture2D>(LoadTexture(filesystem::path(str.C_Str()), manager));
+        textureTarget = std::dynamic_pointer_cast<Texture2D>(LoadTexture(filesystem::path(str.C_Str())));
         return true;
     }
 
@@ -129,19 +128,18 @@ bool TryLoadMaterialProperty(std::shared_ptr<assets::Texture2D> &textureTarget, 
 }
 
 std::shared_ptr<Material> LoadMaterial(aiMaterial const *material, aiScene const *scene,
-                                       Path const &path,
-                                       AssetManager &manager) {
+                                       Path const &path) {
 #undef RETURN_ERROR
-#define RETURN_ERROR(x, y) std::cerr << "cfl::assets::LoadMaterial: " << (x) << std::endl; \
+#define RETURN_ERROR(x, y) LOG_ERROR(cfl::assets::LoadMaterial()) << (x) << std::endl; \
     return nullptr;
     auto mtl = std::make_shared<Material>();
 
     bool succeeded = false;
-    succeeded |= TryLoadMaterialProperty(mtl->diffuseTexture, mtl->diffuseColor, manager,
+    succeeded |= TryLoadMaterialProperty(mtl->diffuseTexture, mtl->diffuseColor,
                                          material, aiTextureType_DIFFUSE, AI_MATKEY_COLOR_DIFFUSE, "diffuse");
-    succeeded |= TryLoadMaterialProperty(mtl->specularTexture, mtl->specularColor, manager,
+    succeeded |= TryLoadMaterialProperty(mtl->specularTexture, mtl->specularColor,
                                          material, aiTextureType_SPECULAR, AI_MATKEY_COLOR_SPECULAR, "specular");
-    succeeded |= TryLoadMaterialProperty(mtl->ambientTexture, mtl->ambientColor, manager,
+    succeeded |= TryLoadMaterialProperty(mtl->ambientTexture, mtl->ambientColor,
                                          material, aiTextureType_AMBIENT, AI_MATKEY_COLOR_AMBIENT, "ambient");
     if (!succeeded) {
         return nullptr;
@@ -155,27 +153,27 @@ std::shared_ptr<Material> LoadMaterial(aiMaterial const *material, aiScene const
     return mtl;
 }
 
-std::shared_ptr<Model> LoadModel(Path const &path, AssetManager &manager) {
+std::shared_ptr<Asset> LoadModel(Path const &path) {
     Assimp::Importer importer;
 
     aiScene const *scene = importer.ReadFile(path.str().c_str(), AssimpFlags);
     if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-        std::cerr << "cfl::assets::LoadModel" << importer.GetErrorString() << std::endl;
+        LOG_ERROR(cfl::assets::LoadModel) << importer.GetErrorString() << std::endl;
         return nullptr;
     }
 
     std::vector<std::shared_ptr<Material>> materials(scene->mNumMaterials);
     for (uint i = 0; i < scene->mNumMaterials; ++i) {
         aiMaterial const *aimaterial = scene->mMaterials[i];
-        materials[i] = LoadMaterial(aimaterial, scene, path, manager);
+        materials[i] = LoadMaterial(aimaterial, scene, path);
     }
 
     auto model = std::make_shared<Model>();
     ProcessNode(scene->mRootNode, scene,
                 materials, *model,
-                path, manager);
+                path);
 
-    return model;
+    return std::static_pointer_cast<Asset>(model);
 }
 } // namespace cfl
 } // namespace assets

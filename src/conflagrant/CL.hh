@@ -5,7 +5,8 @@
 #pragma once
 
 #include <cl/cl.hpp>
-#include <iostream>
+#include <string>
+#include <conflagrant/logging.hh>
 
 namespace cfl {
 /**
@@ -28,11 +29,11 @@ std::string _OpenCLErrorToString(cl_int error);
  * This function is used by the OCL macro to provide debugging information in stdout when an OpenCL API call fails.
  */
 
-inline void _DisplayOpenCLError(cl_int error, std::string command, std::string file, int line) {
+inline void _DisplayOpenCLError(cl_int error, std::string const& command, std::string const& file, int line) {
     if (error != CL_SUCCESS) {
-        std::cerr << "OpenCL Error: " << error << " -- " << _OpenCLErrorToString(error) << std::endl;
-        std::cerr << "Relevant Command: " << command << std::endl;
-        std::cerr << "Location: " << file << " at Line: " << line << std::endl;
+        LOG_ERROR(OpenCL) << error << " -- " << _OpenCLErrorToString(error) << std::endl
+                          << "Relevant Command: " << command << std::endl
+                          << "Location: " << file << " at Line: " << line << std::endl;
     }
 }
 
@@ -49,13 +50,10 @@ inline void _DisplayOpenCLError(cl_int error, std::string command, std::string f
 #endif
 
 #if CFL_DEBUG == 1
-#define OCL_ERROR cl_int *CL_ERROR = new cl_int();
-#else
-#define OCL_ERROR cl_int *CL_ERROR = nullptr;
-#endif
-
-#if CFL_DEBUG == 1
-#define OCL_CHECK(x) x; _DisplayOpenCLError(*CL_ERROR, #x, __FILE__, __LINE__);
+#define OCL_CHECK(x) cl_int *OCL_ERROR = new cl_int(); \
+x; \
+_DisplayOpenCLError(*OCL_ERROR, #x, __FILE__, __LINE__); \
+delete OCL_ERROR;
 #else
 #define OCL_CHECK(x) x;
 #endif

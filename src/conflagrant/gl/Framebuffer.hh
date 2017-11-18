@@ -41,7 +41,7 @@ struct Framebuffer : public GlObject<GlFramebufferFactory> {
 
         // check if framebuffer is complete
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-            std::cerr << "cfl::gl::Framebuffer is incomplete" << std::endl;
+            LOG_ERROR(cfl::gl::Framebuffer::Framebuffer()) << "fbo is incomplete" << std::endl;
         }
 
         Unbind();

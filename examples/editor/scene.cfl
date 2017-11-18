@@ -1,0 +1,70 @@
+{
+  "window": {
+    "dimensions": [
+      640,
+      480
+    ],
+    "title": "Conflagrant Engine: Editor example"
+  },
+  "systems": [
+    {
+      "name": "CameraController"
+    },
+    {
+      "name": "TransformUpdater"
+    },
+    {
+      "name": "ForwardRenderer"
+    }
+  ],
+  "entities": [
+    {
+      "Name": "bunny",
+      "Guid": "c348dfd3-4861-4cc9-8876-c939fd3819a5",
+      "Transform": {
+        "pivot": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "orientation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": 1.0
+      },
+      "Model": "bunny.obj"
+    },
+    {
+      "Name": "ground",
+      "Guid": "a28b2aeb-0e20-48ca-91bb-7655fc9fc791",
+      "Transform": {
+        "pivot": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "orientation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": 1.0
+      },
+      "Model": "quad.obj"
+    }
+  ]
+}

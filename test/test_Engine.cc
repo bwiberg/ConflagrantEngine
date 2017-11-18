@@ -4,24 +4,44 @@
 #include <conflagrant/ComponentFactory.hh>
 #include <conflagrant/SystemFactory.hh>
 
-class EngineTest : public ::testing::Test {
-public:
-    cfl::Engine engine;
+struct DummyWindow : public cfl::Window {
+    void SetFramebufferSizeCallback(FramebufferSizeCallback callback) override {}
 
-protected:
-    void TearDown() override {
-        CLEAR_REGISTERED_COMPONENTS();
-        CLEAR_REGISTERED_SYSTEMS();
+    void SetKeyCallback(KeyCallback callback) override {}
+
+    void SetMouseButtonCallback(MouseButtonCallback callback) override {}
+
+    void SetMousePosCallback(MousePosCallback callback) override {}
+
+    bool MakeContextCurrent() override {
+        return true;
+    }
+
+    bool PollEvents() override {
+        return true;
+    }
+
+    bool SetSwapInterval(int interval) override {
+        return true;
+    }
+
+    bool SwapBuffers() override {
+        return true;
+    }
+
+    cfl::uvec2 GetSize() const override {
+        return cfl::uvec2();
     }
 };
 
 struct CompA {
-    int a;
-    uint count{0};
+    CompA() : a(0), count(0) {}
 
-    inline static cfl::string const &GetName() {
-        static const cfl::string name = "CompA";
-        return name;
+    int a;
+    uint count;
+
+    inline static cfl::string const GetName() {
+        return "CompA";
     }
 
     template<typename TSerializer>
@@ -32,12 +52,13 @@ struct CompA {
 };
 
 struct CompB {
-    std::string a, b;
-    uint count{0};
+    CompB() : a(""), b(""), count(0) {}
 
-    inline static cfl::string const &GetName() {
-        static const cfl::string name = "CompB";
-        return name;
+    std::string a, b;
+    uint count;
+
+    inline static cfl::string const GetName() {
+        return "CompB";
     }
 
     template<typename TSerializer>
@@ -48,7 +69,25 @@ struct CompB {
     }
 };
 
-struct SystemA : public entityx::System<SystemA> {
+struct CompUnregistered {
+    CompUnregistered() : a(""), b(""), count(0) {}
+
+    std::string a, b;
+    uint count;
+
+    inline static cfl::string const GetName() {
+        return "CompUnregistered";
+    }
+
+    template<typename TSerializer>
+    static bool Serialize(Json::Value &json, CompUnregistered &component) {
+        SERIALIZE(json["a"], component.a);
+        SERIALIZE(json["b"], component.b);
+        return true;
+    }
+};
+
+struct SystemA : public cfl::System, public entityx::System<SystemA> {
     void update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) override {
         auto k = entities.entities_with_components<CompA>();
         for (auto e : k) {
@@ -56,9 +95,8 @@ struct SystemA : public entityx::System<SystemA> {
         }
     }
 
-    inline static cfl::string const &GetName() {
-        static const cfl::string name = "SystemA";
-        return name;
+    inline static cfl::string const GetName() {
+        return "SystemA";
     }
 
     template<typename TSerializer>
@@ -68,7 +106,7 @@ struct SystemA : public entityx::System<SystemA> {
     }
 };
 
-struct SystemAB : public entityx::System<SystemAB> {
+struct SystemAB : public cfl::System, public entityx::System<SystemAB> {
     void update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) override {
         auto k = entities.entities_with_components<CompA, CompB>();
         for (auto e : k) {
@@ -77,9 +115,8 @@ struct SystemAB : public entityx::System<SystemAB> {
         }
     }
 
-    inline static cfl::string const &GetName() {
-        static const cfl::string name = "SystemAB";
-        return name;
+    inline static cfl::string const GetName() {
+        return "SystemAB";
     }
 
     template<typename TSerializer>
@@ -87,6 +124,35 @@ struct SystemAB : public entityx::System<SystemAB> {
         json["name"] = GetName();
         return true;
     }
+};
+
+struct SystemUnregistered : public cfl::System, public entityx::System<SystemUnregistered> {
+    void update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) override {
+    }
+
+    inline static cfl::string const GetName() {
+        return "SystemUnregistered";
+    }
+
+    template<typename TSerializer>
+    static bool Serialize(Json::Value &json, SystemUnregistered &name) {
+        json["name"] = GetName();
+        return true;
+    }
+};
+
+class EngineTest : public ::testing::Test {
+public:
+    EngineTest() : engine(window = std::static_pointer_cast<cfl::Window>(std::make_shared<DummyWindow>())) {
+        REGISTER_SYSTEM(SystemA);
+        REGISTER_SYSTEM(SystemAB);
+
+        REGISTER_COMPONENT(CompA);
+        REGISTER_COMPONENT(CompB);
+    }
+
+    cfl::Engine engine;
+    std::shared_ptr<cfl::Window> window;
 };
 
 TEST_F(EngineTest, LoadScene_Function_Works) {
@@ -113,7 +179,7 @@ TEST_F(EngineTest, LoadScene_Function_Works) {
         return true;
     }));
 
-    engine.RunOnce();
+    engine.Run(true);
 
     auto em = engine.GetEntityManager();
     EXPECT_EQ(3, em->size());
@@ -128,55 +194,11 @@ TEST_F(EngineTest, LoadScene_Function_Works) {
     }
 }
 
-TEST_F(EngineTest, LoadScene_Json_ComponentsAndSystemsRegistered_Works) {
-    REGISTER_COMPONENT(CompA);
-    REGISTER_COMPONENT(CompB);
-
-    REGISTER_SYSTEM(SystemA);
-    REGISTER_SYSTEM(SystemAB);
-
-    std::istringstream ss(R"(
-{
-    "systems": [
-        {"name": "SystemA"}, {"name": "SystemAB"}
-    ],
-    "entities": [
-        {"CompA": {"a": -1}, "CompB": {"a": "hello", "b": "world"}},
-        {"CompA": {"a": 1337}}
-    ]
-}
-)");
-    Json::Value json;
-    ss >> json;
-
-    EXPECT_TRUE(engine.LoadScene(json));
-
-    EXPECT_TRUE(!!engine.GetSystemManager()->system<SystemA>());
-    EXPECT_TRUE(!!engine.GetSystemManager()->system<SystemAB>());
-
-    EXPECT_EQ(2, engine.GetEntityManager()->size());
-    auto es = engine.GetEntityManager()->entities_for_debugging();
-    for (auto e : es) {
-        if (e.has_component<CompA>() && e.has_component<CompB>()) {
-            auto a = e.component<CompA>();
-            EXPECT_EQ(-1, a->a);
-
-            auto b = e.component<CompB>();
-            EXPECT_EQ("hello", b->a);
-            EXPECT_EQ("world", b->b);
-        } else {
-            auto a = e.component<CompA>();
-            EXPECT_TRUE(a);
-            EXPECT_EQ(1337, a->a);
-        }
-    }
-}
-
-TEST_F(EngineTest, LoadScene_Json_ComponentsNotRegistered_Fails) {
+TEST_F(EngineTest, LoadScene_Json_ComponentNotRegistered_Fails) {
     std::istringstream ss(R"(
 {
     "entities": [
-        {"CompA": {"a": -1}, "CompB": {"a": "hello", "b": "world"}},
+        {"CompA": {"a": -1}, "CompUnregistered": {"a": "hello", "b": "world"}},
         {"CompA": {"a": 1337}}
     ]
 }
@@ -187,11 +209,11 @@ TEST_F(EngineTest, LoadScene_Json_ComponentsNotRegistered_Fails) {
     EXPECT_FALSE(engine.LoadScene(json));
 }
 
-TEST_F(EngineTest, LoadScene_Json_SystemsNotRegistered_Fails) {
+TEST_F(EngineTest, LoadScene_Json_SystemNotRegistered_Fails) {
     std::istringstream ss(R"(
 {
     "systems": [
-        {"name": "SystemA"}, {"name": "SystemAB"}
+        {"name": "SystemA"}, {"name": "SystemAB"}, {"name": "SystemUnregistered"}
     ]
 }
 )");
@@ -202,12 +224,6 @@ TEST_F(EngineTest, LoadScene_Json_SystemsNotRegistered_Fails) {
 }
 
 TEST_F(EngineTest, LoadScene_SaveScene_ReturnsSame) {
-    REGISTER_COMPONENT(CompA);
-    REGISTER_COMPONENT(CompB);
-
-    REGISTER_SYSTEM(SystemA);
-    REGISTER_SYSTEM(SystemAB);
-
     std::istringstream ss(R"(
 {
     "entities": [

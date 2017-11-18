@@ -57,6 +57,8 @@ typedef glm::mat2 mat2;
 typedef glm::mat3 mat3;
 typedef glm::mat4 mat4;
 
+typedef glm::quat quat;
+
 // external/filesystem
 
 typedef filesystem::path Path;

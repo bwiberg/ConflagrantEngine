@@ -5,10 +5,10 @@
 #pragma once
 
 #include <conflagrant/assets/AssetLoader.hh>
-#include <conflagrant/Model.hh>
+#include <conflagrant/assets/Model.hh>
 
 namespace cfl {
 namespace assets {
-std::shared_ptr<Model> LoadModel(Path const &path, AssetManager &manager);
+std::shared_ptr<Asset> LoadModel(Path const &path);
 } // namespace assets
 } // namespace cfl

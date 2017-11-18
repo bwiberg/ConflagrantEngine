@@ -17,6 +17,7 @@
 #endif
 
 #include <iostream>
+#include <conflagrant/logging.hh>
 
 namespace cfl {
 /**
@@ -39,12 +40,12 @@ std::string _OpenGLErrorToString(GLenum err);
  * This function is used by the OGL macro to provide debugging information in stdout when an OpenGL API call fails.
  */
 
-inline void _DisplayOpenGLError(std::string command, std::string file, int line) {
-    GLenum err = glGetError();
-    if (err != GL_NO_ERROR) {
-        std::cerr << "OpenGL Error: " << err << " -- " << _OpenGLErrorToString(err) << std::endl;
-        std::cerr << "Relevant Command: " << command << std::endl;
-        std::cerr << "Location: " << file << " at Line: " << line << std::endl;
+inline void _DisplayOpenGLError(std::string const& command, std::string const& file, int line) {
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        LOG_ERROR(OpenGL) << error << " -- " << _OpenGLErrorToString(error) << std::endl
+                          << "Relevant Command: " << command << std::endl
+                          << "Location: " << file << " at Line: " << line << std::endl;
     }
 }
 

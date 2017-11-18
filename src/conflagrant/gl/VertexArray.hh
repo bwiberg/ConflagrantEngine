@@ -20,7 +20,7 @@ struct VertexArray : public GlObject<GlVertexArrayFactory> {
         OGL(glBindVertexArray(id));
     }
 
-    inline static void Unbind() const {
+    inline static void Unbind() {
         OGL(glBindVertexArray(0));
     }
 };

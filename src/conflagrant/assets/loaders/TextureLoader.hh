@@ -4,6 +4,6 @@
 
 namespace cfl {
 namespace assets {
-std::shared_ptr<Asset> LoadTexture(Path const &path, AssetManager &manager);
+std::shared_ptr<Asset> LoadTexture(Path const &path);
 } // namespace assets
 } // namespace cfl

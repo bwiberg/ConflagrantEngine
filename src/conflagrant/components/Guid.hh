@@ -11,15 +11,14 @@ namespace comp {
 struct Guid {
     xg::Guid value;
 
-    friend
+    inline static string const GetName() {
+        return "Guid";
+    }
+
     template<typename TSerializer>
-    bool Serialize(Json::Value &json, comp::Guid &guid);
+    static bool Serialize(Json::Value &json, comp::Guid &guid) {
+        return cfl::Serialize<TSerializer>(json, guid.value);
+    }
 };
 } // namespace comp
-
-template<typename TSerializer>
-bool Serialize(Json::Value &json, comp::Guid &guid) {
-    SERIALIZE(json, guid);
-}
-
 } // namespace cfl

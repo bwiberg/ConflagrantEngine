@@ -44,7 +44,7 @@ public:
         vertexBuffer.BufferData(size, data, usage);
     }
 
-    inline void BufferIndexData(GLenum type, GLsizeiptr count, const GLvoid *data, GLenum usage,
+    inline void BufferIndexData(GLenum type, GLsizeiptr count, GLvoid const *data, GLenum usage,
                                 GLenum mode = GL_TRIANGLES) {
         size_t size = sizeof_gltype(type);
         indexBuffer.BufferData(size * count, data, usage);
@@ -56,7 +56,7 @@ public:
     inline void Attribute(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride,
                           GLvoid const *offset) {
         OGL(glEnableVertexArrayAttrib(vao, index));
-        OGL(glVertexAttribPointer(index, size, type, normalized, stride, (GLintptr) offset));
+        OGL(glVertexAttribPointer(index, size, type, normalized, stride, offset));
         vertexStride = stride;
     }
 

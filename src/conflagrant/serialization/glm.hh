@@ -83,4 +83,14 @@ bool Serialize(Json::Value &json, glm::tmat4x4<T, P> &value) {
 
     return true;
 };
+
+template<typename TSerializer, typename T, glm::precision P>
+bool Serialize(Json::Value &json, glm::tquat<T, P> &quat) {
+    SERIALIZE(json[0], quat[0]);
+    SERIALIZE(json[1], quat[1]);
+    SERIALIZE(json[2], quat[2]);
+    SERIALIZE(json[3], quat[3]);
+
+    return true;
+};
 } // namespace cfl

@@ -8,6 +8,6 @@ namespace cfl {
 namespace assets {
 class AssetManager;
 
-typedef std::shared_ptr<Asset> (*AssetLoader)(Path const &path, AssetManager &manager);
+typedef std::shared_ptr<Asset> (*AssetLoader)(Path const &path);
 } // namespace assets
 } // namespace cfl
