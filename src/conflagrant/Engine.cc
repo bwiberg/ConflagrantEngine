@@ -9,7 +9,7 @@ namespace cfl {
 Engine::Engine(std::shared_ptr<Window> window)
         : window(window) {
     assert(window != nullptr);
-    input = std::make_shared<Input>(window);
+    input = std::make_shared<InputManager>(window);
 }
 
 Engine::~Engine() {

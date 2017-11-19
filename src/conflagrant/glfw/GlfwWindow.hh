@@ -32,7 +32,7 @@ class GlfwWindow final : public Window {
 
     static void GlfwCursorPosCallback(GLFWwindow *w, double x, double y);
 
-    FramebufferSizeCallback framebufferSizeCallback;
+    // FramebufferSizeCallback framebufferSizeCallback;
     KeyCallback keyCallback;
     MouseButtonCallback mouseButtonCallback;
     MousePosCallback mousePosCallback;
@@ -48,7 +48,7 @@ public:
 
     ~GlfwWindow() final;
 
-    void SetFramebufferSizeCallback(FramebufferSizeCallback callback) override;
+    // void SetFramebufferSizeCallback(FramebufferSizeCallback callback) override;
 
     void SetKeyCallback(KeyCallback callback) override;
 

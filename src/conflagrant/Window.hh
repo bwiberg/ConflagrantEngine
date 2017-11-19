@@ -10,7 +10,7 @@ using namespace input;
 
 struct Window {
     typedef std::function<void(Key, KeyAction, ModifierSet const &)> KeyCallback;
-    typedef std::function<void(uint, uint)> FramebufferSizeCallback;
+    // typedef std::function<void(uint, uint)> FramebufferSizeCallback;
     typedef std::function<void(MouseButton, MouseAction, ModifierSet const &)> MouseButtonCallback;
     typedef std::function<void(double, double)> MousePosCallback;
 
@@ -18,9 +18,9 @@ struct Window {
         return [](Key a, KeyAction b, ModifierSet const &c) {};
     };
 
-    inline static FramebufferSizeCallback const NoopFramebufferSizeCallback() {
-        return [](uint a, uint b) {};
-    };
+    // inline static FramebufferSizeCallback const NoopFramebufferSizeCallback() {
+    //     return [](uint a, uint b) {};
+    // };
 
     inline static MouseButtonCallback const NoopMouseButtonCallback() {
         return [](MouseButton a, MouseAction b, ModifierSet const &c) {};
@@ -32,7 +32,7 @@ struct Window {
 
     virtual ~Window() = default;
 
-    virtual void SetFramebufferSizeCallback(FramebufferSizeCallback callback) = 0;
+    // virtual void SetFramebufferSizeCallback(FramebufferSizeCallback callback) = 0;
 
     virtual void SetKeyCallback(KeyCallback callback) = 0;
 

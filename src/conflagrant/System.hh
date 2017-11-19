@@ -3,14 +3,14 @@
 #include <conflagrant/types.hh>
 #include <conflagrant/GL.hh>
 
-#include "Input.hh"
+#include "InputManager.hh"
 
 namespace cfl {
 struct System {
     /**
      * Assigned by cfl::Engine.
      */
-    std::shared_ptr<Input const> input{nullptr};
+    std::shared_ptr<InputManager const> input{nullptr};
 
     /**
      * assigned by cfl::Engine.

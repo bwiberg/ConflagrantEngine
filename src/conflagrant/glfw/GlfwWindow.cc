@@ -194,9 +194,9 @@ GlfwWindow::~GlfwWindow() {
     glfwDestroyWindow(window);
 }
 
-void GlfwWindow::SetFramebufferSizeCallback(Window::FramebufferSizeCallback callback) {
-    framebufferSizeCallback = callback;
-}
+//void GlfwWindow::SetFramebufferSizeCallback(Window::FramebufferSizeCallback callback) {
+//    framebufferSizeCallback = callback;
+//}
 
 void GlfwWindow::SetKeyCallback(Window::KeyCallback callback) {
     keyCallback = callback;
@@ -262,7 +262,7 @@ void GlfwWindow::GlfwFramebufferSizeCallback(GLFWwindow *w, int width, int heigh
     win->width = static_cast<uint>(width);
     win->height = static_cast<uint>(height);
 
-    win->framebufferSizeCallback(win->width, win->height);
+    // win->framebufferSizeCallback(win->width, win->height);
 }
 
 void GlfwWindow::GlfwKeyCallback(GLFWwindow *w, int button, int scancode, int action, int glfwModifierBits) {

@@ -168,7 +168,7 @@ set(HH_FILES
         src/conflagrant/serialization/glm.hh
         src/conflagrant/serialization/path.hh
         src/conflagrant/input.hh
-        src/conflagrant/Input.hh
+        src/conflagrant/InputManager.hh
         src/conflagrant/glfw/GlfwWindow.hh
         )
 set(CC_FILES
@@ -181,7 +181,7 @@ set(CC_FILES
         src/conflagrant/CL.cc
         src/conflagrant/GL.cc
         src/conflagrant/glfw/GlfwWindow.cc
-        src/conflagrant/Input.cc
+        src/conflagrant/InputManager.cc
         src/conflagrant/Factory.cc
         )
 

@@ -13,7 +13,7 @@ namespace input {
 #define LENGTH_OF_ENUM(enum_name) NUM_ENUM_ENTRIES_ ## enum_name
 
 enum class Modifier {
-    SHIFT,
+    SHIFT = 0,
     CONTROL,
     ALT,
     SUPER,
@@ -27,7 +27,7 @@ struct ModifierSet {
 };
 
 enum class Key {
-    SPACE,
+    SPACE = 0,
     APOSTROPHE,
     COMMA,
     MINUS,
@@ -74,14 +74,14 @@ enum class Key {
 };
 
 enum class KeyAction {
-    PRESS,
+    PRESS = 0,
     REPEAT,
     RELEASE,
     LENGTH_OF_ENUM(KeyAction) // should equal the number of entries in the enum
 };
 
 enum class MouseButton {
-    BUTTON_1,
+    BUTTON_1 = 0,
     BUTTON_2,
     BUTTON_3,
     BUTTON_4,
@@ -97,7 +97,7 @@ enum class MouseButton {
 };
 
 enum class MouseAction {
-    PRESS,
+    PRESS = 0,
     RELEASE,
     LENGTH_OF_ENUM(MouseAction) // should equal the number of entries in the enum
 };
@@ -107,9 +107,11 @@ enum class MouseAction {
 ///////////////////////////////
 
 enum class Axis {
-    HORIZONTAL,
+    HORIZONTAL = 0,
     VERTICAL,
     LENGTH_OF_ENUM(Axis) // should equal the number of entries in the enum
 };
+
+#undef LENGTH_OF_ENUM
 }
 } // namespace cfl

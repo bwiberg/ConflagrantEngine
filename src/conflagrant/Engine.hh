@@ -5,7 +5,7 @@
 #include <conflagrant/Window.hh>
 #include <conflagrant/assets/AssetManager.hh>
 #include <entityx/entityx.h>
-#include <conflagrant/Input.hh>
+#include <conflagrant/InputManager.hh>
 #include <conflagrant/System.hh>
 
 namespace cfl {
@@ -24,7 +24,7 @@ class Engine {
 
     std::shared_ptr<Window> const window;
 
-    std::shared_ptr<Input> input;
+    std::shared_ptr<InputManager> input;
 
     std::shared_ptr<assets::AssetManager> assets;
 
