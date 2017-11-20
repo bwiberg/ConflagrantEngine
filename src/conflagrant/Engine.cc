@@ -13,7 +13,7 @@ Engine::Engine(std::shared_ptr<Window> window)
 }
 
 Engine::~Engine() {
-
+    entities->reset();
 }
 
 bool Engine::LoadScene(string const &pathToJson) {
@@ -229,6 +229,10 @@ int Engine::Run(bool singleTimestep) {
     shouldStop = singleTimestep;
     do {
         if (input) input->ProcessInput();
+
+        if (input->GetKey(Key::ESCAPE)) {
+            break;
+        }
 
         systems->update_all(0);
 
