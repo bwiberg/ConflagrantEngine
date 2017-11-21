@@ -49,5 +49,9 @@ struct Window {
     virtual bool SwapBuffers() = 0;
 
     virtual uvec2 GetSize() const = 0;
+
+    virtual double GetTime() const = 0;
+
+    virtual bool SetTime(double time) = 0;
 };
 } // namespace cfl

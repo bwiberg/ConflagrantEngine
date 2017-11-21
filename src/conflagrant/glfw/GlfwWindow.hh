@@ -65,5 +65,9 @@ public:
     bool SwapBuffers() override;
 
     uvec2 GetSize() const override;
+
+    double GetTime() const override;
+
+    bool SetTime(double time) override;
 };
 } // namespace cfl

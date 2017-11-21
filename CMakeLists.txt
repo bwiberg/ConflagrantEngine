@@ -180,6 +180,7 @@ set(CC_FILES
         src/conflagrant/glfw/GlfwWindow.cc
         src/conflagrant/InputManager.cc
         src/conflagrant/Factory.cc
+        src/conflagrant/systems/ForwardRenderer.cc
         )
 
 #######################################################################

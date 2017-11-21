@@ -316,6 +316,15 @@ uvec2 GlfwWindow::GetSize() const {
     return uvec2(width, height);
 }
 
+double GlfwWindow::GetTime() const {
+    return glfwGetTime();
+}
+
+bool GlfwWindow::SetTime(double time) {
+    GLFW_RETURN_FALSE(glfwSetTime(time));
+    return true;
+}
+
 GlfwModifierSet::GlfwModifierSet(int glfwModifierBits)
         : glfwModifierBits(glfwModifierBits) {}
 

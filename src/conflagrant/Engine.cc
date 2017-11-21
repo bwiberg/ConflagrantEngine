@@ -1,4 +1,5 @@
 #include "Engine.hh"
+#include "Time.hh"
 
 #include <conflagrant/ComponentFactory.hh>
 #include <conflagrant/SystemFactory.hh>
@@ -227,9 +228,12 @@ bool Engine::CreateEntity(Json::Value &jsonEntity) {
 
 int Engine::Run(bool singleTimestep) {
     shouldStop = singleTimestep;
+    window->SetTime(0);
+    Time::previousFrameTime = Time::currentFrameTime = 0;
     do {
+        Time::previousFrameTime = Time::currentFrameTime;
+        Time::currentFrameTime = window->GetTime();
         if (input) input->ProcessInput();
-
         if (input->GetKey(Key::ESCAPE)) {
             break;
         }

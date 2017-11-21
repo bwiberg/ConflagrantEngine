@@ -62,5 +62,9 @@ public:
     bool GetKeyDown(input::Key key) const;
 
     bool GetKeyUp(input::Key key) const;
+
+    std::vector<input::Key> GetAllKeys_Slow() const;
+
+    std::vector<input::MouseButton> GetAllMouseButtons() const;
 };
 } // namespace cfl

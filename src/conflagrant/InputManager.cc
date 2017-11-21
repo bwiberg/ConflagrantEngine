@@ -39,7 +39,7 @@ InputManager::InputManager(std::shared_ptr<Window> &window) : window(window) {
                 mouseButtonStates[static_cast<int>(button)] = State::PRESSED;
                 return;
             case input::MouseAction::RELEASE:
-                mouseButtonStates[static_cast<int>(button)] = State::HELD_DOWN;
+                mouseButtonStates[static_cast<int>(button)] = State::RELEASED;
                 return;
             default:
                 LOG_ERROR(cfl::InputManager::<lambda> SetMouseButtonCallback)
@@ -132,5 +132,33 @@ bool InputManager::GetKeyDown(input::Key key) const {
 
 bool InputManager::GetKeyUp(input::Key key) const {
     return keyStates[static_cast<int>(key)] == State::RELEASED;
+}
+
+std::vector<input::Key> InputManager::GetAllKeys_Slow() const {
+    unsigned long constexpr GuessMaxKeysHeld = 6;
+    std::vector<input::Key> keys(0);
+    keys.reserve(GuessMaxKeysHeld);
+
+    for (int i = 0; i < keyStates.size(); ++i) {
+        if (keyStates[i] == State::PRESSED || keyStates[i] == State::HELD_DOWN) {
+            keys.push_back(static_cast<input::Key>(i));
+        }
+    }
+
+    return keys;
+}
+
+std::vector<input::MouseButton> InputManager::GetAllMouseButtons() const {
+    unsigned long constexpr GuessMaxMouseButtonsHeld = 2;
+    std::vector<MouseButton> mouseButtons(0);
+    mouseButtons.reserve(GuessMaxMouseButtonsHeld);
+
+    for (int i = 0; i < mouseButtonStates.size(); ++i) {
+        if (mouseButtonStates[i] == State::PRESSED || mouseButtonStates[i] == State::HELD_DOWN) {
+            mouseButtons.push_back(static_cast<MouseButton>(i));
+        }
+    }
+
+    return mouseButtons;
 }
 } // namespace cfl
