@@ -1,5 +1,13 @@
 #include "GlfwWindow.hh"
 
+#ifndef GLFW_TRUE
+#define GLFW_TRUE 1
+#endif
+
+#ifndef GLFW_FALSE
+#define GLFW_FALSE 0
+#endif
+
 namespace cfl {
 using namespace input;
 

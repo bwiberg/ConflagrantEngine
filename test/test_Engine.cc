@@ -5,8 +5,6 @@
 #include <conflagrant/SystemFactory.hh>
 
 struct DummyWindow : public cfl::Window {
-    void SetFramebufferSizeCallback(FramebufferSizeCallback callback) override {}
-
     void SetKeyCallback(KeyCallback callback) override {}
 
     void SetMouseButtonCallback(MouseButtonCallback callback) override {}

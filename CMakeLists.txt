@@ -53,7 +53,6 @@ macro(cfl_use_include_dir include_dir)
 endmacro()
 
 macro(cfl_use_library library_name)
-    message(STATUS ${library_name})
     set(EXTERNAL_LIBRARIES ${EXTERNAL_LIBRARIES} ${library_name})
 endmacro()
 
@@ -83,9 +82,7 @@ cfl_use_library(${OPENGL_gl_LIBRARY})
 cfl_use_library(${OPENGL_glu_LIBRARY})
 
 cfl_use_package(GLM GLM_FOUND GLM_INCLUDE_DIRS "")
-if (NOT APPLE)
-    cfl_use_package(GLEW GLEW_FOUND GLEW_INCLUDE_DIRS GLEW_LIBRARIES)
-endif ()
+cfl_use_package(GLEW GLEW_FOUND GLEW_INCLUDE_DIRS GLEW_LIBRARIES)
 cfl_use_package(OpenCL OpenCL_FOUND OpenCL_INCLUDE_DIRS OpenCL_LIBRARIES)
 cfl_use_package(Assimp ASSIMP_FOUND assimp_INCLUDE_DIRS assimp_LIBRARIES)
 cfl_use_package(JsonCpp JSONCPP_FOUND JSONCPP_INCLUDE_DIRS JSONCPP_LIBRARY)

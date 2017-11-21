@@ -4,16 +4,17 @@
 
 #pragma once
 
+#include <GL/glew.h>
+
 #ifdef __APPLE__
 #include <OpenGL/gl3.h>
 #include <OpenGL/glu.h>
 #include <OpenGL/glext.h>
 #include <GLUT/glut.h>
 #elif __linux__
-#include <GL/glew.h>
 #include <GL/gl.h>
 #elif __MINGW32__ || __MINGW64__
-#include <GL/glew.h>
+// #include <GL/glew.h>
 #endif
 
 #include <iostream>
