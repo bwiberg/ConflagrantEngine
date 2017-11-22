@@ -44,7 +44,7 @@ bool Engine::LoadScene(string const &pathToJson) {
     assets::AssetManager::AddAssetsPath(defaultAssetsPath);
 
     return LoadScene([this, &json, &jsonDirectory](std::shared_ptr<entityx::EntityManager> entities,
-                         std::shared_ptr<entityx::SystemManager> systems) {
+                                                   std::shared_ptr<entityx::SystemManager> systems) {
         if (!json.isObject()) {
             RETURN_ERROR("Json is not an object.");
         }
@@ -97,7 +97,7 @@ bool Engine::LoadScene(string const &pathToJson) {
 bool Engine::LoadScene(Json::Value &json) {
 #define RETURN_ERROR(message) LOG_ERROR(cfl::Engine::LoadScene) << (message) << std::endl; return false;
     return LoadScene([this, &json](std::shared_ptr<entityx::EntityManager> entities,
-                         std::shared_ptr<entityx::SystemManager> systems) {
+                                   std::shared_ptr<entityx::SystemManager> systems) {
         if (!json.isObject()) {
             RETURN_ERROR("Json is not an object.");
         }
@@ -233,14 +233,17 @@ int Engine::Run(bool singleTimestep) {
     do {
         Time::previousFrameTime = Time::currentFrameTime;
         Time::currentFrameTime = window->GetTime();
-        if (input) input->ProcessInput();
-        if (input->GetKey(Key::ESCAPE)) {
-            break;
+
+        if (input) {
+            input->ProcessInput();
+            if (input->GetKey(Key::ESCAPE)) {
+                break;
+            }
         }
 
+        if (window) window->BeginFrame();
         systems->update_all(0);
-
-        if (window) window->SwapBuffers();
+        if (window) window->FinishFrame();
 
     } while (!shouldStop);
 

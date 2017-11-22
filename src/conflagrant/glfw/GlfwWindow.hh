@@ -18,6 +18,8 @@ struct GlfwModifierSet : public input::ModifierSet {
 };
 
 class GlfwWindow final : public Window {
+    GlfwWindow() = default;
+
     static bool InitHasBeenCalled;
 
     GLFWwindow *window;
@@ -32,6 +34,10 @@ class GlfwWindow final : public Window {
 
     static void GlfwCursorPosCallback(GLFWwindow *w, double x, double y);
 
+    static void GlfwScrollCallback(GLFWwindow *w, double xoffset, double yoffset);
+
+    static void GlfwCharCallback(GLFWwindow *w, unsigned int c);
+
     // FramebufferSizeCallback framebufferSizeCallback;
     KeyCallback keyCallback;
     MouseButtonCallback mouseButtonCallback;
@@ -43,8 +49,6 @@ public:
     static std::shared_ptr<GlfwWindow> Create(uint width = 640,
                                               uint height = 480,
                                               string title = "Conflagrant");
-
-    GlfwWindow() = default;
 
     ~GlfwWindow() final;
 
@@ -62,7 +66,9 @@ public:
 
     bool SetSwapInterval(int interval) override;
 
-    bool SwapBuffers() override;
+    bool BeginFrame() override;
+
+    bool FinishFrame() override;
 
     uvec2 GetSize() const override;
 

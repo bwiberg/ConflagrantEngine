@@ -1,5 +1,8 @@
 #include "GlfwWindow.hh"
 
+#include <imgui.h>
+#include "imgui_impl_glfw_gl3.h"
+
 #ifndef GLFW_TRUE
 #define GLFW_TRUE 1
 #endif
@@ -200,6 +203,7 @@ returnStatement; \
 
 GlfwWindow::~GlfwWindow() {
     glfwDestroyWindow(window);
+    ImGui_ImplGlfwGL3_Shutdown();
 }
 
 //void GlfwWindow::SetFramebufferSizeCallback(Window::FramebufferSizeCallback callback) {
@@ -250,7 +254,9 @@ std::shared_ptr<GlfwWindow> GlfwWindow::Create(uint width, uint height, string t
         return nullptr;
     }
 
-    auto ret = std::make_shared<GlfwWindow>();
+    ImGui_ImplGlfwGL3_Init(window, false);
+
+    auto ret = std::shared_ptr<GlfwWindow>(new GlfwWindow);
     ret->window = window;
     ret->width = width;
     ret->height = height;
@@ -261,6 +267,8 @@ std::shared_ptr<GlfwWindow> GlfwWindow::Create(uint width, uint height, string t
     GLFW_RETURN_NULLPTR(glfwSetKeyCallback(window, GlfwKeyCallback));
     GLFW_RETURN_NULLPTR(glfwSetMouseButtonCallback(window, GlfwMouseButtonCallback));
     GLFW_RETURN_NULLPTR(glfwSetCursorPosCallback(window, GlfwCursorPosCallback));
+    GLFW_RETURN_NULLPTR(glfwSetCharCallback(window, GlfwCharCallback));
+    GLFW_RETURN_NULLPTR(glfwSetScrollCallback(window, GlfwScrollCallback));
 
     return ret;
 }
@@ -278,6 +286,8 @@ void GlfwWindow::GlfwKeyCallback(GLFWwindow *w, int button, int scancode, int ac
             ->keyCallback(KeysByGlfwCode[button],
                           KeyActionsByGlfwCode[action],
                           GlfwModifierSet(glfwModifierBits));
+
+    ImGui_ImplGlfwGL3_KeyCallback(button, scancode, action, glfwModifierBits);
 }
 
 void GlfwWindow::GlfwMouseButtonCallback(GLFWwindow *w, int button, int action, int glfwModifierBits) {
@@ -285,6 +295,8 @@ void GlfwWindow::GlfwMouseButtonCallback(GLFWwindow *w, int button, int action, 
             ->mouseButtonCallback(MouseButtonsByGlfwCode[button],
                                   MouseActionsByGlfwCode[action],
                                   GlfwModifierSet(glfwModifierBits));
+
+    ImGui_ImplGlfwGL3_MouseButtonCallback(button, action, glfwModifierBits);
 }
 
 void GlfwWindow::GlfwCursorPosCallback(GLFWwindow *w, double x, double y) {
@@ -292,8 +304,23 @@ void GlfwWindow::GlfwCursorPosCallback(GLFWwindow *w, double x, double y) {
             ->mousePosCallback(x, y);
 }
 
+void GlfwWindow::GlfwScrollCallback(GLFWwindow *w, double xoffset, double yoffset) {
+    ImGui_ImplGlfwGL3_ScrollCallback(xoffset, yoffset);
+}
+
+void GlfwWindow::GlfwCharCallback(GLFWwindow *w, unsigned int c) {
+    ImGui_ImplGlfwGL3_CharCallback(c);
+}
+
 bool GlfwWindow::MakeContextCurrent() {
     GLFW_RETURN_FALSE(glfwMakeContextCurrent(window));
+
+    glewExperimental = GL_TRUE;
+    if (glewInit()) {
+        LOG_ERROR(glewInit) << "Did not return GL_TRUE" << std::endl;
+        return false;
+    }
+
     return true;
 }
 
@@ -307,7 +334,13 @@ bool GlfwWindow::SetSwapInterval(int interval) {
     return true;
 }
 
-bool GlfwWindow::SwapBuffers() {
+bool GlfwWindow::BeginFrame() {
+    ImGui_ImplGlfwGL3_NewFrame();
+    return false;
+}
+
+bool GlfwWindow::FinishFrame() {
+    ImGui::Render();
     GLFW_RETURN_FALSE(glfwSwapBuffers(window));
     return true;
 }

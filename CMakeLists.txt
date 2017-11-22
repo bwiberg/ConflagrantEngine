@@ -94,6 +94,10 @@ cfl_use_include_dir(${CMAKE_CURRENT_SOURCE_DIR}/external/entityx)
 add_subdirectory(external/crossguid)
 cfl_use_library(xg)
 
+add_subdirectory(external/imgui)
+cfl_use_include_dir(external/imgui)
+cfl_use_library(imgui)
+
 cfl_use_include_dir(external)
 
 include_directories(${EXTERNAL_INCLUDE_DIRS})
@@ -167,6 +171,7 @@ set(HH_FILES
         src/conflagrant/input.hh
         src/conflagrant/InputManager.hh
         src/conflagrant/glfw/GlfwWindow.hh
+        src/conflagrant/glfw/imgui_impl_glfw_gl3.h
         )
 set(CC_FILES
         src/conflagrant/Engine.cc
@@ -181,6 +186,7 @@ set(CC_FILES
         src/conflagrant/InputManager.cc
         src/conflagrant/Factory.cc
         src/conflagrant/systems/ForwardRenderer.cc
+        src/conflagrant/glfw/imgui_impl_glfw_gl3.cpp
         )
 
 #######################################################################

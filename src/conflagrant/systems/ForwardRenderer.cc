@@ -1,7 +1,10 @@
+#include "ForwardRenderer.hh"
+
 #include <conflagrant/Time.hh>
 #include <conflagrant/components/Model.hh>
 #include <conflagrant/components/Transform.hh>
-#include "ForwardRenderer.hh"
+
+#include <imgui.h>
 
 namespace cfl {
 namespace syst {
@@ -18,6 +21,12 @@ void RenderModels(entityx::EntityManager &entities) {
     for (auto const& entity : entities.entities_with_components(transform, model)) {
         
     }
+
+    if (ImGui::Button("LOG")) {
+        LOG_INFO(cfl::syst::ForwardRenderer) << "Button pressed." << std::endl;
+    }
+
+    ImGui::Text("ForwardRenderer: time=%f", Time::CurrentTime());
 }
 
 void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt)  {

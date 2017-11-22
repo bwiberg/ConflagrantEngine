@@ -5,6 +5,7 @@
 #include <conflagrant/serialization/Serialize.hh>
 #include <conflagrant/serialization/path.hh>
 
+#include <conflagrant/assets/AssetManager.hh>
 #include <conflagrant/assets/Model.hh>
 
 namespace cfl {

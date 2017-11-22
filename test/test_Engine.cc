@@ -30,6 +30,14 @@ struct DummyWindow : public cfl::Window {
     cfl::uvec2 GetSize() const override {
         return cfl::uvec2();
     }
+
+    double GetTime() const override {
+        return 0;
+    }
+
+    bool SetTime(double time) override {
+        return false;
+    }
 };
 
 struct CompA {

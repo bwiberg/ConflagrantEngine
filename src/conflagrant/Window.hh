@@ -46,7 +46,9 @@ struct Window {
 
     virtual bool SetSwapInterval(int interval) = 0;
 
-    virtual bool SwapBuffers() = 0;
+    virtual bool BeginFrame() = 0;
+
+    virtual bool FinishFrame() = 0;
 
     virtual uvec2 GetSize() const = 0;
 
