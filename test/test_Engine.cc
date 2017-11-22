@@ -23,8 +23,12 @@ struct DummyWindow : public cfl::Window {
         return true;
     }
 
-    bool SwapBuffers() override {
-        return true;
+    bool BeginFrame() override {
+        return false;
+    }
+
+    bool FinishFrame() override {
+        return false;
     }
 
     cfl::uvec2 GetSize() const override {

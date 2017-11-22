@@ -169,8 +169,10 @@ bool Engine::CreateSystems(Json::Value &json) {
 
         assert(input != nullptr);
         assert(window != nullptr);
+
         system->input = input;
         system->window = window;
+        system->engine = this;
 
         systemVector.push_back(system);
     }
@@ -271,6 +273,7 @@ bool Engine::UnloadScene() {
     for (auto &system : systemVector) {
         system->window = nullptr;
         system->input = nullptr;
+        system->engine = nullptr;
     }
     systemVector.clear();
 

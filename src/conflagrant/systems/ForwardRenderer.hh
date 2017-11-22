@@ -13,7 +13,7 @@ struct ForwardRenderer : public cfl::System, public entityx::System<ForwardRende
 
     void update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) override;
 
-    inline static string const GetName() {
+    inline static string GetName() {
         return "ForwardRenderer";
     }
 

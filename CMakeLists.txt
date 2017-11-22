@@ -145,8 +145,9 @@ set(HH_FILES
         src/conflagrant/components/PerspectiveCamera.hh
         src/conflagrant/components/OrthographicCamera.hh
         src/conflagrant/System.hh
-        src/conflagrant/systems/ForwardRenderer.hh
         src/conflagrant/systems/CameraController.hh
+        src/conflagrant/systems/EcsDebugger.hh
+        src/conflagrant/systems/ForwardRenderer.hh
         src/conflagrant/systems/TransformUpdater.hh
         src/conflagrant/assets/Mesh.hh
         src/conflagrant/assets/Model.hh

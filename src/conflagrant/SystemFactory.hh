@@ -20,6 +20,7 @@ template<typename TSystem>
 struct ConcreteSystemFactory : public SystemFactory {
     std::shared_ptr<System> Create(entityx::SystemManager &manager, Json::Value &json) const override {
         static_assert(std::is_base_of<System, TSystem>::value);
+        static_assert(std::is_base_of<entityx::BaseSystem, TSystem>::value);
 
         std::shared_ptr<TSystem> system = manager.add<TSystem>();
         if (!TSystem::template Serialize<Deserializer>(json, *system)) {

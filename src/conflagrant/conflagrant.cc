@@ -13,8 +13,11 @@
 #include <conflagrant/components/Mesh.hh>
 #include <conflagrant/components/Model.hh>
 #include <conflagrant/components/Transform.hh>
+#include <conflagrant/components/PerspectiveCamera.hh>
+#include <conflagrant/components/OrthographicCamera.hh>
 
 #include <conflagrant/systems/CameraController.hh>
+#include <conflagrant/systems/EcsDebugger.hh>
 #include <conflagrant/systems/TransformUpdater.hh>
 #include <conflagrant/systems/ForwardRenderer.hh>
 
@@ -32,8 +35,11 @@ bool InitDefaults() {
     REGISTER_COMPONENT(cfl::comp::Model);
     REGISTER_COMPONENT(cfl::comp::Name);
     REGISTER_COMPONENT(cfl::comp::Transform);
+    REGISTER_COMPONENT(cfl::comp::PerspectiveCamera);
+    REGISTER_COMPONENT(cfl::comp::OrthographicCamera);
 
     REGISTER_SYSTEM(cfl::syst::CameraController);
+    REGISTER_SYSTEM(cfl::syst::EcsDebugger);
     REGISTER_SYSTEM(cfl::syst::TransformUpdater);
     REGISTER_SYSTEM(cfl::syst::ForwardRenderer);
 

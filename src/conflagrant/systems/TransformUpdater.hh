@@ -27,7 +27,7 @@ struct TransformUpdater : public cfl::System, public entityx::System<TransformUp
         }
     }
 
-    inline static string const GetName() {
+    inline static string GetName() {
         return "TransformUpdater";
     }
 

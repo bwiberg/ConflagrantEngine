@@ -73,7 +73,7 @@ struct CameraController : public cfl::System, public entityx::System<CameraContr
         }
     }
 
-    inline static string const GetName() {
+    inline static string GetName() {
         return "CameraController";
     }
 
