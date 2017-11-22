@@ -27,6 +27,10 @@ struct Model {
         }
         return model.value != nullptr;
     }
+
+    static bool DrawWithImGui(Model &model) {
+        return true;
+    }
 };
 } // namespace comp
 } // namespace cfl

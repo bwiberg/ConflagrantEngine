@@ -6,6 +6,8 @@
 #include <conflagrant/serialization/Serialize.hh>
 #include <conflagrant/serialization/crossguid.hh>
 
+#include <imgui.h>
+
 namespace cfl {
 namespace comp {
 struct Guid {
@@ -16,8 +18,12 @@ struct Guid {
     }
 
     template<typename TSerializer>
-    static bool Serialize(Json::Value &json, comp::Guid &guid) {
+    static bool Serialize(Json::Value &json, Guid &guid) {
         return cfl::Serialize<TSerializer>(json, guid.value);
+    }
+
+    static bool DrawWithImGui(Guid &guid) {
+        return true;
     }
 };
 } // namespace comp

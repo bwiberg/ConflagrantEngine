@@ -27,6 +27,10 @@ struct OrthographicCamera {
         camera.hasChanged = true;
         return true;
     }
+
+    static bool DrawWithImGui(OrthographicCamera &camera) {
+        return true;
+    }
 };
 } // namespace comp
 } // namespace cfl

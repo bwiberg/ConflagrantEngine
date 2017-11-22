@@ -20,8 +20,12 @@ struct Mesh {
     }
 
     template<typename TSerializer>
-    static bool Serialize(Json::Value &json, Mesh &name) {
+    static bool Serialize(Json::Value &json, Mesh &mesh) {
         // SERIALIZE(json, name.value);
+        return true;
+    }
+
+    static bool DrawWithImGui(Mesh &mesh) {
         return true;
     }
 };

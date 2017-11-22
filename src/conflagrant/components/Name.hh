@@ -18,6 +18,10 @@ struct Name {
         SERIALIZE(json, name.value);
         return true;
     }
+
+    static bool DrawWithImGui(Name &name) {
+        return true;
+    }
 };
 } // namespace comp
 } // namespace cfl

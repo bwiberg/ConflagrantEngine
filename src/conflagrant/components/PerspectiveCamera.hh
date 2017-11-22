@@ -27,6 +27,10 @@ struct PerspectiveCamera {
         camera.hasChanged = true;
         return true;
     }
+
+    static bool DrawWithImGui(PerspectiveCamera &camera) {
+        return true;
+    }
 };
 } // namespace comp
 } // namespace cfl

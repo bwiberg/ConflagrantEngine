@@ -30,6 +30,10 @@ struct Transform {
         transform.hasChanged = true;
         return true;
     }
+
+    static bool DrawWithImGui(Transform &transform) {
+        return true;
+    }
 };
 } // namespace comp
 } // namespace cfl
