@@ -5,6 +5,8 @@
 #include <conflagrant/serialization/Serialize.hh>
 #include <conflagrant/serialization/glm.hh>
 
+#include <imgui.h>
+
 namespace cfl {
 namespace comp {
 struct Transform {
@@ -32,6 +34,11 @@ struct Transform {
     }
 
     static bool DrawWithImGui(Transform &transform) {
+        transform.hasChanged |= ImGui::InputFloat3("Pivot", glm::value_ptr(transform.pivot));
+        transform.hasChanged |= ImGui::InputFloat3("Position", glm::value_ptr(transform.position));
+        transform.hasChanged |= ImGui::InputFloat4("Orientation", glm::value_ptr(transform.orientation));
+        transform.hasChanged |= ImGui::InputFloat("Scale", &transform.scale);
+
         return true;
     }
 };

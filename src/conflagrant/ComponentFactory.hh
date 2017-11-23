@@ -12,6 +12,8 @@ struct ComponentFactory {
     virtual bool HasComponent(entityx::Entity &entity) const = 0;
 
     virtual bool Serialize(Json::Value &json, entityx::Entity &entity) const = 0;
+
+    virtual bool DrawWithImGui(entityx::Entity &entity) const = 0;
 };
 
 template<typename TComponent>
@@ -26,7 +28,12 @@ struct ConcreteComponentFactory : public ComponentFactory {
     }
 
     bool Serialize(Json::Value &json, entityx::Entity &entity) const override {
-        return TComponent::template Serialize<Serializer>(json, *entity.component<TComponent>().get());
+        return TComponent::template Serialize<Serializer>(json, *entity.component<TComponent>());
+    }
+
+    bool DrawWithImGui(entityx::Entity &entity) const override {
+        assert(HasComponent(entity));
+        return TComponent::DrawWithImGui(*entity.component<TComponent>());
     }
 };
 

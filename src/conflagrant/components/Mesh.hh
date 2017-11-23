@@ -7,6 +7,8 @@
 #include <conflagrant/GL.hh>
 #include <conflagrant/gl/Mesh.hh>
 
+#include <imgui.h>
+
 namespace cfl {
 namespace comp {
 /**

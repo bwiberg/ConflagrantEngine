@@ -4,6 +4,8 @@
 #include <conflagrant/GL.hh>
 #include <conflagrant/serialization/Serialize.hh>
 
+#include <imgui.h>
+
 namespace cfl {
 namespace comp {
 struct Name {

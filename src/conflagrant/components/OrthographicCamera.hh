@@ -4,6 +4,7 @@
 #include <conflagrant/GL.hh>
 #include <conflagrant/serialization/Serialize.hh>
 
+#include <imgui.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace cfl {
