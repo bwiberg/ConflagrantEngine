@@ -29,7 +29,7 @@ struct Model {
         return model.value != nullptr;
     }
 
-    static bool DrawWithImGui(Model &model) {
+    inline static bool DrawWithImGui(Model &model, InputManager const &input) {
         size_t constexpr BufferSize = 1024;
         char buf[BufferSize];
         model.path.copy(buf, BufferSize);
@@ -41,7 +41,7 @@ struct Model {
         return true;
     }
 
-    static bool ReloadModel(Model &model) {
+    inline static bool ReloadModel(Model &model) {
         model.value = assets::AssetManager::LoadAsset<assets::Model const>(model.path);
         return model.value != nullptr;
     }

@@ -11,6 +11,8 @@
 namespace cfl {
 namespace comp {
 struct Guid {
+    inline Guid() : value(xg::newGuid()) {}
+
     xg::Guid value;
 
     inline static string const GetName() {
@@ -22,7 +24,7 @@ struct Guid {
         return cfl::Serialize<TSerializer>(json, guid.value);
     }
 
-    static bool DrawWithImGui(Guid &guid) {
+    inline static bool DrawWithImGui(Guid &guid, InputManager const &input) {
         ImGui::LabelText("Guid", guid.value.str().c_str());
 
         if (ImGui::Button("Regenerate Guid")) {

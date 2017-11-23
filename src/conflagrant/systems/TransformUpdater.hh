@@ -37,7 +37,7 @@ struct TransformUpdater : public cfl::System, public entityx::System<TransformUp
         return true;
     }
 
-    static bool DrawWithImGui(TransformUpdater &sys) {
+    static bool DrawWithImGui(TransformUpdater &sys, InputManager const &input) {
         return true;
     }
 };

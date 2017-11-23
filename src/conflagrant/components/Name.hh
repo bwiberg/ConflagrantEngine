@@ -21,7 +21,7 @@ struct Name {
         return true;
     }
 
-    static bool DrawWithImGui(Name &name) {
+    inline static bool DrawWithImGui(Name &name, InputManager const &input) {
         size_t constexpr BufferSize = 1024;
         char buf[BufferSize];
         name.value.copy(buf, BufferSize);

@@ -84,7 +84,7 @@ struct CameraController : public cfl::System, public entityx::System<CameraContr
         return true;
     }
 
-    static bool DrawWithImGui(CameraController &sys) {
+    static bool DrawWithImGui(CameraController &sys, InputManager const &input) {
         string cameraName = "none";
         if (sys.activeCamera.valid()) {
             cameraName = sys.activeCamera.component<comp::Name>()->value;

@@ -10,7 +10,7 @@
 namespace cfl {
 namespace comp {
 struct OrthographicCamera {
-    float size, zNear, zFar;
+    float size{1.0f}, zNear{0.01f}, zFar{100.0f};
 
     bool hasChanged{true};
 
@@ -29,10 +29,13 @@ struct OrthographicCamera {
         return true;
     }
 
-    static bool DrawWithImGui(OrthographicCamera &camera) {
-        camera.hasChanged |= ImGui::InputFloat("Size", &camera.size);
-        camera.hasChanged |= ImGui::InputFloat("Near clip", &camera.zNear);
-        camera.hasChanged |= ImGui::InputFloat("Far clip", &camera.zFar);
+    inline static bool DrawWithImGui(OrthographicCamera &camera, InputManager const &input) {
+        float const DragSpeed = (input.GetKey(Key::LEFT_CONTROL) || input.GetKey(Key::LEFT_SHIFT))
+                                ? 0.01f : 0.5f;
+
+        camera.hasChanged |= ImGui::DragFloat("Size", &camera.size, DragSpeed);
+        camera.hasChanged |= ImGui::DragFloat("Near clip", &camera.zNear, DragSpeed);
+        camera.hasChanged |= ImGui::DragFloat("Far clip", &camera.zFar, DragSpeed);
 
         return true;
     }

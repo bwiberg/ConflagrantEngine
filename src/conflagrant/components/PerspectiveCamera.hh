@@ -29,10 +29,13 @@ struct PerspectiveCamera {
         return true;
     }
 
-    static bool DrawWithImGui(PerspectiveCamera &camera) {
-        camera.hasChanged |= ImGui::InputFloat("Field of view", &camera.fov);
-        camera.hasChanged |= ImGui::InputFloat("Near clip", &camera.zNear);
-        camera.hasChanged |= ImGui::InputFloat("Far clip", &camera.zFar);
+    static bool DrawWithImGui(PerspectiveCamera &camera, InputManager const &input) {
+        float const DragSpeed = (input.GetKey(Key::LEFT_CONTROL) || input.GetKey(Key::LEFT_SHIFT))
+                                ? 0.01f : 0.5f;
+
+        camera.hasChanged |= ImGui::DragFloat("Field of view", &camera.fov, DragSpeed);
+        camera.hasChanged |= ImGui::DragFloat("Near clip", &camera.zNear, DragSpeed);
+        camera.hasChanged |= ImGui::DragFloat("Far clip", &camera.zFar, DragSpeed);
 
         return true;
     }

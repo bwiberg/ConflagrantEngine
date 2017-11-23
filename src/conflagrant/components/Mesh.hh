@@ -27,7 +27,7 @@ struct Mesh {
         return true;
     }
 
-    static bool DrawWithImGui(Mesh &mesh) {
+    inline static bool DrawWithImGui(Mesh &mesh, InputManager const &input) {
         return true;
     }
 };

@@ -23,7 +23,7 @@ struct ForwardRenderer : public cfl::System, public entityx::System<ForwardRende
         return true;
     }
 
-    static bool DrawWithImGui(ForwardRenderer &sys) {
+    static bool DrawWithImGui(ForwardRenderer &sys, InputManager const &input) {
         return true;
     }
 };
