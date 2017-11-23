@@ -30,6 +30,10 @@ struct OrthographicCamera {
     }
 
     static bool DrawWithImGui(OrthographicCamera &camera) {
+        camera.hasChanged |= ImGui::InputFloat("Size", &camera.size);
+        camera.hasChanged |= ImGui::InputFloat("Near clip", &camera.zNear);
+        camera.hasChanged |= ImGui::InputFloat("Far clip", &camera.zFar);
+
         return true;
     }
 };

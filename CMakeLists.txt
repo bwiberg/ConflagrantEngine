@@ -187,6 +187,7 @@ set(CC_FILES
         src/conflagrant/InputManager.cc
         src/conflagrant/Factory.cc
         src/conflagrant/systems/ForwardRenderer.cc
+        src/conflagrant/systems/EcsDebugger.cc
         src/conflagrant/glfw/imgui_impl_glfw_gl3.cpp
         )
 

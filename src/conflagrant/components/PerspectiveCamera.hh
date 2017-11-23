@@ -30,6 +30,9 @@ struct PerspectiveCamera {
     }
 
     static bool DrawWithImGui(PerspectiveCamera &camera) {
+        camera.hasChanged |= ImGui::InputFloat("Field of view", &camera.fov);
+        camera.hasChanged |= ImGui::InputFloat("Near clip", &camera.zNear);
+        camera.hasChanged |= ImGui::InputFloat("Far clip", &camera.zFar);
 
         return true;
     }

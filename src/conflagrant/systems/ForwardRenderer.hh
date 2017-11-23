@@ -18,7 +18,12 @@ struct ForwardRenderer : public cfl::System, public entityx::System<ForwardRende
     }
 
     template<typename TSerializer>
-    static bool Serialize(Json::Value &json, ForwardRenderer &system) {
+    static bool Serialize(Json::Value &json, ForwardRenderer &sys) {
+        json["name"] = GetName();
+        return true;
+    }
+
+    static bool DrawWithImGui(ForwardRenderer &sys) {
         return true;
     }
 };

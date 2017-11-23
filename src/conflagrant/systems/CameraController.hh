@@ -29,6 +29,7 @@ struct CameraController : public cfl::System, public entityx::System<CameraContr
             if (cameraEntities.empty()) {
                 // create default camera
                 auto entity = entities.create();
+                entity.assign<comp::Name>()->value = "(auto-created camera)";
                 entity.assign<comp::Transform>();
                 entity.assign<comp::PerspectiveCamera>();
                 cameraEntities.push_back(entity);
@@ -78,7 +79,17 @@ struct CameraController : public cfl::System, public entityx::System<CameraContr
     }
 
     template<typename TSerializer>
-    static bool Serialize(Json::Value &json, CameraController &system) {
+    static bool Serialize(Json::Value &json, CameraController &sys) {
+        json["name"] = GetName();
+        return true;
+    }
+
+    static bool DrawWithImGui(CameraController &sys) {
+        string cameraName = "none";
+        if (sys.activeCamera.valid()) {
+            cameraName = sys.activeCamera.component<comp::Name>()->value;
+        }
+        ImGui::LabelText("Active camera", cameraName.c_str());
         return true;
     }
 };

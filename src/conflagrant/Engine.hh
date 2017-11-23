@@ -73,5 +73,9 @@ public:
     inline std::shared_ptr<entityx::SystemManager> GetSystemManager() const {
         return systems;
     }
+
+    inline size_t GetNumSystems() const {
+        return systemVector.size();
+    }
 };
 } // namespace cfl

@@ -14,6 +14,8 @@ struct SystemFactory {
     virtual bool HasSystem(entityx::SystemManager &manager) const = 0;
 
     virtual bool Serialize(Json::Value &json, entityx::SystemManager &manager) const = 0;
+
+    virtual bool DrawWithImGui(entityx::SystemManager &manager) const = 0;
 };
 
 template<typename TSystem>
@@ -38,6 +40,11 @@ struct ConcreteSystemFactory : public SystemFactory {
         assert(HasSystem(manager));
         std::shared_ptr<TSystem> system = manager.system<TSystem>();
         return TSystem::template Serialize<Serializer>(json, *system);
+    }
+
+    bool DrawWithImGui(entityx::SystemManager &manager) const override {
+        assert(HasSystem(manager));
+        return TSystem::DrawWithImGui(*manager.system<TSystem>());
     }
 };
 

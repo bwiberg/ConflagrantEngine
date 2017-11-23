@@ -32,7 +32,12 @@ struct TransformUpdater : public cfl::System, public entityx::System<TransformUp
     }
 
     template<typename TSerializer>
-    static bool Serialize(Json::Value &json, TransformUpdater &system) {
+    static bool Serialize(Json::Value &json, TransformUpdater &sys) {
+        json["name"] = GetName();
+        return true;
+    }
+
+    static bool DrawWithImGui(TransformUpdater &sys) {
         return true;
     }
 };

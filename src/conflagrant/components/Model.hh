@@ -30,7 +30,20 @@ struct Model {
     }
 
     static bool DrawWithImGui(Model &model) {
+        size_t constexpr BufferSize = 1024;
+        char buf[BufferSize];
+        model.path.copy(buf, BufferSize);
+        if (ImGui::InputText("Path", buf, IM_ARRAYSIZE(buf))) {
+            model.path = string(buf);
+            ReloadModel(model);
+        }
+
         return true;
+    }
+
+    static bool ReloadModel(Model &model) {
+        model.value = assets::AssetManager::LoadAsset<assets::Model const>(model.path);
+        return model.value != nullptr;
     }
 };
 } // namespace comp

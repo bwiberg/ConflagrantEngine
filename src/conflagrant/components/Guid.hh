@@ -23,6 +23,12 @@ struct Guid {
     }
 
     static bool DrawWithImGui(Guid &guid) {
+        ImGui::LabelText("Guid", guid.value.str().c_str());
+
+        if (ImGui::Button("Regenerate Guid")) {
+            guid.value = xg::newGuid();
+        }
+
         return true;
     }
 };
