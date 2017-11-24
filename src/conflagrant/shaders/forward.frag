@@ -34,6 +34,8 @@ uniform float AttenuationConstant = 1.0f;
 uniform float AttenuationLinear = 0.1f;
 uniform float AttenuationQuadratic = 0.01f;
 
+uniform float time;
+
 vec3 GetPropertyColor(MaterialProperty prop) {
     vec3 color = prop.color;
     if (prop.hasMap != 0) {
@@ -56,7 +58,7 @@ vec3 ApplyPhongShading(PointLight l, vec3 Normal, vec3 kDiffuse, vec3 kSpecular,
 
     vec3 E = normalize(-fIn_Position);
     float ER = max(dot(E, R), 0.0);
-    vec3 specular = pow(ER, shininess) * l.intensity * l.color * kDiffuse * kSpecular;
+    vec3 specular = pow(ER, 1) * l.intensity * l.color * kDiffuse * kSpecular;
 
     float distance = length(l.position - fIn_Position);
     return Attenuate(distance) * (diffuse + specular);

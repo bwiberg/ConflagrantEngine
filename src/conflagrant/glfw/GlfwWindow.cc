@@ -275,8 +275,11 @@ std::shared_ptr<GlfwWindow> GlfwWindow::Create(uint width, uint height, string t
 
 void GlfwWindow::GlfwFramebufferSizeCallback(GLFWwindow *w, int width, int height) {
     GlfwWindow *win = static_cast<GlfwWindow *>(glfwGetWindowUserPointer(w));
+
+    uint oldWidth = win->width, oldHeight = win->height;
     win->width = static_cast<uint>(width);
     win->height = static_cast<uint>(height);
+    win->sizeChanged = (win->width != oldWidth || win->height != oldHeight);
 
     // win->framebufferSizeCallback(win->width, win->height);
 }
@@ -325,6 +328,7 @@ bool GlfwWindow::MakeContextCurrent() {
 }
 
 bool GlfwWindow::PollEvents() {
+    sizeChanged = false;
     GLFW_RETURN_FALSE(glfwPollEvents());
     return true;
 }
@@ -347,6 +351,12 @@ bool GlfwWindow::FinishFrame() {
 
 uvec2 GlfwWindow::GetSize() const {
     return uvec2(width, height);
+}
+
+bool GlfwWindow::SizeHasChanged(uvec2 &sizeOut) const {
+    sizeOut.x = width;
+    sizeOut.y = height;
+    return sizeChanged;
 }
 
 double GlfwWindow::GetTime() const {

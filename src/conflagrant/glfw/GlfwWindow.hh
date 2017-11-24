@@ -26,6 +26,8 @@ class GlfwWindow final : public Window {
 
     uint width, height;
 
+    bool sizeChanged{true};
+
     static void GlfwFramebufferSizeCallback(GLFWwindow *w, int width, int height);
 
     static void GlfwKeyCallback(GLFWwindow *w, int button, int scancode, int action, int modifiers);
@@ -71,6 +73,8 @@ public:
     bool FinishFrame() override;
 
     uvec2 GetSize() const override;
+
+    bool SizeHasChanged(uvec2 &sizeOut) const override;
 
     double GetTime() const override;
 

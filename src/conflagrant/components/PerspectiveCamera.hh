@@ -33,9 +33,12 @@ struct PerspectiveCamera {
         float const DragSpeed = (input.GetKey(Key::LEFT_CONTROL) || input.GetKey(Key::LEFT_SHIFT))
                                 ? 0.01f : 0.5f;
 
-        camera.hasChanged |= ImGui::DragFloat("Field of view", &camera.fov, DragSpeed);
-        camera.hasChanged |= ImGui::DragFloat("Near clip", &camera.zNear, DragSpeed);
-        camera.hasChanged |= ImGui::DragFloat("Far clip", &camera.zFar, DragSpeed);
+        float constexpr MinimumDiff = 1e-4f;
+        camera.hasChanged |= ImGui::DragFloat("Field of view", &camera.fov, DragSpeed, 1.0f, 120.0f);
+        camera.hasChanged |= ImGui::DragFloat("Near clip", &camera.zNear, DragSpeed,
+                                              MinimumDiff, camera.zFar - MinimumDiff);
+        camera.hasChanged |= ImGui::DragFloat("Far clip", &camera.zFar, DragSpeed,
+                                              camera.zNear + MinimumDiff);
 
         return true;
     }

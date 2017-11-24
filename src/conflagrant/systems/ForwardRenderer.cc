@@ -1,16 +1,22 @@
 #include "ForwardRenderer.hh"
 
+#include <conflagrant/systems/CameraController.hh>
+#include <conflagrant/Engine.hh>
 #include <conflagrant/Time.hh>
 #include <conflagrant/components/Model.hh>
 #include <conflagrant/components/Transform.hh>
+#include <conflagrant/components/PointLight.hh>
 
 #include <imgui.h>
 #include <fstream>
-#include <conflagrant/components/PointLight.hh>
 
 namespace cfl {
 namespace syst {
 ForwardRenderer::ForwardRenderer() {
+    LoadShaders();
+}
+
+void ForwardRenderer::LoadShaders() {
     Path forwardVertexPath("forward.vert"), forwardFragmentPath("forward.frag");
     {
         PathResolver resolver;
@@ -39,15 +45,53 @@ ForwardRenderer::ForwardRenderer() {
     forwardShader = std::make_shared<gl::Shader>(forwardShaderVertex, forwardShaderFragment);
 }
 
+void SetCameraMatrices(entityx::EntityManager &entities, mat4 &V, mat4 &P) {
+    using entityx::ComponentHandle;
+
+    ComponentHandle<comp::Transform> transform;
+    ComponentHandle<comp::ActiveCamera> active;
+    ComponentHandle<comp::PerspectiveCamera> perspective;
+    ComponentHandle<comp::OrthographicCamera> orthographic;
+
+    entityx::Entity activeCamera;
+    for (auto entity : entities.entities_with_components(transform, active, perspective)) {
+        activeCamera = entity;
+        break;
+    }
+
+    if (!activeCamera.valid()) {
+        for (auto entity : entities.entities_with_components(transform, active, orthographic)) {
+            activeCamera = entity;
+            break;
+        }
+    }
+
+    if (transform) {
+        V = glm::inverse(transform->matrix);
+    } else {
+        V = mat4(1);
+    }
+
+    if (perspective) {
+        P = perspective->projection;
+    } else if (orthographic) {
+        P = orthographic->projection;
+    } else {
+        LOG_ERROR(cfl::ForwardRenderer::SetCameraMatrices)
+                << "No OrthographicCamera or PerspectiveCamera." << std::endl;
+        P = mat4(1);
+    }
+}
+
 void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) {
     uvec2 size = window->GetSize();
     OGL(glViewport(0, 0, size.x, size.y));
-    OGL(glClear(GL_COLOR_BUFFER_BIT));
+    OGL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     OGL(glClearColor(0.0f, 0.0f, 0.0f, 0.0f));
 
-    mat4 tmp;
-    mat4 const &P = tmp; // todo get active camera's projection
-    mat4 const &V = tmp; // todo get active camera's view
+    mat4 P;
+    mat4 V;
+    SetCameraMatrices(entities, V, P);
 
     using entityx::ComponentHandle;
     ComponentHandle<comp::Transform> transform;
@@ -55,6 +99,8 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
     ComponentHandle<comp::PointLight> pointLight;
 
     forwardShader->Bind();
+
+    forwardShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
 
     // upload camera parameters
     forwardShader->Uniform("P", P);
@@ -76,6 +122,10 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
     }
 
     forwardShader->Uniform("numPointLights", ilight);
+
+    OGL(glEnable(GL_CULL_FACE));
+    OGL(glCullFace(GL_BACK));
+    OGL(glEnable(GL_DEPTH_TEST));
 
     for (auto const &entity : entities.entities_with_components(transform, model)) {
         forwardShader->Uniform("M", transform->matrix);
@@ -130,6 +180,14 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
     }
 
     forwardShader->Unbind();
+}
+
+bool ForwardRenderer::DrawWithImGui(ForwardRenderer &sys, InputManager const &input) {
+    if (ImGui::Button("Reload shaders")) {
+        sys.LoadShaders();
+    }
+
+    return true;
 }
 } // namespace syst
 } // namespace cfl

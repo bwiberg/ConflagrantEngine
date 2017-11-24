@@ -13,6 +13,8 @@ namespace syst {
 class ForwardRenderer : public cfl::System, public entityx::System<ForwardRenderer> {
     std::shared_ptr<gl::Shader> forwardShader;
 
+    void LoadShaders();
+
 public:
     ForwardRenderer();
 
@@ -28,9 +30,7 @@ public:
         return true;
     }
 
-    static bool DrawWithImGui(ForwardRenderer &sys, InputManager const &input) {
-        return true;
-    }
+    static bool DrawWithImGui(ForwardRenderer &sys, InputManager const &input);
 };
 } // namespace syst
 } // namespace cfl

@@ -13,6 +13,7 @@ out vec2 fIn_TexCoord;
 uniform mat4 M;
 uniform mat4 V;
 uniform mat4 P;
+uniform float time;
 
 void main(void) {
     fIn_Position = vec3(V * M * vec4(vIn_Position, 1.0));

@@ -21,7 +21,7 @@ struct PointLight {
 
     template<typename TSerializer>
     static bool Serialize(Json::Value &json, PointLight &comp) {
-        SERIALIZE(json["color"], comp.color);
+        SERIALIZE_CUSTOM(json["color"], comp.color);
         SERIALIZE(json["intensity"], comp.intensity);
         return true;
     }

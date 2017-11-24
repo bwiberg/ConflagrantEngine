@@ -4,19 +4,31 @@
 #include <crossguid/Guid.hpp>
 
 namespace cfl {
-DEFINE_SERIALIZER_SIGNATURE(xg::Guid);
+template<typename TSerializer>
+struct _xgGuidSerializerHelper;
 
-DEFINE_SERIALIZER(xg::Guid) {
-    json = value.str();
-    return true;
-}
+template<>
+struct _xgGuidSerializerHelper<Serializer> {
+    static bool Serialize(Json::Value &json, xg::Guid &value) {
+        json = value.str();
+        return true;
+    }
+};
 
-DEFINE_DESERIALIZER(xg::Guid) {
-    if (!json.isString()) return false;
+template<>
+struct _xgGuidSerializerHelper<Deserializer> {
+    static bool Serialize(Json::Value &json, xg::Guid &value) {
+        if (!json.isString()) return false;
 
-    xg::Guid source(json.asCString());
-    value.swap(source);
+        xg::Guid source(json.asCString());
+        value.swap(source);
 
-    return true;
-}
+        return true;
+    }
+};
+
+template<typename TSerializer>
+static bool Serialize(Json::Value &json, xg::Guid &value) {
+    _xgGuidSerializerHelper<TSerializer>::Serialize(json, value);
+};
 } // namespace cfl

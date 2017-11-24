@@ -12,10 +12,12 @@ namespace comp {
 struct Transform {
     vec3 pivot{0.0f, 0.0f, 0.0f};
     vec3 position{0.0f, 0.0f, 0.0f};
+    vec3 editorEulerAngles{0.0f, 0.0f, 0.0f};
     quat orientation{vec3(0.0f, 0.0f, 0.0f)};
     float scale{1.0f};
 
     bool hasChanged{true};
+    bool quaternionHasChanged{false};
 
     mat4 matrix;
 
@@ -40,9 +42,11 @@ struct Transform {
         transform.hasChanged |= ImGui::DragFloat3("Pivot", glm::value_ptr(transform.pivot), DragSpeed);
         transform.hasChanged |= ImGui::DragFloat3("Position", glm::value_ptr(transform.position), DragSpeed);
 
-        vec3 eulerAngles = glm::degrees(glm::eulerAngles(transform.orientation));
-        transform.hasChanged |= ImGui::DragFloat3("Orientation", glm::value_ptr(eulerAngles), DragSpeed);
-        transform.orientation = glm::quat(glm::radians(eulerAngles));
+        if (transform.quaternionHasChanged) {
+            transform.editorEulerAngles = glm::degrees(glm::eulerAngles(transform.orientation));
+        }
+        transform.hasChanged |= ImGui::DragFloat3("Euler angles", glm::value_ptr(transform.editorEulerAngles), DragSpeed);
+        transform.orientation = glm::quat(glm::radians(transform.editorEulerAngles));
 
         transform.hasChanged |= ImGui::DragFloat("Scale", &transform.scale, DragSpeed);
 

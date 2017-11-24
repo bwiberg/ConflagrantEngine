@@ -52,6 +52,8 @@ struct Window {
 
     virtual uvec2 GetSize() const = 0;
 
+    virtual bool SizeHasChanged(uvec2 &sizeOut) const = 0;
+
     virtual double GetTime() const = 0;
 
     virtual bool SetTime(double time) = 0;

@@ -28,7 +28,7 @@ struct Material : public Asset {
     /**
      * The material's shininess.
      */
-    float shininess{0};
+    float shininess{1.0f};
 };
 } // namespace assets
 } // namespace cfl

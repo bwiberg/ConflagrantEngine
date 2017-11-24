@@ -138,6 +138,7 @@ set(HH_FILES
         src/conflagrant/assets/Texture.hh
         src/conflagrant/assets/loaders/ModelLoader.hh
         src/conflagrant/assets/loaders/TextureLoader.hh
+        src/conflagrant/components/ActiveCamera.hh
         src/conflagrant/components/Mesh.hh
         src/conflagrant/components/Name.hh
         src/conflagrant/components/Guid.hh

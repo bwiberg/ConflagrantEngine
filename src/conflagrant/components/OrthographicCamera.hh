@@ -10,7 +10,7 @@
 namespace cfl {
 namespace comp {
 struct OrthographicCamera {
-    float size{1.0f}, zNear{0.01f}, zFar{100.0f};
+    float size{0.001f}, zNear{0.01f}, zFar{100.0f};
 
     bool hasChanged{true};
 
