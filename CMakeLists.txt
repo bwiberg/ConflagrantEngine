@@ -111,7 +111,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 ### set base asset directory ###
 ################################
 
-include(cmake/EcsConfig.cmake)
+set(CFL_BUILTIN_SHADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/conflagrant/shaders)
+add_definitions(-DBUILTIN_SHADER_DIR="${CFL_BUILTIN_SHADER_DIR}")
 
 ################################################
 ### gather all source files and header files ###
@@ -144,6 +145,7 @@ set(HH_FILES
         src/conflagrant/components/Transform.hh
         src/conflagrant/components/PerspectiveCamera.hh
         src/conflagrant/components/OrthographicCamera.hh
+        src/conflagrant/components/PointLight.hh
         src/conflagrant/System.hh
         src/conflagrant/systems/CameraController.hh
         src/conflagrant/systems/EcsDebugger.hh

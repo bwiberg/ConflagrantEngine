@@ -35,6 +35,9 @@ struct Model {
         model.path.copy(buf, BufferSize);
         if (ImGui::InputText("Path", buf, IM_ARRAYSIZE(buf))) {
             model.path = string(buf);
+        }
+
+        if (ImGui::Button("Reload model")) {
             ReloadModel(model);
         }
 

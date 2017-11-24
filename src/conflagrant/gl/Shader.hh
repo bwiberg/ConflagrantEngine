@@ -144,7 +144,7 @@ public:
                                       GL_FALSE, glm::value_ptr(values[0])));
     }
 
-    inline void Texture(std::string const &name, GLenum target, GLenum unit, GlTextureBase const &tex) const {
+    inline void Texture(std::string const &name, GLenum unit, GlTextureBase const &tex) const {
         OGL(glActiveTexture(GL_TEXTURE0 + unit));
         OGL(glBindTexture(tex.target, tex));
         OGL(glProgramUniform1i(program, GetUniformLocation(name), unit));

@@ -30,6 +30,7 @@ struct CameraController : public cfl::System, public entityx::System<CameraContr
                 // create default camera
                 auto entity = entities.create();
                 entity.assign<comp::Name>()->value = "(auto-created camera)";
+                entity.assign<comp::Guid>();
                 entity.assign<comp::Transform>();
                 entity.assign<comp::PerspectiveCamera>();
                 cameraEntities.push_back(entity);

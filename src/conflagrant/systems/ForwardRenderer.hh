@@ -6,9 +6,14 @@
 #include <conflagrant/GL.hh>
 #include <conflagrant/System.hh>
 
+#include <conflagrant/gl/Shader.hh>
+
 namespace cfl {
 namespace syst {
-struct ForwardRenderer : public cfl::System, public entityx::System<ForwardRenderer> {
+class ForwardRenderer : public cfl::System, public entityx::System<ForwardRenderer> {
+    std::shared_ptr<gl::Shader> forwardShader;
+
+public:
     ForwardRenderer();
 
     void update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) override;

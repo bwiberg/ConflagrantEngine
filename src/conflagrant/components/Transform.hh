@@ -10,10 +10,10 @@
 namespace cfl {
 namespace comp {
 struct Transform {
-    vec3 pivot;
-    vec3 position;
-    quat orientation{0, 0, 0, 1};
-    float scale;
+    vec3 pivot{0.0f, 0.0f, 0.0f};
+    vec3 position{0.0f, 0.0f, 0.0f};
+    quat orientation{vec3(0.0f, 0.0f, 0.0f)};
+    float scale{1.0f};
 
     bool hasChanged{true};
 

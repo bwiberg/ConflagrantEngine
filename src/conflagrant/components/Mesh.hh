@@ -12,10 +12,10 @@
 namespace cfl {
 namespace comp {
 /**
- * @brief Component that references a Mesh in OpenGL memory.
+ * @brief Component that references a Mesh asset
  */
 struct Mesh {
-    std::shared_ptr<gl::Mesh> glMesh;
+    std::shared_ptr<assets::Mesh> value;
 
     inline static string const GetName() {
         return "Mesh";

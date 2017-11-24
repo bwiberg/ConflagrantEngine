@@ -18,11 +18,12 @@ struct TransformUpdater : public cfl::System, public entityx::System<TransformUp
         for (auto const &e : entities.entities_with_components(transform)) {
             if (transform->hasChanged) {
                 transform->hasChanged;
-                transform->matrix = glm::translate(-transform->pivot) *
-                                    glm::scale(glm::vec3(transform->scale)) *
-                                    glm::toMat4(transform->orientation) *
-                                    glm::translate(-transform->pivot) *
-                                    glm::translate(transform->position);
+                transform->matrix =
+                        glm::translate(transform->position) *
+                        glm::translate(-transform->pivot) *
+                        glm::scale(glm::vec3(transform->scale)) *
+                        glm::toMat4(transform->orientation) *
+                        glm::translate(-transform->pivot);
             }
         }
     }
