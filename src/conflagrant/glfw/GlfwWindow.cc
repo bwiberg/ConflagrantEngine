@@ -368,6 +368,23 @@ bool GlfwWindow::SetTime(double time) {
     return true;
 }
 
+bool GlfwWindow::SetCursorMode(CursorMode mode) const {
+    int glfwMode = GLFW_CURSOR_NORMAL;
+    if (mode == CursorMode::HIDDEN) glfwMode = GLFW_CURSOR_HIDDEN;
+    else if (mode == CursorMode::HIDDEN_FIXED) glfwMode = GLFW_CURSOR_DISABLED;
+
+    GLFW_RETURN_FALSE(glfwSetInputMode(window, GLFW_CURSOR, glfwMode));
+    return false;
+}
+
+CursorMode GlfwWindow::GetCursorMode() const {
+    GLFW_RETURN(int glfwMode = glfwGetInputMode(window, GLFW_CURSOR), return CursorMode::NORMAL);
+
+    if (glfwMode == GLFW_CURSOR_NORMAL) return CursorMode::NORMAL;
+    if (glfwMode == GLFW_CURSOR_HIDDEN) return CursorMode::HIDDEN;
+    return CursorMode::HIDDEN_FIXED;
+}
+
 GlfwModifierSet::GlfwModifierSet(int glfwModifierBits)
         : glfwModifierBits(glfwModifierBits) {}
 

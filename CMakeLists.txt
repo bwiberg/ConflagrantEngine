@@ -151,7 +151,6 @@ set(HH_FILES
         src/conflagrant/systems/CameraController.hh
         src/conflagrant/systems/EcsDebugger.hh
         src/conflagrant/systems/ForwardRenderer.hh
-        src/conflagrant/systems/TransformUpdater.hh
         src/conflagrant/assets/Mesh.hh
         src/conflagrant/assets/Model.hh
         src/conflagrant/assets/Material.hh

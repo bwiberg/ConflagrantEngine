@@ -11,9 +11,6 @@
       "name": "CameraController"
     },
     {
-      "name": "TransformUpdater"
-    },
-    {
       "name": "ForwardRenderer"
     },
     {

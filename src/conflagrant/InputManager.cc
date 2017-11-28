@@ -48,6 +48,7 @@ InputManager::InputManager(std::shared_ptr<Window> &window) : window(window) {
     });
 
     window->SetMousePosCallback([this](double x, double y) {
+        prevMousePosition = mousePosition;
         mousePosition.x = x;
         mousePosition.y = y;
     });
@@ -83,9 +84,9 @@ bool InputManager::ProcessInput() {
     return window->PollEvents();
 }
 
-vec2 InputManager::GetAxis(input::Axis axis) const {
+float InputManager::GetAxis(input::Axis axis) const {
     LOG_ERROR(cfl::InputManager::GetAxis) << "Unimplemented." << std::endl;
-    return cfl::vec2();
+    return 0.0f;
 }
 
 bool InputManager::AnyKey() const {
@@ -106,6 +107,14 @@ dvec2 InputManager::GetMousePositionPixel() const {
 
 dvec2 InputManager::GetMousePositionNormalized() const {
     return mousePosition / dvec2(window->GetSize());
+}
+
+dvec2 InputManager::GetDeltaMousePositionPixel() const {
+    return mousePosition - prevMousePosition;
+}
+
+dvec2 InputManager::GetDeltaMousePositionNormalized() const {
+    return (mousePosition - prevMousePosition) / dvec2(window->GetSize());
 }
 
 bool InputManager::GetMouseButton(input::MouseButton button) const {

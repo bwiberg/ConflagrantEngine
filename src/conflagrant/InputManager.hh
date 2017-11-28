@@ -26,7 +26,7 @@ class InputManager final {
 
     std::array<State, static_cast<int>(input::Key::NUM_ENUM_ENTRIES_Key)> mouseButtonStates;
 
-    dvec2 mousePosition;
+    dvec2 mousePosition, prevMousePosition;
 
 public:
     explicit InputManager(std::shared_ptr<Window> &window);
@@ -37,7 +37,7 @@ public:
     /// Controller-agnostic API ///
     ///////////////////////////////
 
-    vec2 GetAxis(input::Axis axis) const;
+    float GetAxis(input::Axis axis) const;
 
     /////////////////////////////
     /// Keyboard-specific API ///
@@ -50,6 +50,10 @@ public:
     dvec2 GetMousePositionPixel() const;
 
     dvec2 GetMousePositionNormalized() const;
+
+    dvec2 GetDeltaMousePositionPixel() const;
+
+    dvec2 GetDeltaMousePositionNormalized() const;
 
     bool GetMouseButton(input::MouseButton button) const;
 

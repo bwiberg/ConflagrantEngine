@@ -67,7 +67,7 @@ void SetCameraMatrices(entityx::EntityManager &entities, mat4 &V, mat4 &P) {
     }
 
     if (transform) {
-        V = glm::inverse(transform->matrix);
+        V = glm::inverse(transform->GetMatrix());
     } else {
         V = mat4(1);
     }
@@ -113,7 +113,7 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
         ss << "pointLights" << "[" << ilight << "]" << ".";
         string const prefix = ss.str();
 
-        forwardShader->Uniform(prefix + "position", transform->position);
+        forwardShader->Uniform(prefix + "position", transform->Position());
         forwardShader->Uniform(prefix + "intensity", pointLight->intensity);
         forwardShader->Uniform(prefix + "color", pointLight->color);
 
@@ -128,7 +128,7 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
     OGL(glEnable(GL_DEPTH_TEST));
 
     for (auto const &entity : entities.entities_with_components(transform, model)) {
-        forwardShader->Uniform("M", transform->matrix);
+        forwardShader->Uniform("M", transform->GetMatrix());
 
         for (auto const &part : model->value->parts) {
             string const prefix = "material.";

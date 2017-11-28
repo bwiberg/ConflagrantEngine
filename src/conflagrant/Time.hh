@@ -16,12 +16,14 @@ class Time final {
     static double previousFrameTime;
 
 public:
-    inline static time_t CurrentTime() {
-        return currentFrameTime;
+    template<typename T = time_t>
+    inline static T CurrentTime() {
+        return static_cast<T>(currentFrameTime);
     }
 
-    inline static time_t DeltaTime() {
-        return currentFrameTime - previousFrameTime;
+    template<typename T = time_t>
+    inline static T DeltaTime() {
+        return static_cast<T>(currentFrameTime - previousFrameTime);
     }
 };
 } // namespace cfl

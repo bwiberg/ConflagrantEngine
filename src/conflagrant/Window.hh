@@ -8,6 +8,12 @@
 namespace cfl {
 using namespace input;
 
+enum class CursorMode {
+    NORMAL,
+    HIDDEN,
+    HIDDEN_FIXED
+};
+
 struct Window {
     typedef std::function<void(Key, KeyAction, ModifierSet const &)> KeyCallback;
     // typedef std::function<void(uint, uint)> FramebufferSizeCallback;
@@ -39,6 +45,10 @@ struct Window {
     virtual void SetMouseButtonCallback(MouseButtonCallback callback) = 0;
 
     virtual void SetMousePosCallback(MousePosCallback callback) = 0;
+
+    virtual bool SetCursorMode(CursorMode mode) const = 0;
+
+    virtual CursorMode GetCursorMode() const = 0;
 
     virtual bool MakeContextCurrent() = 0;
 

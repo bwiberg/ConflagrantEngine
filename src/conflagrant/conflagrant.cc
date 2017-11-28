@@ -20,7 +20,6 @@
 
 #include <conflagrant/systems/CameraController.hh>
 #include <conflagrant/systems/EcsDebugger.hh>
-#include <conflagrant/systems/TransformUpdater.hh>
 #include <conflagrant/systems/ForwardRenderer.hh>
 
 namespace cfl {
@@ -44,7 +43,6 @@ bool InitDefaults() {
 
     REGISTER_SYSTEM(cfl::syst::CameraController);
     REGISTER_SYSTEM(cfl::syst::EcsDebugger);
-    REGISTER_SYSTEM(cfl::syst::TransformUpdater);
     REGISTER_SYSTEM(cfl::syst::ForwardRenderer);
 
     return true;

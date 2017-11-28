@@ -62,6 +62,10 @@ public:
 
     void SetMousePosCallback(MousePosCallback callback) override;
 
+    bool SetCursorMode(CursorMode mode) const override;
+
+    CursorMode GetCursorMode() const override;
+
     bool MakeContextCurrent() override;
 
     bool PollEvents() override;
