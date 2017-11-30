@@ -67,5 +67,7 @@ struct Window {
     virtual double GetTime() const = 0;
 
     virtual bool SetTime(double time) = 0;
+
+    virtual bool SetTitle(string const& title) = 0;
 };
 } // namespace cfl

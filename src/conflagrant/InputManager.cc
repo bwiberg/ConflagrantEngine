@@ -48,7 +48,6 @@ InputManager::InputManager(std::shared_ptr<Window> &window) : window(window) {
     });
 
     window->SetMousePosCallback([this](double x, double y) {
-        prevMousePosition = mousePosition;
         mousePosition.x = x;
         mousePosition.y = y;
     });
@@ -62,8 +61,14 @@ InputManager::~InputManager() {
 }
 
 bool InputManager::ProcessInput() {
+    prevMousePosition = mousePosition;
+
     // manually update all "RELEASED" keyStates to "NONE" since there is no KeyAction that is "REPEATED RELEASE"
     for (auto &keyState : keyStates) {
+        if (keyState == State::PRESSED) {
+            keyState = State::HELD_DOWN;
+        }
+
         if (keyState == State::RELEASED) {
             keyState = State::NONE;
         }

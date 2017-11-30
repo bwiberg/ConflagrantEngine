@@ -83,5 +83,7 @@ public:
     double GetTime() const override;
 
     bool SetTime(double time) override;
+
+    bool SetTitle(string const &title) override;
 };
 } // namespace cfl

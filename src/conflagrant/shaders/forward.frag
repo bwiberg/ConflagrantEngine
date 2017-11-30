@@ -1,7 +1,7 @@
 #version 410
 
-in mat3 fIn_TBN;
-in vec3 fIn_Position;
+in mat3 fIn_WorldTBN;
+in vec3 fIn_WorldPosition;
 in vec2 fIn_TexCoord;
 
 out vec4 out_Color;
@@ -21,7 +21,7 @@ uniform struct {
 } material;
 
 struct PointLight {
-    vec3 position;
+    vec3 worldPosition;
     float intensity;
     vec3 color;
 };
@@ -35,6 +35,7 @@ uniform float AttenuationLinear = 0.1f;
 uniform float AttenuationQuadratic = 0.01f;
 
 uniform float time;
+uniform vec3 EyePos;
 
 vec3 GetPropertyColor(MaterialProperty prop) {
     vec3 color = prop.color;
@@ -49,18 +50,18 @@ float Attenuate(float d) {
 }
 
 vec3 ApplyPhongShading(PointLight l, vec3 Normal, vec3 kDiffuse, vec3 kSpecular, float shininess) {
-    vec3 L = normalize(l.position - fIn_Position);
+    vec3 L = normalize(l.worldPosition - fIn_WorldPosition);
 
     float NL = max(dot(normalize(Normal), L), 0.0);
     vec3 diffuse = NL * l.intensity * l.color * kDiffuse;
 
     vec3 R = normalize(reflect(-L, Normal));
 
-    vec3 E = normalize(-fIn_Position);
+    vec3 E = normalize(EyePos - fIn_WorldPosition);
     float ER = max(dot(E, R), 0.0);
     vec3 specular = pow(ER, 1) * l.intensity * l.color * kDiffuse * kSpecular;
 
-    float distance = length(l.position - fIn_Position);
+    float distance = length(l.worldPosition - fIn_WorldPosition);
     return Attenuate(distance) * (diffuse + specular);
 }
 
@@ -69,9 +70,9 @@ void main(void) {
 
     vec3 Normal = vec3(0, 0, 1);
     if (material.hasNormalMap != 0) {
-        Normal = texture(material.normalMap, fIn_TexCoord).rgb;
+        Normal = 2.0 * texture(material.normalMap, fIn_TexCoord).rgb - vec3(1.0);
     }
-    Normal = normalize(fIn_TBN * (Normal * 2.0 - vec3(1.0)));
+    Normal = normalize(fIn_WorldTBN * Normal);
 
     vec3 kDiffuse = GetPropertyColor(material.diffuse);
     vec3 kSpecular = GetPropertyColor(material.specular);

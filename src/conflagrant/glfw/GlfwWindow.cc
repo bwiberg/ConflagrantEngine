@@ -274,7 +274,7 @@ std::shared_ptr<GlfwWindow> GlfwWindow::Create(uint width, uint height, string t
 }
 
 void GlfwWindow::GlfwFramebufferSizeCallback(GLFWwindow *w, int width, int height) {
-    GlfwWindow *win = static_cast<GlfwWindow *>(glfwGetWindowUserPointer(w));
+    auto *win = static_cast<GlfwWindow *>(glfwGetWindowUserPointer(w));
 
     uint oldWidth = win->width, oldHeight = win->height;
     win->width = static_cast<uint>(width);
@@ -383,6 +383,11 @@ CursorMode GlfwWindow::GetCursorMode() const {
     if (glfwMode == GLFW_CURSOR_NORMAL) return CursorMode::NORMAL;
     if (glfwMode == GLFW_CURSOR_HIDDEN) return CursorMode::HIDDEN;
     return CursorMode::HIDDEN_FIXED;
+}
+
+bool GlfwWindow::SetTitle(string const &title) {
+    GLFW_RETURN_FALSE(glfwSetWindowTitle(window, title.c_str()));
+    return true;
 }
 
 GlfwModifierSet::GlfwModifierSet(int glfwModifierBits)

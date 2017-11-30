@@ -45,7 +45,7 @@ void ForwardRenderer::LoadShaders() {
     forwardShader = std::make_shared<gl::Shader>(forwardShaderVertex, forwardShaderFragment);
 }
 
-void SetCameraMatrices(entityx::EntityManager &entities, mat4 &V, mat4 &P) {
+void SetCameraUniforms(entityx::EntityManager &entities, gl::Shader &shader) {
     using entityx::ComponentHandle;
 
     ComponentHandle<comp::Transform> transform;
@@ -66,12 +66,15 @@ void SetCameraMatrices(entityx::EntityManager &entities, mat4 &V, mat4 &P) {
         }
     }
 
+    mat4 V;
     if (transform) {
         V = glm::inverse(transform->GetMatrix());
     } else {
         V = mat4(1);
     }
+    shader.Uniform("V", V);
 
+    mat4 P;
     if (perspective) {
         P = perspective->projection;
     } else if (orthographic) {
@@ -81,6 +84,9 @@ void SetCameraMatrices(entityx::EntityManager &entities, mat4 &V, mat4 &P) {
                 << "No OrthographicCamera or PerspectiveCamera." << std::endl;
         P = mat4(1);
     }
+    shader.Uniform("P", P);
+
+    shader.Uniform("EyePos", transform->Position());
 }
 
 void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) {
@@ -89,9 +95,6 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
     OGL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     OGL(glClearColor(0.0f, 0.0f, 0.0f, 0.0f));
 
-    mat4 P;
-    mat4 V;
-    SetCameraMatrices(entities, V, P);
 
     using entityx::ComponentHandle;
     ComponentHandle<comp::Transform> transform;
@@ -103,8 +106,7 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
     forwardShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
 
     // upload camera parameters
-    forwardShader->Uniform("P", P);
-    forwardShader->Uniform("V", V);
+    SetCameraUniforms(entities, *forwardShader);
 
     // upload light data
     int ilight = 0;
@@ -113,7 +115,7 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
         ss << "pointLights" << "[" << ilight << "]" << ".";
         string const prefix = ss.str();
 
-        forwardShader->Uniform(prefix + "position", transform->Position());
+        forwardShader->Uniform(prefix + "worldPosition", transform->Position());
         forwardShader->Uniform(prefix + "intensity", pointLight->intensity);
         forwardShader->Uniform(prefix + "color", pointLight->color);
 
@@ -144,7 +146,7 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
                     int hasDiffuseMap = (material.diffuseTexture != nullptr) ? 1 : 0;
                     forwardShader->Uniform(diffusePrefix + "hasMap", hasDiffuseMap);
                     if (hasDiffuseMap == 1) {
-                        forwardShader->Texture(diffusePrefix + "map", GL_TEXTURE0, material.diffuseTexture->texture);
+                        forwardShader->Texture(diffusePrefix + "map", 0, material.diffuseTexture->texture);
                     }
                 }
 
@@ -155,7 +157,7 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
                     int hasSpecularMap = (material.specularTexture != nullptr) ? 1 : 0;
                     forwardShader->Uniform(specularPrefix + "hasMap", hasSpecularMap);
                     if (hasSpecularMap == 1) {
-                        forwardShader->Texture(specularPrefix + "map", GL_TEXTURE1, material.specularTexture->texture);
+                        forwardShader->Texture(specularPrefix + "map", 1, material.specularTexture->texture);
                     }
                 }
 
@@ -186,6 +188,8 @@ bool ForwardRenderer::DrawWithImGui(ForwardRenderer &sys, InputManager const &in
     if (ImGui::Button("Reload shaders")) {
         sys.LoadShaders();
     }
+
+    ImGui::LabelText("FPS", std::to_string(Time::ComputeFPS()).c_str());
 
     return true;
 }

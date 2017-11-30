@@ -122,6 +122,7 @@ add_definitions(-DBUILTIN_SHADER_DIR="${CFL_BUILTIN_SHADER_DIR}")
 set(HH_FILES
         src/conflagrant/conflagrant.hh
         src/conflagrant/logging.hh
+        src/conflagrant/math.hh
         src/conflagrant/Engine.hh
         src/conflagrant/Time.hh
         src/conflagrant/ComponentFactory.hh
@@ -188,8 +189,9 @@ set(CC_FILES
         src/conflagrant/glfw/GlfwWindow.cc
         src/conflagrant/InputManager.cc
         src/conflagrant/Factory.cc
-        src/conflagrant/systems/ForwardRenderer.cc
+        src/conflagrant/systems/CameraController.cc
         src/conflagrant/systems/EcsDebugger.cc
+        src/conflagrant/systems/ForwardRenderer.cc
         src/conflagrant/glfw/imgui_impl_glfw_gl3.cpp
         )
 

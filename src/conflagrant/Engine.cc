@@ -233,8 +233,7 @@ int Engine::Run(bool singleTimestep) {
     window->SetTime(0);
     Time::previousFrameTime = Time::currentFrameTime = 0;
     do {
-        Time::previousFrameTime = Time::currentFrameTime;
-        Time::currentFrameTime = window->GetTime();
+        Time::RecordCurrentFrameTime(window->GetTime());
 
         if (input) {
             input->ProcessInput();

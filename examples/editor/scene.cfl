@@ -19,8 +19,8 @@
   ],
   "entities": [
     {
-      "Name": "bunny",
-      "Guid": "c348dfd3-4861-4cc9-8876-c939fd3819a5",
+      "Name": "temple",
+      "Guid": "7b7fd26e-4599-46f8-91f2-114e05453318",
       "Transform": {
         "pivot": [
           0.0,
@@ -28,7 +28,7 @@
           0.0
         ],
         "position": [
-          0.0,
+          4.0,
           0.0,
           0.0
         ],
@@ -40,7 +40,31 @@
         ],
         "scale": 1.0
       },
-      "Model": "bunny.obj"
+      "Model": "mayan-temple/altar.obj"
+    },
+    {
+      "Name": "sponza",
+      "Guid": "d58ed905-a1fc-465a-93c2-145f2f89e7a7",
+      "Transform": {
+        "pivot": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "position": [
+          4.0,
+          0.0,
+          0.0
+        ],
+        "orientation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": 0.1
+      },
+      "Model": "sponza/sponza.obj"
     },
     {
       "Name": "ground",
@@ -65,6 +89,43 @@
         "scale": 1.0
       },
       "Model": "quad.obj"
+    },
+    {
+      "Name": "Free-fly Camera",
+      "Guid": "f6a2ebc0-51cb-4d0a-9be1-3db0b38a255e",
+      "Transform": {
+        "pivot": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "position": [
+          0.0,
+          0.0,
+          10.0
+        ],
+        "orientation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "scale": 1.0
+      },
+      "PointLight": {
+        "color": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "intensity": 10.0
+      },
+      "ActiveCamera": {},
+      "PerspectiveCamera": {
+        "fov": 70,
+        "zNear": 0.1,
+        "zFar": 1000
+      }
     },
     {
       "Name": "light0",

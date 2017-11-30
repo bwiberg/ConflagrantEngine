@@ -96,7 +96,8 @@ std::shared_ptr<Mesh> LoadMesh(aiMesh const *mesh, aiScene const *scene,
 bool TryLoadMaterialProperty(std::shared_ptr<assets::Texture2D> &textureTarget, vec3 &colorTarget,
                              aiMaterial const *aimtl, aiTextureType const type,
                              char const *propKey, uint const ttype, uint const idx,
-                             std::string const typeName) {
+                             std::string const typeName,
+                             Path const &folder) {
 #define RETURN_ERROR(x, y) LOG_ERROR(cfl::assets::TryLoadMaterialProperty())<< "typeName=" << typeName << (x) << std::endl; \
     return false;
 
@@ -115,7 +116,7 @@ bool TryLoadMaterialProperty(std::shared_ptr<assets::Texture2D> &textureTarget, 
             RETURN_ERROR("aiMaterial->GetTexture failed with return value ", ret);
         };
 
-        textureTarget = std::dynamic_pointer_cast<Texture2D>(LoadTexture(filesystem::path(str.C_Str())));
+        textureTarget = std::dynamic_pointer_cast<Texture2D>(LoadTexture(folder / filesystem::path(str.C_Str())));
         return true;
     }
 
@@ -135,13 +136,18 @@ std::shared_ptr<Material> LoadMaterial(aiMaterial const *material, aiScene const
     return nullptr;
     auto mtl = std::make_shared<Material>();
 
+    Path const folder = path.parent_path();
+
     bool succeeded = false;
     succeeded |= TryLoadMaterialProperty(mtl->diffuseTexture, mtl->diffuseColor,
-                                         material, aiTextureType_DIFFUSE, AI_MATKEY_COLOR_DIFFUSE, "diffuse");
+                                         material, aiTextureType_DIFFUSE, AI_MATKEY_COLOR_DIFFUSE, "diffuse",
+                                         folder);
     succeeded |= TryLoadMaterialProperty(mtl->specularTexture, mtl->specularColor,
-                                         material, aiTextureType_SPECULAR, AI_MATKEY_COLOR_SPECULAR, "specular");
+                                         material, aiTextureType_SPECULAR, AI_MATKEY_COLOR_SPECULAR, "specular",
+                                         folder);
     succeeded |= TryLoadMaterialProperty(mtl->ambientTexture, mtl->ambientColor,
-                                         material, aiTextureType_AMBIENT, AI_MATKEY_COLOR_AMBIENT, "ambient");
+                                         material, aiTextureType_AMBIENT, AI_MATKEY_COLOR_AMBIENT, "ambient",
+                                         folder);
     if (!succeeded) {
         return nullptr;
     }

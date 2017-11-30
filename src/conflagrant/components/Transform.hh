@@ -69,7 +69,7 @@ public:
             hasChanged = false;
             matrix =
                     glm::translate(position) *
-                    glm::translate(-pivot) *
+                    glm::translate(pivot) *
                     glm::scale(glm::vec3(scale)) *
                     glm::toMat4(rotation) *
                     glm::translate(-pivot);
@@ -101,6 +101,8 @@ public:
         vec3 eulerAngles = transform.EulerAnglesDegrees();
         transform.hasChanged |= ImGui::DragFloat3("Euler angles", glm::value_ptr(eulerAngles), DragSpeed);
         transform.EulerAnglesDegrees(eulerAngles);
+
+        transform.hasChanged |= ImGui::DragFloat4("Quaternion", glm::value_ptr(transform.rotation), DragSpeed);
 
         transform.hasChanged |= ImGui::DragFloat("Scale", &transform.scale, DragSpeed);
 
