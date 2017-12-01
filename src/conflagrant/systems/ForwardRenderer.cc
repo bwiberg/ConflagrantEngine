@@ -6,6 +6,7 @@
 #include <conflagrant/components/Model.hh>
 #include <conflagrant/components/Transform.hh>
 #include <conflagrant/components/PointLight.hh>
+#include <conflagrant/components/DirectionalLight.hh>
 
 #include <imgui.h>
 #include <fstream>
@@ -100,6 +101,7 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
     ComponentHandle<comp::Transform> transform;
     ComponentHandle<comp::Model> model;
     ComponentHandle<comp::PointLight> pointLight;
+    ComponentHandle<comp::DirectionalLight> directionalLight;
 
     forwardShader->Bind();
 
@@ -108,7 +110,7 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
     // upload camera parameters
     SetCameraUniforms(entities, *forwardShader);
 
-    // upload light data
+    // upload PointLight data
     int ilight = 0;
     std::stringstream ss;
     for (auto const &entity : entities.entities_with_components(transform, pointLight)) {
@@ -120,10 +122,29 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
         forwardShader->Uniform(prefix + "color", pointLight->color);
 
         ilight++;
-        ss.clear();
+        ss.str("");
     }
-
     forwardShader->Uniform("numPointLights", ilight);
+
+    // upload DirectionalLight data
+    ilight = 0;
+    ss.str("");
+    for (auto const &entity : entities.entities_with_components(directionalLight)) {
+        ss << "directionalLights" << "[" << ilight << "]" << ".";
+        string const prefix = ss.str();
+
+        float const phi = glm::radians(directionalLight->horizontal);
+        float const theta = glm::radians(90 - directionalLight->vertical);
+        vec3 direction(sinf(theta) * cosf(phi), cosf(theta), sinf(theta) * sinf(phi));
+
+        forwardShader->Uniform(prefix + "direction", direction);
+        forwardShader->Uniform(prefix + "intensity", directionalLight->intensity);
+        forwardShader->Uniform(prefix + "color", directionalLight->color);
+
+        ilight++;
+        ss.str("");
+    }
+    forwardShader->Uniform("numDirectionalLights", ilight);
 
     OGL(glEnable(GL_CULL_FACE));
     OGL(glCullFace(GL_BACK));

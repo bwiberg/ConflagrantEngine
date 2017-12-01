@@ -10,26 +10,31 @@
 
 namespace cfl {
 namespace comp {
-struct PointLight {
+struct DirectionalLight {
+    float horizontal, vertical;
     vec3 color{1.0f, 1.0f, 1.0f};
     float intensity{1.0f};
 
     inline static string const &GetName() {
-        static const string name = "PointLight";
+        static const string name = "DirectionalLight";
         return name;
     }
 
     template<typename TSerializer>
-    static bool Serialize(Json::Value &json, PointLight &comp) {
+    static bool Serialize(Json::Value &json, DirectionalLight &comp) {
         SERIALIZE_CUSTOM(json["color"], comp.color);
         SERIALIZE(json["intensity"], comp.intensity);
+        SERIALIZE(json["horizontal"], comp.horizontal);
+        SERIALIZE(json["vertical"], comp.vertical);
         return true;
     }
 
-    inline static bool DrawWithImGui(PointLight &comp, InputManager const &input) {
+    inline static bool DrawWithImGui(DirectionalLight &comp, InputManager const &input) {
         float const DragSpeed = (input.GetKey(Key::LEFT_CONTROL) || input.GetKey(Key::LEFT_SHIFT))
-                               ? 0.01f : 0.5f;
+                                ? 0.01f : 0.5f;
 
+        ImGui::DragFloat("Horizontal angle", &comp.horizontal, DragSpeed);
+        ImGui::DragFloat("Vertical angle", &comp.vertical, DragSpeed, -90, 90);
         ImGui::DragFloat3("Color", glm::value_ptr(comp.color), DragSpeed);
         ImGui::DragFloat("Intensity", &comp.intensity, DragSpeed);
 

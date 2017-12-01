@@ -9,7 +9,7 @@
 #include <conflagrant/System.hh>
 
 namespace cfl {
-class Engine {
+class Engine : entityx::Receiver<Engine> {
     std::shared_ptr<entityx::EntityManager> entities;
 
     /**

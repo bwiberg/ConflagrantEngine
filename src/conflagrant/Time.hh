@@ -43,7 +43,7 @@ public:
 
         auto current = currentFrameTime;
         auto old = FrameTimeSamples[subtractIndex];
-        return numSamples / (current - old);
+        return (numSamples - 1) / (current - old);
     }
 };
 } // namespace cfl

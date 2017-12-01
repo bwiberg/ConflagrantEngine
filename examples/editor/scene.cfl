@@ -112,14 +112,6 @@
         ],
         "scale": 1.0
       },
-      "PointLight": {
-        "color": [
-          1.0,
-          1.0,
-          1.0
-        ],
-        "intensity": 10.0
-      },
       "ActiveCamera": {},
       "PerspectiveCamera": {
         "fov": 70,
@@ -128,7 +120,7 @@
       }
     },
     {
-      "Name": "light0",
+      "Name": "PointLight 0",
       "Guid": "d2fde301-066d-4ed2-95b7-23546fa6a625",
       "Transform": {
         "pivot": [
@@ -150,6 +142,20 @@
         "scale": 1.0
       },
       "PointLight": {
+        "color": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "intensity": 1.0
+      }
+    },
+    {
+      "Name": "DirectionalLight 0 (sun)",
+      "Guid": "d2fde301-066d-4ed2-95b7-23546fa6a625",
+      "DirectionalLight": {
+        "horizontal": 0,
+        "vertical": 75,
         "color": [
           1.0,
           1.0,

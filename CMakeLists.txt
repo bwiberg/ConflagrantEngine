@@ -147,6 +147,7 @@ set(HH_FILES
         src/conflagrant/components/Transform.hh
         src/conflagrant/components/PerspectiveCamera.hh
         src/conflagrant/components/OrthographicCamera.hh
+        src/conflagrant/components/DirectionalLight.hh
         src/conflagrant/components/PointLight.hh
         src/conflagrant/System.hh
         src/conflagrant/systems/CameraController.hh

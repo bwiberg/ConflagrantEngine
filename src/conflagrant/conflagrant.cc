@@ -17,6 +17,7 @@
 #include <conflagrant/components/PerspectiveCamera.hh>
 #include <conflagrant/components/OrthographicCamera.hh>
 #include <conflagrant/components/PointLight.hh>
+#include <conflagrant/components/DirectionalLight.hh>
 
 #include <conflagrant/systems/CameraController.hh>
 #include <conflagrant/systems/EcsDebugger.hh>
@@ -40,6 +41,7 @@ bool InitDefaults() {
     REGISTER_COMPONENT(cfl::comp::PerspectiveCamera);
     REGISTER_COMPONENT(cfl::comp::OrthographicCamera);
     REGISTER_COMPONENT(cfl::comp::PointLight);
+    REGISTER_COMPONENT(cfl::comp::DirectionalLight);
 
     REGISTER_SYSTEM(cfl::syst::CameraController);
     REGISTER_SYSTEM(cfl::syst::EcsDebugger);
