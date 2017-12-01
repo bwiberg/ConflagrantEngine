@@ -16,6 +16,12 @@ struct SystemFactory {
     virtual bool Serialize(Json::Value &json, entityx::SystemManager &manager) const = 0;
 
     virtual bool DrawWithImGui(entityx::SystemManager &manager, InputManager const &input) const = 0;
+
+    virtual void Update(entityx::SystemManager &manager,
+                        entityx::EntityManager &entities,
+                        entityx::EventManager &events) const = 0;
+
+    virtual string GetName() const = 0;
 };
 
 template<typename TSystem>
@@ -45,6 +51,17 @@ struct ConcreteSystemFactory : public SystemFactory {
     bool DrawWithImGui(entityx::SystemManager &manager, InputManager const &input) const override {
         assert(HasSystem(manager));
         return TSystem::DrawWithImGui(*manager.system<TSystem>(), input);
+    }
+
+    void Update(entityx::SystemManager &manager,
+                entityx::EntityManager &entities,
+                entityx::EventManager &events) const override {
+        assert(HasSystem(manager));
+        manager.system<TSystem>()->update(entities, events, 0);
+    }
+
+    string GetName() const override {
+        return TSystem::GetName();
     }
 };
 

@@ -7,9 +7,10 @@
 #include <entityx/entityx.h>
 #include <conflagrant/InputManager.hh>
 #include <conflagrant/System.hh>
+#include <conflagrant/SystemFactory.hh>
 
 namespace cfl {
-class Engine : entityx::Receiver<Engine> {
+class Engine {
     std::shared_ptr<entityx::EntityManager> entities;
 
     /**
@@ -45,6 +46,8 @@ class Engine : entityx::Receiver<Engine> {
     std::vector<std::shared_ptr<System>> systemVector;
 
 public:
+    std::vector<std::shared_ptr<SystemFactory>> orderedSystemFactories;
+
     explicit Engine(std::shared_ptr<Window> window = nullptr);
 
     ~Engine();

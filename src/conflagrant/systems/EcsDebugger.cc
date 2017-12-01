@@ -6,6 +6,7 @@
 #include <conflagrant/Engine.hh>
 
 #include <imgui.h>
+#include <algorithm>
 
 namespace cfl {
 void syst::EcsDebugger::DrawEntityEditor(entityx::Entity &entity) {
@@ -36,13 +37,15 @@ void syst::EcsDebugger::DrawEntityEditor(entityx::Entity &entity) {
     ImGui::End();
 }
 
-void syst::EcsDebugger::DrawSystems(std::unordered_set<std::shared_ptr<SystemFactory>> &currentSystems, entityx::SystemManager &manager) {
+void syst::EcsDebugger::DrawSystems(std::unordered_set<std::shared_ptr<SystemFactory>> &currentSystems,
+                                    entityx::SystemManager &manager) {
+    std::shared_ptr<SystemFactory> toMove = nullptr;
+    bool moveDown = false;
+
     ImGui::Begin("Systems");
 
-    for (auto &kvp : SystemFactoriesByName) {
-        auto const &name = kvp.first;
-        auto &factory = kvp.second;
-
+    for (auto &factory : engine->orderedSystemFactories) {
+        auto const &name = factory->GetName();
         if (name == syst::EcsDebugger::GetName()) {
             continue;
         }
@@ -63,6 +66,13 @@ void syst::EcsDebugger::DrawSystems(std::unordered_set<std::shared_ptr<SystemFac
 
         if (isSelected) {
             ImGui::Begin(name.c_str());
+            if (ImGui::Button("Move up")) {
+                toMove = factory;
+            } else if (ImGui::Button("Move down")) {
+                toMove = factory;
+                moveDown = true;
+            }
+
             if (!factory->DrawWithImGui(manager, *input)) {
                 currentSystems.erase(factory);
             }
@@ -71,6 +81,26 @@ void syst::EcsDebugger::DrawSystems(std::unordered_set<std::shared_ptr<SystemFac
     }
 
     ImGui::End();
+
+    if (!toMove) return;
+
+    auto iter = std::find(engine->orderedSystemFactories.begin(), engine->orderedSystemFactories.end(), toMove);
+    if (moveDown) {
+        if (iter + 1 == engine->orderedSystemFactories.end()) {
+            return;
+        }
+
+        std::iter_swap(iter, iter + 1);
+        return;
+    } else {
+        // move up
+        if (iter == engine->orderedSystemFactories.begin()) {
+            return;
+        }
+
+        std::iter_swap(iter, iter - 1);
+        return;
+    }
 }
 
 void syst::EcsDebugger::update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) {

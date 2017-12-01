@@ -24,6 +24,6 @@ struct System {
     /**
      * Assigned by cfl::Engine.
      */
-    Engine const *engine{nullptr};
+    Engine *engine{nullptr};
 };
 } // namespace cfl

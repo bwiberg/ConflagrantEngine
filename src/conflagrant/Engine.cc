@@ -160,6 +160,8 @@ bool Engine::CreateSystems(Json::Value &json) {
         }
 
         std::shared_ptr<SystemFactory> factory = it->second;
+        orderedSystemFactories.push_back(factory);
+
         auto system = factory->Create(*systems, jsonSystem);
         if (!system) {
             LOG_ERROR(cfl::Engine::CreateSystems) << "Failed to create system with name '" << systemName << "'."
@@ -243,7 +245,12 @@ int Engine::Run(bool singleTimestep) {
         }
 
         if (window) window->BeginFrame();
-        systems->update_all(0);
+        std::stringstream ss;
+        for (auto &factory : orderedSystemFactories) {
+            factory->Update(*systems, *entities, *events);
+            ss << factory->GetName() << ", ";
+        }
+        LOG_INFO(cfl::Engine::Run) << "System order: " << ss.str();
         Log::DrawImGuiWindow();
         if (window) window->FinishFrame();
 
@@ -276,6 +283,7 @@ bool Engine::UnloadScene() {
         system->engine = nullptr;
     }
     systemVector.clear();
+    orderedSystemFactories.clear();
 
     events = std::make_shared<entityx::EventManager>();
     entities = std::make_shared<entityx::EntityManager>(*events);
