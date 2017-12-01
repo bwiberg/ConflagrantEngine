@@ -37,6 +37,10 @@ void ProcessNode(aiNode const *node, aiScene const *scene,
         aiMesh const *aimesh = scene->mMeshes[node->mMeshes[i]];
 
         auto mesh = LoadMesh(aimesh, scene, path);
+        if (!mesh) {
+            continue;
+        }
+
         mesh->UploadToGL();
         auto &material = materials[aimesh->mMaterialIndex];
 
@@ -81,7 +85,8 @@ std::shared_ptr<Mesh> LoadMesh(aiMesh const *mesh, aiScene const *scene,
         aiFace const &face = mesh->mFaces[i];
 
         if (face.mNumIndices != 3) {
-            LOG_ERROR(cfl::assets::LoadMesh) << "ERROR" << std::endl;
+            LOG_INFO(cfl::assets::LoadMesh) << "Encountered mesh face with mNumIndices=" << face.mNumIndices
+                                            << ". Skipping this mesh entirely." << std::endl;
             return nullptr;
         }
 

@@ -91,6 +91,8 @@ void SetCameraUniforms(entityx::EntityManager &entities, gl::Shader &shader) {
 }
 
 void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) {
+    renderStats = RenderStats{};
+
     uvec2 size = window->GetSize();
     OGL(glViewport(0, 0, size.x, size.y));
     OGL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
@@ -125,6 +127,7 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
         ss.str("");
     }
     forwardShader->Uniform("numPointLights", ilight);
+    renderStats.numPointLights = ilight;
 
     // upload DirectionalLight data
     ilight = 0;
@@ -145,6 +148,7 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
         ss.str("");
     }
     forwardShader->Uniform("numDirectionalLights", ilight);
+    renderStats.numDirectionalLights = ilight;
 
     OGL(glEnable(GL_CULL_FACE));
     OGL(glCullFace(GL_BACK));
@@ -197,6 +201,10 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
             {
                 auto const &mesh = *part.first;
                 mesh.glMesh->DrawElements();
+
+                renderStats.numMeshes++;
+                renderStats.numTriangles += mesh.triangles.size();
+                renderStats.numVertices += mesh.vertices.size();
             }
 
         }
@@ -211,6 +219,14 @@ bool ForwardRenderer::DrawWithImGui(ForwardRenderer &sys, InputManager const &in
     }
 
     ImGui::LabelText("FPS", std::to_string(Time::ComputeFPS()).c_str());
+
+    ImGui::Text("Render Stats");
+
+    ImGui::LabelText("Vertices", std::to_string(sys.renderStats.numVertices).c_str());
+    ImGui::LabelText("Triangles", std::to_string(sys.renderStats.numTriangles).c_str());
+    ImGui::LabelText("Meshes", std::to_string(sys.renderStats.numMeshes).c_str());
+    ImGui::LabelText("Point lights", std::to_string(sys.renderStats.numPointLights).c_str());
+    ImGui::LabelText("Directional lights", std::to_string(sys.renderStats.numDirectionalLights).c_str());
 
     return true;
 }
