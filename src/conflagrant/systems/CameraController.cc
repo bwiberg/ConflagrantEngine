@@ -64,9 +64,9 @@ void CameraController::MoveCamera(comp::Transform &transform) {
 
     auto orientation = transform.Quaternion();
 
-    auto framePitch = glm::angleAxis(glm::radians(Time::DeltaTime<float>() * static_cast<float>(turnSpeed * -delta.y)),
+    auto framePitch = glm::angleAxis(glm::radians(static_cast<float>(turnSpeed * -delta.y)),
                                      vec3(1, 0, 0));
-    auto frameYaw = glm::angleAxis(glm::radians(Time::DeltaTime<float>() * static_cast<float>(turnSpeed * -delta.x)),
+    auto frameYaw = glm::angleAxis(glm::radians(static_cast<float>(turnSpeed * -delta.x)),
                                    vec3(0, 1, 0));
 
     orientation = glm::normalize(frameYaw * transform.Quaternion() * framePitch);

@@ -19,7 +19,7 @@ namespace cfl {
 namespace syst {
 class CameraController : public cfl::System, public entityx::System<CameraController> {
     float movementSpeed{3};
-    float turnSpeed{3};
+    float turnSpeed{0.3};
 
     bool isActive;
 

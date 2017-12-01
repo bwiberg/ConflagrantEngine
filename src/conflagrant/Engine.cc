@@ -244,6 +244,7 @@ int Engine::Run(bool singleTimestep) {
 
         if (window) window->BeginFrame();
         systems->update_all(0);
+        Log::DrawImGuiWindow();
         if (window) window->FinishFrame();
 
     } while (!shouldStop);

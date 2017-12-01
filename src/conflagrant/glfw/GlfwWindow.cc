@@ -335,7 +335,12 @@ bool GlfwWindow::PollEvents() {
 
 bool GlfwWindow::SetSwapInterval(int interval) {
     GLFW_RETURN_FALSE(glfwSwapInterval(interval));
+    swapInterval = interval;
     return true;
+}
+
+int GlfwWindow::GetSwapInterval() const {
+    return swapInterval;
 }
 
 bool GlfwWindow::BeginFrame() {

@@ -4,8 +4,6 @@ in mat3 fIn_WorldTBN;
 in vec3 fIn_WorldPosition;
 in vec2 fIn_TexCoord;
 
-out vec4 out_Color;
-
 struct MaterialProperty {
     sampler2D map;
     vec3 color;
@@ -45,10 +43,12 @@ uniform float AttenuationQuadratic = 0.01f;
 uniform float time;
 uniform vec3 EyePos;
 
+out vec4 out_Color;
+
 vec3 GetPropertyColor(MaterialProperty prop) {
     vec3 color = prop.color;
     if (prop.hasMap != 0) {
-        color = texture(prop.map, fIn_TexCoord).rgb;
+        color = texture(prop.map, vec2(fIn_TexCoord.s, 1 - fIn_TexCoord.t)).rgb;
     }
     return color;
 }

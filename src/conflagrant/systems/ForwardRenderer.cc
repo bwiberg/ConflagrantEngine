@@ -218,6 +218,12 @@ bool ForwardRenderer::DrawWithImGui(ForwardRenderer &sys, InputManager const &in
         sys.LoadShaders();
     }
 
+    int swapInterval = sys.window->GetSwapInterval();
+    string currentRenderMode = (swapInterval == 0) ? "Enable VSync" : "Disable VSync";
+    if (ImGui::Button(currentRenderMode.c_str())) {
+        sys.window->SetSwapInterval(swapInterval == 0 ? 1 : 0);
+    }
+
     ImGui::LabelText("FPS", std::to_string(Time::ComputeFPS()).c_str());
 
     ImGui::Text("Render Stats");

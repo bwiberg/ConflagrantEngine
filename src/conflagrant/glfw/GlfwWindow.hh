@@ -28,6 +28,8 @@ class GlfwWindow final : public Window {
 
     bool sizeChanged{true};
 
+    int swapInterval{0};
+
     static void GlfwFramebufferSizeCallback(GLFWwindow *w, int width, int height);
 
     static void GlfwKeyCallback(GLFWwindow *w, int button, int scancode, int action, int modifiers);
@@ -71,6 +73,8 @@ public:
     bool PollEvents() override;
 
     bool SetSwapInterval(int interval) override;
+
+    int GetSwapInterval() const override;
 
     bool BeginFrame() override;
 

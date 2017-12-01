@@ -23,7 +23,7 @@ struct Name {
 
     inline static bool DrawWithImGui(Name &name, InputManager const &input) {
         size_t constexpr BufferSize = 1024;
-        char buf[BufferSize];
+        char buf[BufferSize] = {'\0'};
         name.value.copy(buf, BufferSize);
         if (ImGui::InputText("Text", buf, IM_ARRAYSIZE(buf))) {
             name.value = string(buf);

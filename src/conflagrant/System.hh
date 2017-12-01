@@ -19,7 +19,7 @@ struct System {
     /**
      * Assigned by cfl::Engine.
      */
-    std::shared_ptr<Window const> window{nullptr};
+    std::shared_ptr<Window> window{nullptr};
 
     /**
      * Assigned by cfl::Engine.

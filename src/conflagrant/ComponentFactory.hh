@@ -20,7 +20,12 @@ template<typename TComponent>
 struct ConcreteComponentFactory : public ComponentFactory {
     bool Create(entityx::Entity &entity, Json::Value &json) const override {
         entityx::ComponentHandle<TComponent> component = entity.assign<TComponent>();
-        return TComponent::template Serialize<Deserializer>(json, *component.get());
+        bool success = TComponent::template Serialize<Deserializer>(json, *component.get());
+#ifdef NDEBUG
+        return true;
+#else
+        return success;
+#endif // NDEBUG
     }
 
     bool HasComponent(entityx::Entity &entity) const override {

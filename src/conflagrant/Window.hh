@@ -56,6 +56,8 @@ struct Window {
 
     virtual bool SetSwapInterval(int interval) = 0;
 
+    virtual int GetSwapInterval() const = 0;
+
     virtual bool BeginFrame() = 0;
 
     virtual bool FinishFrame() = 0;

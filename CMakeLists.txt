@@ -181,6 +181,7 @@ set(HH_FILES
 set(CC_FILES
         src/conflagrant/Engine.cc
         src/conflagrant/Time.cc
+        src/conflagrant/logging.cc
         src/conflagrant/assets/AssetManager.cc
         src/conflagrant/assets/loaders/ModelLoader.cc
         src/conflagrant/assets/loaders/TextureLoader.cc
