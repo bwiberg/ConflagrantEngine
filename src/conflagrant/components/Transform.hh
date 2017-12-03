@@ -92,8 +92,7 @@ public:
     }
 
     static bool DrawWithImGui(Transform &transform, InputManager const &input) {
-        float const DragSpeed = (input.GetKey(Key::LEFT_CONTROL) || input.GetKey(Key::LEFT_SHIFT))
-                                ? 0.01f : 0.5f;
+        float const DragSpeed = input.GetKey(Key::LEFT_SHIFT)? 0.01f : 0.5f;
 
         transform.hasChanged |= ImGui::DragFloat3("Pivot", glm::value_ptr(transform.pivot), DragSpeed);
         transform.hasChanged |= ImGui::DragFloat3("Position", glm::value_ptr(transform.position), DragSpeed);

@@ -20,10 +20,9 @@ void main(void) {
     gl_Position = P * V * vec4(fIn_WorldPosition, 1.0);
     fIn_TexCoord = vIn_TexCoord;
 
-    vec3 T = normalize(vec3(M * vec4(vIn_Tangent,   0.0)));
-    vec3 N = normalize(vec3(M * vec4(vIn_Normal,    0.0)));
-    T = normalize(T - dot(T, N) * N);
-    vec3 B = cross(T, N);
+    vec3 T = normalize(vec3(M * vec4(vIn_Tangent, 0.0)));
+    vec3 N = normalize(vec3(M * vec4(vIn_Normal, 0.0)));
+    vec3 B = normalize(vec3(M * vec4(vIn_Bitangent, 0.0)));
 
-    fIn_WorldTBN = transpose(inverse(mat3(M))) * mat3(T, B, N);
+    fIn_WorldTBN = mat3(T, B, N);
 }

@@ -112,7 +112,9 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 ################################
 
 set(CFL_BUILTIN_SHADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/conflagrant/shaders)
+set(CFL_BUILTIN_ASSETS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/assets)
 add_definitions(-DBUILTIN_SHADER_DIR="${CFL_BUILTIN_SHADER_DIR}")
+add_definitions(-DBUILTIN_ASSETS_DIR="${CFL_BUILTIN_ASSETS_DIR}")
 
 ################################################
 ### gather all source files and header files ###

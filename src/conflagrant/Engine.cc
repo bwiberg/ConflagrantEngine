@@ -250,7 +250,6 @@ int Engine::Run(bool singleTimestep) {
             factory->Update(*systems, *entities, *events);
             ss << factory->GetName() << ", ";
         }
-        LOG_INFO(cfl::Engine::Run) << "System order: " << ss.str();
         Log::DrawImGuiWindow();
         if (window) window->FinishFrame();
 

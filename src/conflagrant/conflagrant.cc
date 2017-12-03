@@ -25,12 +25,17 @@
 
 namespace cfl {
 bool InitDefaults() {
-    cfl::assets::AssetManager::RegisterLoaderForExtensions(
+    using cfl::assets::AssetManager;
+
+    AssetManager::RegisterLoaderForExtensions(
             cfl::assets::LoadModel,
             {"obj", "fbx"});
-    cfl::assets::AssetManager::RegisterLoaderForExtensions(
+    AssetManager::RegisterLoaderForExtensions(
             cfl::assets::LoadTexture,
             {"jpg", "jpeg", "png", "tga", "bmp", "psd", "gif", "hdr", "pic"});
+
+    Path builtinAssetsPath(BUILTIN_ASSETS_DIR);
+    AssetManager::AddAssetsPath(builtinAssetsPath);
 
     REGISTER_COMPONENT(cfl::comp::Guid);
     REGISTER_COMPONENT(cfl::comp::Mesh);

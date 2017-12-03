@@ -63,7 +63,7 @@ vec3 ComputePhongShading(vec3 L, vec3 N, vec3 E, vec3 lcolor, vec3 kDiffuse, vec
 
     vec3 R = normalize(reflect(-L, N));
     float ER = max(dot(E, R), 0.0);
-    vec3 specular = pow(ER, 1) * lcolor * kDiffuse * kSpecular;
+    vec3 specular = pow(ER, shininess) * lcolor * kDiffuse * kSpecular;
 
     return diffuse + specular;
 }
@@ -73,8 +73,9 @@ vec3 ApplyDirectionalLight(DirectionalLight l, vec3 N, vec3 E, vec3 kDiffuse, ve
 }
 
 vec3 ApplyPointLight(PointLight l, vec3 N, vec3 E, vec3 kDiffuse, vec3 kSpecular, float shininess) {
-    vec3 L = normalize(l.worldPosition - fIn_WorldPosition);
+    vec3 L = l.worldPosition - fIn_WorldPosition;
     float distance = length(l.worldPosition - fIn_WorldPosition);
+    L /= distance;
 
     return Attenuate(distance) * ComputePhongShading(L, N, E, l.intensity * l.color, kDiffuse, kSpecular, shininess);
 }
@@ -86,11 +87,12 @@ void main(void) {
     if (material.hasNormalMap != 0) {
         N = 2.0 * texture(material.normalMap, fIn_TexCoord).rgb - vec3(1.0);
     }
-    N = normalize(fIn_WorldTBN * N);
+    //N = normalize(fIn_WorldTBN * N);
+    N = fIn_WorldTBN[2];
 
     vec3 kDiffuse = GetPropertyColor(material.diffuse);
     vec3 kSpecular = GetPropertyColor(material.specular);
-    float shininess = material.shininess;
+    float shininess = max(10, material.shininess);
 
     vec3 E = normalize(EyePos - fIn_WorldPosition);
 

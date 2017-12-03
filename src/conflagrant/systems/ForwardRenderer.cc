@@ -198,7 +198,11 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
 
             // render mesh
             {
-                auto const &mesh = *part.first;
+                auto &mesh = *part.first;
+                if (mesh.glMeshNeedsUpdate) {
+                    mesh.UploadToGL();
+                }
+
                 mesh.glMesh->DrawElements();
 
                 renderStats.numMeshes++;
