@@ -17,11 +17,13 @@ struct OrthographicCamera {
     mat4 projection;
 
     inline static string const GetName() {
+        $
         return "OrthographicCamera";
     }
 
     template<typename TSerializer>
     static bool Serialize(Json::Value &json, OrthographicCamera &camera) {
+        $
         SERIALIZE(json["size"], camera.size);
         SERIALIZE(json["near"], camera.zNear);
         SERIALIZE(json["far"], camera.zFar);
@@ -30,6 +32,7 @@ struct OrthographicCamera {
     }
 
     inline static bool DrawWithImGui(OrthographicCamera &camera, InputManager const &input) {
+        $
         float const DragSpeed = (input.GetKey(Key::LEFT_CONTROL) || input.GetKey(Key::LEFT_SHIFT))
                                 ? 0.01f : 0.5f;
 

@@ -4,6 +4,7 @@
 namespace cfl {
 namespace syst {
 entityx::Entity GetActiveCamera(entityx::EntityManager &entities) {
+    $
     using entityx::ComponentHandle;
 
     ComponentHandle<comp::Transform> transform;
@@ -38,6 +39,7 @@ entityx::Entity GetActiveCamera(entityx::EntityManager &entities) {
 }
 
 void CameraController::MoveCamera(comp::Transform &transform) {
+    $
     mat4 const &matrix = transform.GetMatrix();
     vec3 position = transform.Position();
 
@@ -57,7 +59,7 @@ void CameraController::MoveCamera(comp::Transform &transform) {
     vec3 const moveSideways = amountRight * Right;
 
     float speed = input->GetKey(Key::LEFT_SHIFT) ? 4.0f : 1.0f;
-    position += Time::DeltaTime<float>() * speed * movementSpeed * (moveForward + moveSideways);
+    position += static_cast<float>(Time::DeltaTime()) * speed * movementSpeed * (moveForward + moveSideways);
     transform.Position(position);
 
     dvec2 const delta = input->GetDeltaMousePositionPixel();
@@ -74,6 +76,7 @@ void CameraController::MoveCamera(comp::Transform &transform) {
 }
 
 void CameraController::update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) {
+    $
     using entityx::ComponentHandle;
 
     auto activeCamera = GetActiveCamera(entities);
@@ -121,6 +124,7 @@ void CameraController::update(entityx::EntityManager &entities, entityx::EventMa
 }
 
 bool CameraController::DrawWithImGui(CameraController &sys, InputManager const &input) {
+    $
     ImGui::DragFloat("Movement speed", &sys.movementSpeed, 1.0f, 0);
     ImGui::DragFloat("Turn speed", &sys.turnSpeed, 1.0f, 0);
     return true;

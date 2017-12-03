@@ -8,6 +8,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <json/json.h>
+#include <dollar/dollar.hpp>
 
 // common STL includes
 

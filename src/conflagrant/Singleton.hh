@@ -27,10 +27,8 @@ template<typename T>
 typename std::shared_ptr<T> Singleton<T>::Instance = 0;
 
 template<typename T>
-std::shared_ptr<T> Singleton<T>::GetInstance()
-{
-    if(!Instance)
-    {
+std::shared_ptr<T> Singleton<T>::GetInstance() {
+    if (!Instance) {
         Singleton<T>::Instance = std::make_shared<T>();
     }
 
@@ -38,8 +36,7 @@ std::shared_ptr<T> Singleton<T>::GetInstance()
 }
 
 template<typename T>
-void Singleton<T>::Destroy()
-{
+void Singleton<T>::Destroy() {
     Singleton<T>::Instance = nullptr;
 }
 } // namespace cfl

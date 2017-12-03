@@ -34,8 +34,7 @@ class StateStack {
         inline void Apply() const {
             if (state) {
                 OGL(glEnable(capability));
-            }
-            else {
+            } else {
                 OGL(glDisable(capability));
             }
         }
@@ -87,7 +86,7 @@ inline PushedState::~PushedState() {
 
 template<size_t N>
 struct StateGroup {
-    StateGroup(std::array<GLenum, N> && capabilities);
+    StateGroup(std::array<GLenum, N> &&capabilities);
 
     StateGroup(std::array<State, N> &&capabilitiesAndStates);
 
@@ -99,7 +98,7 @@ struct StateGroup {
 };
 
 template<size_t N>
-StateGroup::StateGroup(std::array<GLenum, N> && capabilities) {
+StateGroup::StateGroup(std::array<GLenum, N> &&capabilities) {
     for (size_t i = 0; i < N; ++i) {
         capabilitiesAndStates[i].capability = capabilities[i];
         OGL(glGetBooleanv(capabilities[i], &capabilitiesAndStates[i].state));
@@ -120,8 +119,7 @@ void StateGroup::Apply() {
     for (auto &csp : capabilitiesAndStates) {
         if (csp.state) {
             OGL(glEnable(csp.capability));
-        }
-        else {
+        } else {
             OGL(glDisable(csp.capability));
         }
     }

@@ -17,11 +17,13 @@ struct PerspectiveCamera {
     mat4 projection;
 
     inline static string const GetName() {
+        $
         return "PerspectiveCamera";
     }
 
     template<typename TSerializer>
     static bool Serialize(Json::Value &json, PerspectiveCamera &camera) {
+        $
         SERIALIZE(json["fov"], camera.fov);
         SERIALIZE(json["zNear"], camera.zNear);
         SERIALIZE(json["zFar"], camera.zFar);
@@ -30,6 +32,7 @@ struct PerspectiveCamera {
     }
 
     static bool DrawWithImGui(PerspectiveCamera &camera, InputManager const &input) {
+        $
         float const DragSpeed = (input.GetKey(Key::LEFT_CONTROL) || input.GetKey(Key::LEFT_SHIFT))
                                 ? 0.01f : 0.5f;
 

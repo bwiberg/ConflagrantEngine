@@ -16,11 +16,13 @@ struct Model {
     string path;
 
     inline static string const GetName() {
+        $
         return "Model";
     }
 
     template<typename TSerializer>
     static bool Serialize(Json::Value &json, Model &model) {
+        $
         SERIALIZE(json, model.path);
 
         if (!model.value) {
@@ -30,6 +32,7 @@ struct Model {
     }
 
     inline static bool DrawWithImGui(Model &model, InputManager const &input) {
+        $
         size_t constexpr BufferSize = 1024;
         char buf[BufferSize];
         model.path.copy(buf, BufferSize);
@@ -45,6 +48,7 @@ struct Model {
     }
 
     inline static bool ReloadModel(Model &model) {
+        $
         model.value = assets::AssetManager::LoadAsset<assets::Model const>(model.path);
         return model.value != nullptr;
     }

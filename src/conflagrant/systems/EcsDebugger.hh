@@ -24,6 +24,7 @@ class EcsDebugger : public System, public entityx::System<EcsDebugger> {
 
 public:
     inline static string GetName() {
+        $
         return "EcsDebugger";
     }
 
@@ -31,11 +32,13 @@ public:
 
     template<typename TSerializer>
     static bool Serialize(Json::Value &json, EcsDebugger &sys) {
+        $
         json["name"] = GetName();
         return true;
     }
 
     static bool DrawWithImGui(EcsDebugger &sys, InputManager const &input) {
+        $
         return false;
     }
 };

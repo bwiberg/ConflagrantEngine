@@ -29,7 +29,7 @@ std::string _OpenCLErrorToString(cl_int error);
  * This function is used by the OCL macro to provide debugging information in stdout when an OpenCL API call fails.
  */
 
-inline void _DisplayOpenCLError(cl_int error, std::string const& command, std::string const& file, int line) {
+inline void _DisplayOpenCLError(cl_int error, std::string const &command, std::string const &file, int line) {
     if (error != CL_SUCCESS) {
         LOG_ERROR(OpenCL) << error << " -- " << _OpenCLErrorToString(error) << std::endl
                           << "Relevant Command: " << command << std::endl

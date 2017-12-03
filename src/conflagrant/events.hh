@@ -10,6 +10,7 @@ struct CameraChanged {
     entityx::Entity oldCamera, newCamera;
 };
 
-struct Quit {};
+struct Quit {
+};
 }
 } // namespace cfl

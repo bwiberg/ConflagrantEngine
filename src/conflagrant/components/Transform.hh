@@ -21,50 +21,61 @@ class Transform {
 
 public:
     inline vec3 const &Position() const {
+        $
         return position;
     }
 
     inline void Position(vec3 const &value) {
+        $
         position = value;
         hasChanged = true;
     }
 
     inline quat const &Quaternion() const {
+        $
         return rotation;
     }
 
     inline void Quaternion(quat const &value) {
+        $
         rotation = value;
         hasChanged = true;
     }
 
     inline vec3 EulerAnglesDegrees() const {
+        $
         return glm::degrees(glm::eulerAngles(rotation));
     }
 
     inline void EulerAnglesDegrees(vec3 const &value) {
+        $
         rotation = glm::quat(glm::radians(value));
         hasChanged = true;
     }
 
     inline float Scale() const {
+        $
         return scale;
     }
 
     inline void Scale(float value) {
+        $
         scale = value;
     }
 
     inline vec3 const &Pivot() const {
+        $
         return pivot;
     }
 
     inline void Pivot(vec3 const &value) {
+        $
         pivot = value;
         hasChanged = true;
     }
 
     inline mat4 const &GetMatrix() {
+        $
         if (hasChanged) {
             hasChanged = false;
             matrix =
@@ -78,11 +89,13 @@ public:
     }
 
     inline static string const GetName() {
+        $
         return "Transform";
     }
 
     template<typename TSerializer>
     static bool Serialize(Json::Value &json, Transform &transform) {
+        $
         SERIALIZE_CUSTOM(json["pivot"], transform.pivot);
         SERIALIZE_CUSTOM(json["position"], transform.position);
         SERIALIZE_CUSTOM(json["orientation"], transform.rotation);
@@ -92,7 +105,8 @@ public:
     }
 
     static bool DrawWithImGui(Transform &transform, InputManager const &input) {
-        float const DragSpeed = input.GetKey(Key::LEFT_SHIFT)? 0.01f : 0.5f;
+        $
+        float const DragSpeed = input.GetKey(Key::LEFT_SHIFT) ? 0.01f : 0.5f;
 
         transform.hasChanged |= ImGui::DragFloat3("Pivot", glm::value_ptr(transform.pivot), DragSpeed);
         transform.hasChanged |= ImGui::DragFloat3("Position", glm::value_ptr(transform.position), DragSpeed);

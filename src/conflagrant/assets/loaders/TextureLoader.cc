@@ -2,11 +2,13 @@
 #include <conflagrant/assets/Texture.hh>
 
 #define STB_IMAGE_IMPLEMENTATION
+
 #include <stb/stb_image.h>
 
 namespace cfl {
 namespace assets {
 std::shared_ptr<Asset> LoadTexture(Path const &path) {
+    $
 #define RETURN_ERROR(x) LOG_ERROR(cfl::assets::LoadTexture) << "path=(" << path << "): " << (x) << std::endl; \
     return nullptr;
 

@@ -8,7 +8,7 @@
 namespace cfl {
 namespace math {
 template<typename T>
-inline T Clamp(T const& value, T const& minimum, T const& maximum) {
+inline T Clamp(T const &value, T const &minimum, T const &maximum) {
     if (value < minimum)
         return minimum;
     if (value > maximum)

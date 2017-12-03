@@ -19,6 +19,7 @@ struct ComponentFactory {
 template<typename TComponent>
 struct ConcreteComponentFactory : public ComponentFactory {
     bool Create(entityx::Entity &entity, Json::Value &json) const override {
+        $
         entityx::ComponentHandle<TComponent> component = entity.assign<TComponent>();
         bool success = TComponent::template Serialize<Deserializer>(json, *component.get());
 #ifdef NDEBUG
@@ -29,14 +30,17 @@ struct ConcreteComponentFactory : public ComponentFactory {
     }
 
     bool HasComponent(entityx::Entity &entity) const override {
+        $
         return entity.has_component<TComponent>();
     }
 
     bool Serialize(Json::Value &json, entityx::Entity &entity) const override {
+        $
         return TComponent::template Serialize<Serializer>(json, *entity.component<TComponent>());
     }
 
     bool DrawWithImGui(entityx::Entity &entity, InputManager const &input) const override {
+        $
         assert(HasComponent(entity));
         return TComponent::DrawWithImGui(*entity.component<TComponent>(), input);
     }

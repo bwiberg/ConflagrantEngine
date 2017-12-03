@@ -31,11 +31,13 @@ public:
     void update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) override;
 
     inline static string GetName() {
+        $
         return "ForwardRenderer";
     }
 
     template<typename TSerializer>
     static bool Serialize(Json::Value &json, ForwardRenderer &sys) {
+        $
         json["name"] = GetName();
         return true;
     }

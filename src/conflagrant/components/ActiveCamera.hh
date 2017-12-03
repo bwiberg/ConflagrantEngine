@@ -11,17 +11,20 @@ namespace cfl {
 namespace comp {
 struct ActiveCamera {
     inline static string const &GetName() {
+        $
         static const string name = "ActiveCamera";
         return name;
     }
 
     template<typename TSerializer>
     static bool Serialize(Json::Value &json, ActiveCamera &comp) {
+        $
         // SERIALIZE(json, ...);
         return true;
     }
 
     inline static bool DrawWithImGui(ActiveCamera &comp, InputManager const &input) {
+        $
         // ImGui:: ...
         return true;
     }

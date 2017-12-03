@@ -16,12 +16,14 @@ struct DirectionalLight {
     float intensity{1.0f};
 
     inline static string const &GetName() {
+        $
         static const string name = "DirectionalLight";
         return name;
     }
 
     template<typename TSerializer>
     static bool Serialize(Json::Value &json, DirectionalLight &comp) {
+        $
         SERIALIZE_CUSTOM(json["color"], comp.color);
         SERIALIZE(json["intensity"], comp.intensity);
         SERIALIZE(json["horizontal"], comp.horizontal);
@@ -30,6 +32,7 @@ struct DirectionalLight {
     }
 
     inline static bool DrawWithImGui(DirectionalLight &comp, InputManager const &input) {
+        $
         float const DragSpeed = (input.GetKey(Key::LEFT_CONTROL) || input.GetKey(Key::LEFT_SHIFT))
                                 ? 0.01f : 0.5f;
 

@@ -4,3 +4,6 @@
 [submodule "external/crossguid"]
 	path = external/crossguid
 	url = https://github.com/graeme-hill/crossguid.git
+[submodule "external/dollar"]
+	path = external/dollar
+	url = https://github.com/r-lyeh/dollar.git

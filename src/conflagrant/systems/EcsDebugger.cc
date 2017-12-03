@@ -10,6 +10,7 @@
 
 namespace cfl {
 void syst::EcsDebugger::DrawEntityEditor(entityx::Entity &entity) {
+    $
     ImGui::Begin("Entity Editor");
 
     std::stringstream ss;
@@ -39,6 +40,7 @@ void syst::EcsDebugger::DrawEntityEditor(entityx::Entity &entity) {
 
 void syst::EcsDebugger::DrawSystems(std::unordered_set<std::shared_ptr<SystemFactory>> &currentSystems,
                                     entityx::SystemManager &manager) {
+    $
     std::shared_ptr<SystemFactory> toMove = nullptr;
     bool moveDown = false;
 
@@ -104,6 +106,7 @@ void syst::EcsDebugger::DrawSystems(std::unordered_set<std::shared_ptr<SystemFac
 }
 
 void syst::EcsDebugger::update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) {
+    $
     auto &systemManager = *engine->GetSystemManager();
     DrawSystems(currentSystems, systemManager);
 

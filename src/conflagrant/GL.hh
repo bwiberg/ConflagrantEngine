@@ -12,7 +12,9 @@
 #include <OpenGL/glext.h>
 #include <GLUT/glut.h>
 #elif __linux__
+
 #include <GL/gl.h>
+
 #elif __MINGW32__ || __MINGW64__
 // #include <GL/glew.h>
 #endif
@@ -41,7 +43,7 @@ std::string _OpenGLErrorToString(GLenum err);
  * This function is used by the OGL macro to provide debugging information in stdout when an OpenGL API call fails.
  */
 
-inline void _DisplayOpenGLError(std::string const& command, std::string const& file, int line) {
+inline void _DisplayOpenGLError(std::string const &command, std::string const &file, int line) {
     GLenum error = glGetError();
     if (error != GL_NO_ERROR) {
         LOG_ERROR(OpenGL) << error << " -- " << _OpenGLErrorToString(error) << std::endl

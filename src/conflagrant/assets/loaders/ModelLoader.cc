@@ -33,6 +33,7 @@ void ProcessNode(aiNode const *node, aiScene const *scene,
                  std::vector<std::shared_ptr<Material>> const &materials,
                  Model &model,
                  Path const &path) {
+    $
     for (uint i = 0; i < node->mNumMeshes; i++) {
         aiMesh const *aimesh = scene->mMeshes[node->mMeshes[i]];
 
@@ -55,6 +56,7 @@ void ProcessNode(aiNode const *node, aiScene const *scene,
 
 std::shared_ptr<Mesh> LoadMesh(aiMesh const *mesh, aiScene const *scene,
                                Path const &path) {
+    $
     std::vector<std::shared_ptr<Texture2D>> textures;
 
     bool const hasTangents = mesh->HasTangentsAndBitangents();
@@ -103,6 +105,7 @@ bool TryLoadMaterialProperty(std::shared_ptr<assets::Texture2D> &textureTarget, 
                              char const *propKey, uint const ttype, uint const idx,
                              std::string const typeName,
                              Path const &folder) {
+    $
 #define RETURN_ERROR(x, y) LOG_ERROR(cfl::assets::TryLoadMaterialProperty())<< "typeName=" << typeName << (x) << std::endl; \
     return false;
 
@@ -136,6 +139,7 @@ bool TryLoadMaterialProperty(std::shared_ptr<assets::Texture2D> &textureTarget, 
 
 std::shared_ptr<Material> LoadMaterial(aiMaterial const *material, aiScene const *scene,
                                        Path const &path) {
+    $
 #undef RETURN_ERROR
 #define RETURN_ERROR(x, y) LOG_ERROR(cfl::assets::LoadMaterial()) << (x) << std::endl; \
     return nullptr;
@@ -166,6 +170,7 @@ std::shared_ptr<Material> LoadMaterial(aiMaterial const *material, aiScene const
 }
 
 std::shared_ptr<Asset> LoadModel(Path const &path) {
+    $
     Assimp::Importer importer;
 
     aiScene const *scene = importer.ReadFile(path.str().c_str(), AssimpFlags);

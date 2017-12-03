@@ -29,11 +29,13 @@ public:
     void update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) override;
 
     inline static string GetName() {
+        $
         return "CameraController";
     }
 
     template<typename TSerializer>
     static bool Serialize(Json::Value &json, CameraController &sys) {
+        $
         json["name"] = GetName();
         return true;
     }

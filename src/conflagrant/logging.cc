@@ -1,4 +1,5 @@
 #include "logging.hh"
+#include <dollar/dollar.hpp>
 
 namespace cfl {
 std::vector<Log::Entry> Log::Entries;
@@ -10,6 +11,7 @@ void Log::Append(Entry::Type type, std::string &&identifier, std::string &&messa
 }
 
 void Log::DrawImGuiWindow() {
+    $
     ImGui::Begin("Log");
 
     for (auto const &e : Entries) {

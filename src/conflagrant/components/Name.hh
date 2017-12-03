@@ -12,16 +12,19 @@ struct Name {
     string value;
 
     inline static string const GetName() {
+        $
         return "Name";
     }
 
     template<typename TSerializer>
     static bool Serialize(Json::Value &json, Name &name) {
+        $
         SERIALIZE(json, name.value);
         return true;
     }
 
     inline static bool DrawWithImGui(Name &name, InputManager const &input) {
+        $
         size_t constexpr BufferSize = 1024;
         char buf[BufferSize] = {'\0'};
         name.value.copy(buf, BufferSize);

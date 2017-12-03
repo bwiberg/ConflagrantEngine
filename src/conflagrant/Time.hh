@@ -24,26 +24,10 @@ class Time final {
     static void RecordCurrentFrameTime(time_t time);
 
 public:
-    template<typename T = time_t>
-    inline static T CurrentTime() {
-        return static_cast<T>(currentFrameTime);
-    }
+    static time_t CurrentTime();
 
-    template<typename T = time_t>
-    inline static T DeltaTime() {
-        return static_cast<T>(currentFrameTime - previousFrameTime);
-    }
+    static time_t DeltaTime();
 
-    template<typename T = time_t>
-    inline static T ComputeFPS(size_t numSamples = NumFrameTimeSamples) {
-        assert(numSamples > 1 && numSamples <= NumFrameTimeSamples);
-
-        size_t diff = NumFrameTimeSamples - numSamples + 1;
-        size_t subtractIndex = (Time::CurrentFrameTimeIndex + diff) % Time::NumFrameTimeSamples;
-
-        auto current = currentFrameTime;
-        auto old = FrameTimeSamples[subtractIndex];
-        return (numSamples - 1) / (current - old);
-    }
+    static time_t ComputeFPS(size_t numSamples = NumFrameTimeSamples);
 };
 } // namespace cfl

@@ -235,6 +235,7 @@ int Engine::Run(bool singleTimestep) {
     window->SetTime(0);
     Time::previousFrameTime = Time::currentFrameTime = 0;
     do {
+        dollar::clear();
         Time::RecordCurrentFrameTime(window->GetTime());
 
         if (input) {
@@ -251,8 +252,16 @@ int Engine::Run(bool singleTimestep) {
             ss << factory->GetName() << ", ";
         }
         Log::DrawImGuiWindow();
-        if (window) window->FinishFrame();
 
+        ImGui::Begin("Performance");
+        if (ImGui::Button("Save chrome://tracing file")) {
+            std::ofstream file("/home/bwiberg/confl.json");
+            dollar::chrome(file);
+        }
+        ImGui::End();
+
+        if (window) window->FinishFrame();
+        dollar::clear();
     } while (!shouldStop);
 
     shouldStop = false;

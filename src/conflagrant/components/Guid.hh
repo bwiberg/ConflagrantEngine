@@ -16,15 +16,18 @@ struct Guid {
     xg::Guid value;
 
     inline static string const GetName() {
+        $
         return "Guid";
     }
 
     template<typename TSerializer>
     static bool Serialize(Json::Value &json, Guid &guid) {
+        $
         return cfl::Serialize<TSerializer>(json, guid.value);
     }
 
     inline static bool DrawWithImGui(Guid &guid, InputManager const &input) {
+        $
         ImGui::LabelText("Guid", guid.value.str().c_str());
 
         if (ImGui::Button("Regenerate Guid")) {

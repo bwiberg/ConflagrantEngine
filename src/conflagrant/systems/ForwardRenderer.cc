@@ -14,10 +14,12 @@
 namespace cfl {
 namespace syst {
 ForwardRenderer::ForwardRenderer() {
+    $
     LoadShaders();
 }
 
 void ForwardRenderer::LoadShaders() {
+    $
     Path forwardVertexPath("forward.vert"), forwardFragmentPath("forward.frag");
     {
         PathResolver resolver;
@@ -47,6 +49,7 @@ void ForwardRenderer::LoadShaders() {
 }
 
 void SetCameraUniforms(entityx::EntityManager &entities, gl::Shader &shader) {
+    $
     using entityx::ComponentHandle;
 
     ComponentHandle<comp::Transform> transform;
@@ -91,6 +94,7 @@ void SetCameraUniforms(entityx::EntityManager &entities, gl::Shader &shader) {
 }
 
 void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) {
+    $
     renderStats = RenderStats{};
 
     uvec2 size = window->GetSize();
@@ -108,108 +112,120 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
 
     forwardShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
 
-    // upload camera parameters
     SetCameraUniforms(entities, *forwardShader);
 
-    // upload PointLight data
-    int ilight = 0;
-    std::stringstream ss;
-    for (auto const &entity : entities.entities_with_components(transform, pointLight)) {
-        ss << "pointLights" << "[" << ilight << "]" << ".";
-        string const prefix = ss.str();
+    {
+        DOLLAR("Upload PointLight data")
+        int ilight = 0;
+        std::stringstream ss;
+        for (auto const &entity : entities.entities_with_components(transform, pointLight)) {
+            DOLLAR("Upload single PointLight")
+            ss << "pointLights" << "[" << ilight << "]" << ".";
+            string const prefix = ss.str();
 
-        forwardShader->Uniform(prefix + "worldPosition", transform->Position());
-        forwardShader->Uniform(prefix + "intensity", pointLight->intensity);
-        forwardShader->Uniform(prefix + "color", pointLight->color);
+            forwardShader->Uniform(prefix + "worldPosition", transform->Position());
+            forwardShader->Uniform(prefix + "intensity", pointLight->intensity);
+            forwardShader->Uniform(prefix + "color", pointLight->color);
 
-        ilight++;
-        ss.str("");
+            ilight++;
+            ss.str("");
+        }
+        forwardShader->Uniform("numPointLights", ilight);
+        renderStats.numPointLights = static_cast<size_t>(ilight);
     }
-    forwardShader->Uniform("numPointLights", ilight);
-    renderStats.numPointLights = ilight;
 
-    // upload DirectionalLight data
-    ilight = 0;
-    ss.str("");
-    for (auto const &entity : entities.entities_with_components(directionalLight)) {
-        ss << "directionalLights" << "[" << ilight << "]" << ".";
-        string const prefix = ss.str();
+    {
+        DOLLAR("Upload DirectionalLight data")
+        int ilight = 0;
+        std::stringstream ss;
+        for (auto const &entity : entities.entities_with_components(directionalLight)) {
+            DOLLAR("Upload single DirectionalLight")
+            ss << "directionalLights" << "[" << ilight << "]" << ".";
+            string const prefix = ss.str();
 
-        float const phi = glm::radians(directionalLight->horizontal);
-        float const theta = glm::radians(90 - directionalLight->vertical);
-        vec3 direction(sinf(theta) * cosf(phi), cosf(theta), sinf(theta) * sinf(phi));
+            float const phi = glm::radians(directionalLight->horizontal);
+            float const theta = glm::radians(90 - directionalLight->vertical);
+            vec3 direction(sinf(theta) * cosf(phi), cosf(theta), sinf(theta) * sinf(phi));
 
-        forwardShader->Uniform(prefix + "direction", direction);
-        forwardShader->Uniform(prefix + "intensity", directionalLight->intensity);
-        forwardShader->Uniform(prefix + "color", directionalLight->color);
+            forwardShader->Uniform(prefix + "direction", direction);
+            forwardShader->Uniform(prefix + "intensity", directionalLight->intensity);
+            forwardShader->Uniform(prefix + "color", directionalLight->color);
 
-        ilight++;
-        ss.str("");
+            ilight++;
+            ss.str("");
+        }
+        forwardShader->Uniform("numDirectionalLights", ilight);
+        renderStats.numDirectionalLights = static_cast<size_t>(ilight);
     }
-    forwardShader->Uniform("numDirectionalLights", ilight);
-    renderStats.numDirectionalLights = ilight;
 
-    OGL(glEnable(GL_CULL_FACE));
-    OGL(glCullFace(GL_BACK));
-    OGL(glEnable(GL_DEPTH_TEST));
+    {
+        DOLLAR("Render entities with Model")
+        OGL(glEnable(GL_CULL_FACE));
+        OGL(glCullFace(GL_BACK));
+        OGL(glEnable(GL_DEPTH_TEST));
 
-    for (auto const &entity : entities.entities_with_components(transform, model)) {
-        forwardShader->Uniform("M", transform->GetMatrix());
+        for (auto const &entity : entities.entities_with_components(transform, model)) {
+            DOLLAR("Render single Model")
+            forwardShader->Uniform("M", transform->GetMatrix());
 
-        for (auto const &part : model->value->parts) {
-            string const prefix = "material.";
-
-            // upload material
-            {
-                auto const &material = *part.second;
+            for (auto const &part : model->value->parts) {
+                DOLLAR("Render part of Model")
+                string const prefix = "material.";
 
                 {
-                    string const diffusePrefix = prefix + "diffuse.";
-                    forwardShader->Uniform(diffusePrefix + "color", material.diffuseColor);
+                    DOLLAR("Upload material")
+                    auto const &material = *part.second;
 
-                    int hasDiffuseMap = (material.diffuseTexture != nullptr) ? 1 : 0;
-                    forwardShader->Uniform(diffusePrefix + "hasMap", hasDiffuseMap);
-                    if (hasDiffuseMap == 1) {
-                        forwardShader->Texture(diffusePrefix + "map", 0, material.diffuseTexture->texture);
+                    {
+                        string const diffusePrefix = prefix + "diffuse.";
+                        forwardShader->Uniform(diffusePrefix + "color", material.diffuseColor);
+
+                        int hasDiffuseMap = (material.diffuseTexture != nullptr) ? 1 : 0;
+                        forwardShader->Uniform(diffusePrefix + "hasMap", hasDiffuseMap);
+                        if (hasDiffuseMap == 1) {
+                            forwardShader->Texture(diffusePrefix + "map", 0, material.diffuseTexture->texture);
+                        }
                     }
+
+                    {
+                        string const specularPrefix = prefix + "specular.";
+                        forwardShader->Uniform(specularPrefix + "color", material.specularColor);
+
+                        int hasSpecularMap = (material.specularTexture != nullptr) ? 1 : 0;
+                        forwardShader->Uniform(specularPrefix + "hasMap", hasSpecularMap);
+                        if (hasSpecularMap == 1) {
+                            forwardShader->Texture(specularPrefix + "map", 1, material.specularTexture->texture);
+                        }
+                    }
+
+                    // todo implement normal mapping
+                    int hasNormalMap = 0;
+                    forwardShader->Uniform(prefix + "hasNormalMap", hasNormalMap);
+                    if (hasNormalMap == 1) {
+                        // forwardShader->Texture(prefix + "normalMap", GL_TEXTURE2, material.ambientTexture->texture);
+                        assert(false && "Unreachable code!");
+                    }
+
+                    forwardShader->Uniform(prefix + "shininess", material.shininess);
                 }
 
+                // render mesh
                 {
-                    string const specularPrefix = prefix + "specular.";
-                    forwardShader->Uniform(specularPrefix + "color", material.specularColor);
-
-                    int hasSpecularMap = (material.specularTexture != nullptr) ? 1 : 0;
-                    forwardShader->Uniform(specularPrefix + "hasMap", hasSpecularMap);
-                    if (hasSpecularMap == 1) {
-                        forwardShader->Texture(specularPrefix + "map", 1, material.specularTexture->texture);
+                    DOLLAR("Render mesh")
+                    auto &mesh = *part.first;
+                    if (mesh.glMeshNeedsUpdate) {
+                        mesh.UploadToGL();
+                        mesh.glMeshNeedsUpdate = false;
                     }
+
+                    mesh.glMesh->DrawElements();
+
+                    renderStats.numMeshes++;
+                    renderStats.numTriangles += mesh.triangles.size();
+                    renderStats.numVertices += mesh.vertices.size();
                 }
 
-                // todo implement normal mapping
-                int hasNormalMap = 0;
-                forwardShader->Uniform(prefix + "hasNormalMap", hasNormalMap);
-                if (hasNormalMap == 1) {
-                    // forwardShader->Texture(prefix + "normalMap", GL_TEXTURE2, material.ambientTexture->texture);
-                    assert(false && "Unreachable code!");
-                }
-
-                forwardShader->Uniform(prefix + "shininess", material.shininess);
             }
-
-            // render mesh
-            {
-                auto &mesh = *part.first;
-                if (mesh.glMeshNeedsUpdate) {
-                    mesh.UploadToGL();
-                }
-
-                mesh.glMesh->DrawElements();
-
-                renderStats.numMeshes++;
-                renderStats.numTriangles += mesh.triangles.size();
-                renderStats.numVertices += mesh.vertices.size();
-            }
-
         }
     }
 
@@ -217,6 +233,7 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
 }
 
 bool ForwardRenderer::DrawWithImGui(ForwardRenderer &sys, InputManager const &input) {
+    $
     if (ImGui::Button("Reload shaders")) {
         sys.LoadShaders();
     }

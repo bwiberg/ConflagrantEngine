@@ -188,6 +188,7 @@ bool GlfwWindow::InitHasBeenCalled = false;
 bool encounteredError = false;
 
 void GlfwErrorFunction(int v, const char *str) {
+    $
     encounteredError = true;
     LOG_ERROR(glfw) << str << std::endl;
 }
@@ -202,6 +203,7 @@ returnStatement; \
 #define GLFW_RETURN_VOID(x) GLFW_RETURN(x, return)
 
 GlfwWindow::~GlfwWindow() {
+    $
     glfwDestroyWindow(window);
     ImGui_ImplGlfwGL3_Shutdown();
 }
@@ -211,18 +213,22 @@ GlfwWindow::~GlfwWindow() {
 //}
 
 void GlfwWindow::SetKeyCallback(Window::KeyCallback callback) {
+    $
     keyCallback = callback;
 }
 
 void GlfwWindow::SetMouseButtonCallback(Window::MouseButtonCallback callback) {
+    $
     mouseButtonCallback = callback;
 }
 
 void GlfwWindow::SetMousePosCallback(Window::MousePosCallback callback) {
+    $
     mousePosCallback = callback;
 }
 
 bool GlfwWindow::InitGlfw() {
+    $
     if (InitHasBeenCalled) {
         LOG_ERROR(cfl::GlfwWindow::InitGlfw()) << "Function has already been called once" << std::endl;
     }
@@ -242,6 +248,7 @@ bool GlfwWindow::InitGlfw() {
 }
 
 std::shared_ptr<GlfwWindow> GlfwWindow::Create(uint width, uint height, string title) {
+    $
     if (!InitHasBeenCalled) {
         LOG_ERROR(cfl::GlfwWindow::Create()) << "cfl::GlfwWindow::InitGlfw() must be called before this." << std::endl;
         return nullptr;
@@ -274,6 +281,7 @@ std::shared_ptr<GlfwWindow> GlfwWindow::Create(uint width, uint height, string t
 }
 
 void GlfwWindow::GlfwFramebufferSizeCallback(GLFWwindow *w, int width, int height) {
+    $
     auto *win = static_cast<GlfwWindow *>(glfwGetWindowUserPointer(w));
 
     uint oldWidth = win->width, oldHeight = win->height;
@@ -285,6 +293,7 @@ void GlfwWindow::GlfwFramebufferSizeCallback(GLFWwindow *w, int width, int heigh
 }
 
 void GlfwWindow::GlfwKeyCallback(GLFWwindow *w, int button, int scancode, int action, int glfwModifierBits) {
+    $
     static_cast<GlfwWindow *>(glfwGetWindowUserPointer(w))
             ->keyCallback(KeysByGlfwCode[button],
                           KeyActionsByGlfwCode[action],
@@ -294,6 +303,7 @@ void GlfwWindow::GlfwKeyCallback(GLFWwindow *w, int button, int scancode, int ac
 }
 
 void GlfwWindow::GlfwMouseButtonCallback(GLFWwindow *w, int button, int action, int glfwModifierBits) {
+    $
     static_cast<GlfwWindow *>(glfwGetWindowUserPointer(w))
             ->mouseButtonCallback(MouseButtonsByGlfwCode[button],
                                   MouseActionsByGlfwCode[action],
@@ -303,19 +313,23 @@ void GlfwWindow::GlfwMouseButtonCallback(GLFWwindow *w, int button, int action, 
 }
 
 void GlfwWindow::GlfwCursorPosCallback(GLFWwindow *w, double x, double y) {
+    $
     static_cast<GlfwWindow *>(glfwGetWindowUserPointer(w))
             ->mousePosCallback(x, y);
 }
 
 void GlfwWindow::GlfwScrollCallback(GLFWwindow *w, double xoffset, double yoffset) {
+    $
     ImGui_ImplGlfwGL3_ScrollCallback(xoffset, yoffset);
 }
 
 void GlfwWindow::GlfwCharCallback(GLFWwindow *w, unsigned int c) {
+    $
     ImGui_ImplGlfwGL3_CharCallback(c);
 }
 
 bool GlfwWindow::MakeContextCurrent() {
+    $
     GLFW_RETURN_FALSE(glfwMakeContextCurrent(window));
 
     glewExperimental = GL_TRUE;
@@ -328,52 +342,62 @@ bool GlfwWindow::MakeContextCurrent() {
 }
 
 bool GlfwWindow::PollEvents() {
+    $
     sizeChanged = false;
     GLFW_RETURN_FALSE(glfwPollEvents());
     return true;
 }
 
 bool GlfwWindow::SetSwapInterval(int interval) {
+    $
     GLFW_RETURN_FALSE(glfwSwapInterval(interval));
     swapInterval = interval;
     return true;
 }
 
 int GlfwWindow::GetSwapInterval() const {
+    $
     return swapInterval;
 }
 
 bool GlfwWindow::BeginFrame() {
+    $
     ImGui_ImplGlfwGL3_NewFrame();
     return false;
 }
 
 bool GlfwWindow::FinishFrame() {
+    $
     ImGui::Render();
     GLFW_RETURN_FALSE(glfwSwapBuffers(window));
     return true;
 }
 
 uvec2 GlfwWindow::GetSize() const {
+    $
     return uvec2(width, height);
 }
 
 bool GlfwWindow::SizeHasChanged(uvec2 &sizeOut) const {
+    $
     sizeOut.x = width;
     sizeOut.y = height;
     return sizeChanged;
 }
 
 double GlfwWindow::GetTime() const {
+    $
     return glfwGetTime();
 }
 
 bool GlfwWindow::SetTime(double time) {
+    $
     GLFW_RETURN_FALSE(glfwSetTime(time));
     return true;
 }
 
 bool GlfwWindow::SetCursorMode(CursorMode mode) const {
+    $
     int glfwMode = GLFW_CURSOR_NORMAL;
     if (mode == CursorMode::HIDDEN) glfwMode = GLFW_CURSOR_HIDDEN;
     else if (mode == CursorMode::HIDDEN_FIXED) glfwMode = GLFW_CURSOR_DISABLED;
@@ -383,6 +407,7 @@ bool GlfwWindow::SetCursorMode(CursorMode mode) const {
 }
 
 CursorMode GlfwWindow::GetCursorMode() const {
+    $
     GLFW_RETURN(int glfwMode = glfwGetInputMode(window, GLFW_CURSOR), return CursorMode::NORMAL);
 
     if (glfwMode == GLFW_CURSOR_NORMAL) return CursorMode::NORMAL;
@@ -391,19 +416,22 @@ CursorMode GlfwWindow::GetCursorMode() const {
 }
 
 bool GlfwWindow::SetTitle(string const &title) {
+    $
     GLFW_RETURN_FALSE(glfwSetWindowTitle(window, title.c_str()));
     return true;
 }
 
 GlfwModifierSet::GlfwModifierSet(int glfwModifierBits)
-        : glfwModifierBits(glfwModifierBits) {}
+        : glfwModifierBits(glfwModifierBits) { $ }
 
 bool GlfwModifierSet::Test(Modifier modifier) const {
+    $
     int glfwModifier = GlfwModifierBitByCflModifier[modifier];
     return (glfwModifierBits & glfwModifier) != 0;
 }
 
 std::unordered_set<Modifier> GlfwModifierSet::GetModifiers() const {
+    $
     std::unordered_set<Modifier> modifiers;
     if (Test(Modifier::ALT)) modifiers.insert(Modifier::ALT);
     if (Test(Modifier::SHIFT)) modifiers.insert(Modifier::SHIFT);
