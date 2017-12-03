@@ -43,6 +43,7 @@ void ProcessNode(aiNode const *node, aiScene const *scene,
         }
 
         mesh->UploadToGL();
+        mesh->glMeshNeedsUpdate = false;
         auto &material = materials[aimesh->mMaterialIndex];
 
         model.parts.emplace_back(mesh, material);

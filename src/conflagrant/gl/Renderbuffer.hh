@@ -11,7 +11,6 @@ struct GlRenderbufferFactory {
     };
 
     inline static void Destroy(GLuint x) {
-        $
         OGL(glDeleteRenderbuffers(1, &x));
     };
 };

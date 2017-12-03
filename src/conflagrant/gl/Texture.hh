@@ -11,7 +11,6 @@ struct GlTextureFactory {
     };
 
     inline static void Destroy(GLuint x) {
-        $
         OGL(glDeleteTextures(1, &x));
     };
 };
@@ -64,7 +63,7 @@ struct Texture1D : public GlTextureBase {
     GLsizei const size;
 
     inline Texture1D(Texture1D &&o) noexcept
-            : GlTextureBase(std::move(o)), size(size) { $ }
+            : GlTextureBase(std::move(o)), size(o.size) { $ }
 
     inline Texture1D(GLsizei size,
                      GLenum internalFormat, GLenum format, GLenum type,
@@ -93,7 +92,7 @@ struct Texture2D : public GlTextureBase {
     GLsizei const width, height;
 
     inline Texture2D(Texture2D &&o) noexcept
-            : GlTextureBase(std::move(o)), width(width), height(height) { $ }
+            : GlTextureBase(std::move(o)), width(o.width), height(o.height) { $ }
 
     inline Texture2D(GLsizei width, GLsizei height,
                      GLenum internalFormat, GLenum format, GLenum type,
@@ -142,7 +141,7 @@ struct Texture3D : public GlTextureBase {
     GLsizei const width, height, depth;
 
     inline Texture3D(Texture3D &&o) noexcept
-            : GlTextureBase(std::move(o)), width(width), height(height), depth(depth) { $ }
+            : GlTextureBase(std::move(o)), width(o.width), height(o.height), depth(o.depth) { $ }
 
     inline Texture3D(GLsizei width, GLsizei height, GLsizei depth,
                      GLenum internalFormat, GLenum format, GLenum type,

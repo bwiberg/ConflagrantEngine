@@ -11,7 +11,6 @@ struct GlVertexArrayFactory {
     };
 
     inline static void Destroy(GLuint x) {
-        $
         OGL(glDeleteVertexArrays(1, &x));
     };
 };

@@ -5,7 +5,6 @@
 #include "conflagrant.hh"
 #include <conflagrant/assets/loaders/TextureLoader.hh>
 #include <conflagrant/assets/loaders/ModelLoader.hh>
-#include <conflagrant/SystemFactory.hh>
 #include <conflagrant/ComponentFactory.hh>
 
 #include <conflagrant/components/Name.hh>
@@ -18,6 +17,7 @@
 #include <conflagrant/components/OrthographicCamera.hh>
 #include <conflagrant/components/PointLight.hh>
 #include <conflagrant/components/DirectionalLight.hh>
+#include <conflagrant/components/Skydome.hh>
 
 #include <conflagrant/systems/CameraController.hh>
 #include <conflagrant/systems/EcsDebugger.hh>
@@ -47,6 +47,7 @@ bool InitDefaults() {
     REGISTER_COMPONENT(cfl::comp::OrthographicCamera);
     REGISTER_COMPONENT(cfl::comp::PointLight);
     REGISTER_COMPONENT(cfl::comp::DirectionalLight);
+    REGISTER_COMPONENT(cfl::comp::Skydome);
 
     REGISTER_SYSTEM(cfl::syst::CameraController);
     REGISTER_SYSTEM(cfl::syst::EcsDebugger);

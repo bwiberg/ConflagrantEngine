@@ -13,7 +13,6 @@ struct GlFramebufferFactory {
     };
 
     inline static void Destroy(GLuint x) {
-        $
         OGL(glDeleteFramebuffers(1, &x));
     };
 };

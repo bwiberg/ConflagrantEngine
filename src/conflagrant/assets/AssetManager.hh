@@ -18,7 +18,7 @@ class AssetManager {
 private:
     AssetManager() = default;
 
-    static std::unordered_map<string, std::shared_ptr<Asset const>> LoadedAssetsByPath;
+    static std::unordered_map<string, std::shared_ptr<Asset>> LoadedAssetsByPath;
 
     static std::unordered_map<string, AssetLoader> AssetLoadersByExtension;
 
@@ -29,14 +29,14 @@ private:
      * @param path The path to the asset (relative or absolute)
      * @return The loaded asset (nullptr if nonexistant)
      */
-    static std::shared_ptr<Asset const> InternalLoadAsset(string const &path);
+    static std::shared_ptr<Asset> InternalLoadAsset(string const &path);
 
     /**
      * Gets an asset that has already been loaded into CPU memory.
      * @param path The path to the asset (relative or absolute)
      * @return The loaded asset (nullptr if nonexistant)
      */
-    static std::shared_ptr<Asset const> GetPreloadedAsset(string const &path);
+    static std::shared_ptr<Asset> GetPreloadedAsset(string const &path);
 
 
 public:
@@ -47,7 +47,7 @@ public:
      * @return a shared pointer to the asset (nullptr if nonexistant)
      */
     template<typename T>
-    static std::shared_ptr<T const> LoadAsset(string const &path);
+    static std::shared_ptr<T> LoadAsset(string const &path);
 
     /**
      * Check if the manager supports the given file extension.
@@ -67,7 +67,7 @@ public:
 };
 
 template<typename T>
-std::shared_ptr<const T> AssetManager::LoadAsset(string const &path) {
+std::shared_ptr<T> AssetManager::LoadAsset(string const &path) {
     static_assert(std::is_base_of<Asset, T>::value, "Asset type must inherit from the Asset interface");
     return std::dynamic_pointer_cast<T>(InternalLoadAsset(path));
 }

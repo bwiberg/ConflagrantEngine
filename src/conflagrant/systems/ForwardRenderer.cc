@@ -7,12 +7,41 @@
 #include <conflagrant/components/Transform.hh>
 #include <conflagrant/components/PointLight.hh>
 #include <conflagrant/components/DirectionalLight.hh>
+#include <conflagrant/components/Skydome.hh>
 
 #include <imgui.h>
 #include <fstream>
 
 namespace cfl {
 namespace syst {
+std::shared_ptr<gl::Shader> LoadShader(string const &vertexPathStr, string const &fragmentPathStr) {
+    Path vertexPath(vertexPathStr), fragmentPath(fragmentPathStr);
+    {
+        PathResolver resolver;
+        resolver.append(Path(BUILTIN_SHADER_DIR));
+
+        vertexPath = resolver.resolve(vertexPath);
+        fragmentPath = resolver.resolve(fragmentPath);
+    }
+
+    if (!vertexPath.is_file() || !fragmentPath.is_file()) {
+        LOG_ERROR(cfl::syst::ForwardRenderer)
+                << "Fatal error, couldn't locate built-in shader sources for 'forward' shader" << std::endl;
+        return nullptr;
+    }
+
+    std::stringstream buffer;
+
+    buffer << std::ifstream(vertexPath.str()).rdbuf();
+    string const forwardShaderVertex = buffer.str();
+    buffer.str("");
+
+    buffer << std::ifstream(fragmentPath.str()).rdbuf();
+    string const forwardShaderFragment = buffer.str();
+
+    return std::make_shared<gl::Shader>(forwardShaderVertex, forwardShaderFragment);
+}
+
 ForwardRenderer::ForwardRenderer() {
     $
     LoadShaders();
@@ -20,39 +49,14 @@ ForwardRenderer::ForwardRenderer() {
 
 void ForwardRenderer::LoadShaders() {
     $
-    Path forwardVertexPath("forward.vert"), forwardFragmentPath("forward.frag");
-    {
-        PathResolver resolver;
-        resolver.append(Path(BUILTIN_SHADER_DIR));
-
-        forwardVertexPath = resolver.resolve(forwardVertexPath);
-        forwardFragmentPath = resolver.resolve(forwardFragmentPath);
-    }
-
-    if (!forwardVertexPath.is_file() || !forwardFragmentPath.is_file()) {
-        LOG_ERROR(cfl::syst::ForwardRenderer)
-                << "Fatal error, couldn't locate built-in shader sources for 'forward' shader" << std::endl;
-        return;
-    }
-
-    std::stringstream buffer;
-
-    buffer << std::ifstream(forwardVertexPath.str()).rdbuf();
-    string const forwardShaderVertex = buffer.str();
-    buffer.str("");
-
-    buffer << std::ifstream(forwardFragmentPath.str()).rdbuf();
-    string const forwardShaderFragment = buffer.str();
-    buffer.str("");
-
-    forwardShader = std::make_shared<gl::Shader>(forwardShaderVertex, forwardShaderFragment);
+    forwardShader = LoadShader("forward.vert", "forward.frag");
+    skydomeShader = LoadShader("forward_skydome.vert", "forward_skydome.frag");
 }
 
-void SetCameraUniforms(entityx::EntityManager &entities, gl::Shader &shader) {
+void GetCameraInfo(entityx::EntityManager &entities, entityx::ComponentHandle<comp::Transform> &transform, mat4 &P) {
     $
     using entityx::ComponentHandle;
 
-    ComponentHandle<comp::Transform> transform;
     ComponentHandle<comp::ActiveCamera> active;
     ComponentHandle<comp::PerspectiveCamera> perspective;
     ComponentHandle<comp::OrthographicCamera> orthographic;
@@ -70,15 +74,6 @@ void SetCameraUniforms(entityx::EntityManager &entities, gl::Shader &shader) {
         }
     }
 
-    mat4 V;
-    if (transform) {
-        V = glm::inverse(transform->GetMatrix());
-    } else {
-        V = mat4(1);
-    }
-    shader.Uniform("V", V);
-
-    mat4 P;
     if (perspective) {
         P = perspective->projection;
     } else if (orthographic) {
@@ -88,9 +83,6 @@ void SetCameraUniforms(entityx::EntityManager &entities, gl::Shader &shader) {
                 << "No OrthographicCamera or PerspectiveCamera." << std::endl;
         P = mat4(1);
     }
-    shader.Uniform("P", P);
-
-    shader.Uniform("EyePos", transform->Position());
 }
 
 void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) {
@@ -103,16 +95,23 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
     OGL(glClearColor(0.0f, 0.0f, 0.0f, 0.0f));
 
     using entityx::ComponentHandle;
-    ComponentHandle<comp::Transform> transform;
+    ComponentHandle<comp::Transform> transform, cameraTransform;
     ComponentHandle<comp::Model> model;
     ComponentHandle<comp::PointLight> pointLight;
     ComponentHandle<comp::DirectionalLight> directionalLight;
+    ComponentHandle<comp::Skydome> skydome;
+
+    mat4 P;
+    GetCameraInfo(entities, cameraTransform, P);
+
+    mat4 Vinv = glm::inverse(cameraTransform->GetMatrix());
 
     forwardShader->Bind();
 
+    forwardShader->Uniform("V", Vinv);
+    forwardShader->Uniform("P", P);
+    forwardShader->Uniform("EyePos", cameraTransform->Position());
     forwardShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
-
-    SetCameraUniforms(entities, *forwardShader);
 
     {
         DOLLAR("Upload PointLight data")
@@ -224,12 +223,50 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
                     renderStats.numTriangles += mesh.triangles.size();
                     renderStats.numVertices += mesh.vertices.size();
                 }
-
             }
         }
     }
 
     forwardShader->Unbind();
+
+    Vinv = glm::inverse(glm::toMat4(cameraTransform->Quaternion()));
+
+    skydomeShader->Bind();
+    forwardShader->Uniform("EyePos", cameraTransform->Position());
+    forwardShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
+
+    {
+        DOLLAR("Render entities with Skydome")
+        OGL(glEnable(GL_CULL_FACE));
+        OGL(glCullFace(GL_FRONT));
+        OGL(glEnable(GL_DEPTH_TEST));
+
+        mat4 MVP;
+
+        for (auto const &entity : entities.entities_with_components(skydome)) {
+            DOLLAR("Render single Skydome mesh")
+
+            MVP = P * Vinv * glm::rotate(glm::degrees(skydome->rotationDegrees), vec3(0, 1, 0));
+
+            skydomeShader->Texture("skydomeColor", 0, skydome->texture->texture);
+            skydomeShader->Uniform("radius", skydome->radius);
+            skydomeShader->Uniform("MVP", MVP);
+
+            auto &mesh = *skydome->mesh;
+            if (mesh.glMeshNeedsUpdate) {
+                mesh.UploadToGL();
+                mesh.glMeshNeedsUpdate = false;
+            }
+
+            mesh.glMesh->DrawElements();
+
+            renderStats.numMeshes++;
+            renderStats.numTriangles += mesh.triangles.size();
+            renderStats.numVertices += mesh.vertices.size();
+        }
+    }
+
+    skydomeShader->Unbind();
 }
 
 bool ForwardRenderer::DrawWithImGui(ForwardRenderer &sys, InputManager const &input) {

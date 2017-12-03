@@ -6,11 +6,11 @@ namespace cfl {
 namespace assets {
 std::unordered_map<string, AssetLoader> AssetManager::AssetLoadersByExtension;
 
-std::unordered_map<string, std::shared_ptr<Asset const>> AssetManager::LoadedAssetsByPath;
+std::unordered_map<string, std::shared_ptr<Asset>> AssetManager::LoadedAssetsByPath;
 
 PathResolver AssetManager::AssetsPathResolver;
 
-std::shared_ptr<const Asset> AssetManager::InternalLoadAsset(std::string const &path_) {
+std::shared_ptr<Asset> AssetManager::InternalLoadAsset(std::string const &path_) {
     $
     Path assetPath(path_);
     assetPath = AssetsPathResolver.resolve(assetPath);
@@ -23,15 +23,17 @@ std::shared_ptr<const Asset> AssetManager::InternalLoadAsset(std::string const &
     if (!SupportsExtension(extension))
         return nullptr;
 
-    std::shared_ptr<const Asset> asset = nullptr;
-    if ((asset = GetPreloadedAsset(path_)))
+    auto asset = GetPreloadedAsset(path_);
+    if (asset != nullptr) {
         return asset;
+    }
 
     asset = AssetLoadersByExtension[extension](assetPath);
+    auto &a = *asset;
     return LoadedAssetsByPath[path_] = asset;
 }
 
-std::shared_ptr<const Asset> AssetManager::GetPreloadedAsset(string const &path) {
+std::shared_ptr<Asset> AssetManager::GetPreloadedAsset(string const &path) {
     $
     auto asset = LoadedAssetsByPath.find(path);
     if (asset == LoadedAssetsByPath.end()) {

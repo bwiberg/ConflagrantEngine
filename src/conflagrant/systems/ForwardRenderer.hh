@@ -19,7 +19,7 @@ struct RenderStats {
 };
 
 class ForwardRenderer : public cfl::System, public entityx::System<ForwardRenderer> {
-    std::shared_ptr<gl::Shader> forwardShader;
+    std::shared_ptr<gl::Shader> forwardShader, skydomeShader;
 
     RenderStats renderStats;
 

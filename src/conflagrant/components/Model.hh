@@ -24,11 +24,7 @@ struct Model {
     static bool Serialize(Json::Value &json, Model &model) {
         $
         SERIALIZE(json, model.path);
-
-        if (!model.value) {
-            model.value = assets::AssetManager::LoadAsset<assets::Model const>(model.path);
-        }
-        return model.value != nullptr;
+        return ReloadModel(model);
     }
 
     inline static bool DrawWithImGui(Model &model, InputManager const &input) {

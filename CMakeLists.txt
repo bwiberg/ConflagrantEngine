@@ -136,7 +136,6 @@ set(HH_FILES
         src/conflagrant/GL.hh
         src/conflagrant/CL.hh
         src/conflagrant/Window.hh
-        src/conflagrant/Singleton.hh
         src/conflagrant/assets/Asset.hh
         src/conflagrant/assets/AssetLoader.hh
         src/conflagrant/assets/AssetManager.hh
@@ -153,6 +152,7 @@ set(HH_FILES
         src/conflagrant/components/OrthographicCamera.hh
         src/conflagrant/components/DirectionalLight.hh
         src/conflagrant/components/PointLight.hh
+        src/conflagrant/components/Skydome.hh
         src/conflagrant/System.hh
         src/conflagrant/systems/CameraController.hh
         src/conflagrant/systems/EcsDebugger.hh
