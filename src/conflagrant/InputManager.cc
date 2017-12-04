@@ -5,7 +5,6 @@
 
 namespace cfl {
 InputManager::InputManager(std::shared_ptr<Window> &window) : window(window) {
-    $
     assert(window != nullptr);
 
 //    window->SetFramebufferSizeCallback([this](uint width,
@@ -16,7 +15,6 @@ InputManager::InputManager(std::shared_ptr<Window> &window) : window(window) {
     window->SetKeyCallback([this](input::Key key,
                                   input::KeyAction action,
                                   input::ModifierSet const &modifiers) {
-        $
         switch (action) {
             case input::KeyAction::PRESS:
                 keyStates[static_cast<int>(key)] = State::PRESSED;
@@ -56,7 +54,6 @@ InputManager::InputManager(std::shared_ptr<Window> &window) : window(window) {
 };
 
 InputManager::~InputManager() {
-    $
     window->SetKeyCallback(Window::NoopKeyCallback());
     window->SetMouseButtonCallback(Window::NoopMouseButtonCallback());
     window->SetMousePosCallback(Window::NoopMousePosCallback());
@@ -94,79 +91,65 @@ bool InputManager::ProcessInput() {
 }
 
 float InputManager::GetAxis(input::Axis axis) const {
-    $
     LOG_ERROR(cfl::InputManager::GetAxis) << "Unimplemented." << std::endl;
     return 0.0f;
 }
 
 bool InputManager::AnyKey() const {
-    $
     return std::any_of(keyStates.begin(), keyStates.end(), [](InputManager::State state) {
         return state == State::PRESSED || state == State::HELD_DOWN;
     });
 }
 
 bool InputManager::AnyKeyDown() const {
-    $
     return std::any_of(keyStates.begin(), keyStates.end(), [](InputManager::State state) {
         return state == State::PRESSED;
     });
 }
 
 dvec2 InputManager::GetMousePositionPixel() const {
-    $
     return mousePosition;
 }
 
 dvec2 InputManager::GetMousePositionNormalized() const {
-    $
     return mousePosition / dvec2(window->GetSize());
 }
 
 dvec2 InputManager::GetDeltaMousePositionPixel() const {
-    $
     return mousePosition - prevMousePosition;
 }
 
 dvec2 InputManager::GetDeltaMousePositionNormalized() const {
-    $
     return (mousePosition - prevMousePosition) / dvec2(window->GetSize());
 }
 
 bool InputManager::GetMouseButton(input::MouseButton button) const {
-    $
     return mouseButtonStates[static_cast<int>(button)] == State::PRESSED ||
            mouseButtonStates[static_cast<int>(button)] == State::HELD_DOWN;
 }
 
 bool InputManager::GetMouseButtonDown(input::MouseButton button) const {
-    $
     return mouseButtonStates[static_cast<int>(button)] == State::PRESSED;
 }
 
 bool InputManager::GetMouseButtonUp(input::MouseButton button) const {
-    $
     return mouseButtonStates[static_cast<int>(button)] == State::RELEASED;
 }
 
 bool InputManager::GetKey(input::Key key) const {
-    $
     return keyStates[static_cast<int>(key)] == State::PRESSED ||
            keyStates[static_cast<int>(key)] == State::HELD_DOWN;
 }
 
 bool InputManager::GetKeyDown(input::Key key) const {
-    $
     return keyStates[static_cast<int>(key)] == State::PRESSED;
 }
 
 bool InputManager::GetKeyUp(input::Key key) const {
-    $
     return keyStates[static_cast<int>(key)] == State::RELEASED;
 }
 
 std::vector<input::Key> InputManager::GetAllKeys_Slow() const {
-    $
     unsigned long constexpr GuessMaxKeysHeld = 6;
     std::vector<input::Key> keys(0);
     keys.reserve(GuessMaxKeysHeld);
@@ -181,7 +164,6 @@ std::vector<input::Key> InputManager::GetAllKeys_Slow() const {
 }
 
 std::vector<input::MouseButton> InputManager::GetAllMouseButtons() const {
-    $
     unsigned long constexpr GuessMaxMouseButtonsHeld = 2;
     std::vector<MouseButton> mouseButtons(0);
     mouseButtons.reserve(GuessMaxMouseButtonsHeld);

@@ -10,6 +10,15 @@
 #include <json/json.h>
 #include <dollar/dollar.hpp>
 
+#define USE_DOLLAR 1
+
+#if USE_DOLLAR == 0
+#undef $
+#define $
+#undef DOLLAR
+#define DOLLAR(x)
+#endif // USE_DOLLAR
+
 // common STL includes
 
 #include <memory>

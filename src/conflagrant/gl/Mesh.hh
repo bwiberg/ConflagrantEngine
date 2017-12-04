@@ -21,14 +21,12 @@ public:
     inline Mesh(Mesh &&o) noexcept
             : vao(std::move(o.vao)),
               vertexBuffer(std::move(o.vertexBuffer)), indexBuffer(std::move(o.indexBuffer)),
-              drawMode(o.drawMode), indexType(o.indexType), vertexStride(o.vertexStride), indexCount(o.indexCount) { $ }
-
+              drawMode(o.drawMode), indexType(o.indexType), vertexStride(o.vertexStride), indexCount(o.indexCount) { }
     inline Mesh(const Mesh &r) = delete;
 
     inline ~Mesh() = default;
 
     inline void DrawElements() const {
-        $
         if (vertexBuffer.Size() > 0) {
             vao.Bind();
             if (indexCount > 0) {
@@ -42,7 +40,6 @@ public:
     }
 
     inline void BufferVertexData(GLsizeiptr size, GLvoid const *data, GLenum usage) {
-        $
         vertexBuffer.Bind(GL_ARRAY_BUFFER);
         vertexBuffer.BufferData(size, data, usage);
         vertexBuffer.Unbind(GL_ARRAY_BUFFER);
@@ -50,7 +47,6 @@ public:
 
     inline void BufferIndexData(GLenum type, GLsizeiptr count, GLvoid const *data, GLenum usage,
                                 GLenum mode = GL_TRIANGLES) {
-        $
         size_t size = sizeof_gltype(type);
         indexBuffer.Bind(GL_ELEMENT_ARRAY_BUFFER);
         indexBuffer.BufferData(size * count, data, usage);
@@ -62,7 +58,6 @@ public:
 
     inline void Attribute(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride,
                           GLvoid const *offset) {
-        $
         OGL(glEnableVertexArrayAttribEXT(vao.ID(), index));
         OGL(glVertexArrayVertexAttribOffsetEXT(vao.ID(), vertexBuffer.ID(),
                                                index, size, type, normalized, stride, (GLintptr) offset));
@@ -70,17 +65,14 @@ public:
     }
 
     inline void SetIndices(GLenum mode, GLsizeiptr count, uint8_t const *indices, GLenum usage) {
-        $
         BufferIndexData(GL_UNSIGNED_BYTE, count, indices, usage, mode);
     }
 
     inline void SetIndices(GLenum mode, GLsizeiptr count, uint16_t const *indices, GLenum usage) {
-        $
         BufferIndexData(GL_UNSIGNED_SHORT, count, indices, usage, mode);
     }
 
     inline void SetIndices(GLenum mode, GLsizeiptr count, uint32_t const *indices, GLenum usage) {
-        $
         BufferIndexData(GL_UNSIGNED_INT, count, indices, usage, mode);
     }
 };

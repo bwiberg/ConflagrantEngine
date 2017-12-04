@@ -6,7 +6,6 @@ namespace cfl {
 namespace gl {
 struct GlRenderbufferFactory {
     inline static void Create(GLuint &x) {
-        $
         OGL(glGenRenderbuffers(1, &x));
     };
 
@@ -21,21 +20,18 @@ struct Renderbuffer : public GlObject<GlRenderbufferFactory> {
 
     inline Renderbuffer(Renderbuffer &&o) noexcept
             : GlObject<GlRenderbufferFactory>(std::move(o)),
-              width(o.width), height(o.height), internalFormat(o.internalFormat) { $ }
+              width(o.width), height(o.height), internalFormat(o.internalFormat) {}
 
     inline Renderbuffer(GLenum internalFormat, GLsizei width, GLsizei height)
             : width(width), height(height), internalFormat(internalFormat) {
-        $
         OGL(glNamedRenderbufferStorage(id, internalFormat, width, height));
     }
 
     inline void Bind() const {
-        $
         OGL(glBindRenderbuffer(GL_RENDERBUFFER, id));
     }
 
     inline static void Unbind() const {
-        $
         OGL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
     }
 };

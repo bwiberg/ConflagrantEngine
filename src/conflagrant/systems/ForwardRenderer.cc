@@ -15,7 +15,6 @@
 namespace cfl {
 namespace syst {
 ForwardRenderer::ForwardRenderer() {
-    $
     LoadShaders();
 }
 
@@ -58,7 +57,6 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
         int ilight = 0;
         std::stringstream ss;
         for (auto const &entity : entities.entities_with_components(transform, pointLight)) {
-            DOLLAR("Upload single PointLight")
             ss << "pointLights" << "[" << ilight << "]" << ".";
             string const prefix = ss.str();
 
@@ -78,7 +76,6 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
         int ilight = 0;
         std::stringstream ss;
         for (auto const &entity : entities.entities_with_components(directionalLight)) {
-            DOLLAR("Upload single DirectionalLight")
             ss << "directionalLights" << "[" << ilight << "]" << ".";
             string const prefix = ss.str();
 
@@ -104,15 +101,12 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
         OGL(glEnable(GL_DEPTH_TEST));
 
         for (auto const &entity : entities.entities_with_components(transform, model)) {
-            DOLLAR("Render single Model")
             forwardShader->Uniform("M", transform->GetMatrix());
 
             for (auto const &part : model->value->parts) {
-                DOLLAR("Render part of Model")
                 string const prefix = "material.";
 
                 {
-                    DOLLAR("Upload material")
                     auto const &material = *part.second;
 
                     {
@@ -150,7 +144,6 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
 
                 // render mesh
                 {
-                    DOLLAR("Render mesh")
                     auto &mesh = *part.first;
                     if (mesh.glMeshNeedsUpdate) {
                         mesh.UploadToGL();
@@ -176,7 +169,7 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
     forwardShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
 
     {
-        DOLLAR("Render entities with Skydome")
+        DOLLAR("Render entities with Skydome component")
         OGL(glEnable(GL_CULL_FACE));
         OGL(glCullFace(GL_FRONT));
         OGL(glEnable(GL_DEPTH_TEST));
@@ -184,8 +177,6 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
         mat4 MVP;
 
         for (auto const &entity : entities.entities_with_components(skydome)) {
-            DOLLAR("Render single Skydome mesh")
-
             MVP = P * Vinv * glm::rotate(glm::degrees(skydome->rotationDegrees), vec3(0, 1, 0));
 
             skydomeShader->Texture("skydomeColor", 0, skydome->texture->texture);
