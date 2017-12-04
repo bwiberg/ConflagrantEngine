@@ -45,11 +45,12 @@ uniform vec3 EyePos;
 
 out vec4 out_Color;
 
-vec3 GetPropertyColor(MaterialProperty prop) {
-    vec3 color = prop.color;
+vec4 GetPropertyColor(MaterialProperty prop) {
+    vec4 color = vec4(prop.color, 1);
     if (prop.hasMap != 0) {
-        color = texture(prop.map, vec2(fIn_TexCoord.s, 1 - fIn_TexCoord.t)).rgb;
+        color = texture(prop.map, vec2(fIn_TexCoord.s, 1 - fIn_TexCoord.t));
     }
+
     return color;
 }
 
@@ -83,15 +84,20 @@ vec3 ApplyPointLight(PointLight l, vec3 N, vec3 E, vec3 kDiffuse, vec3 kSpecular
 void main(void) {
     vec3 result = vec3(0, 0, 0);
 
-    vec3 N = vec3(0, 0, 1);
+    vec3 N = fIn_WorldTBN[2];
     if (material.hasNormalMap != 0) {
-        N = 2.0 * texture(material.normalMap, fIn_TexCoord).rgb - vec3(1.0);
+        // N = 2.0 * texture(material.normalMap, fIn_TexCoord).rgb - vec3(1.0);
+        // N = normalize(fIn_WorldTBN * N);
     }
-    //N = normalize(fIn_WorldTBN * N);
-    N = fIn_WorldTBN[2];
 
-    vec3 kDiffuse = GetPropertyColor(material.diffuse);
-    vec3 kSpecular = GetPropertyColor(material.specular);
+    vec4 diffuse = GetPropertyColor(material.diffuse);
+    float alpha = diffuse.a;
+    if (alpha < 1.0 / 255) {
+        discard;
+    }
+    vec3 kDiffuse = diffuse.rgb;
+
+    vec3 kSpecular = GetPropertyColor(material.specular).rgb;
     float shininess = max(10, material.shininess);
 
     vec3 E = normalize(EyePos - fIn_WorldPosition);
@@ -109,5 +115,6 @@ void main(void) {
         result += kDiffuse;
     }
 
-    out_Color =  vec4(result, 1.0);
+    // result = N;
+    out_Color =  vec4(result, alpha);
 }

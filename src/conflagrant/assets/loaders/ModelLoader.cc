@@ -114,12 +114,12 @@ bool TryLoadMaterialProperty(std::shared_ptr<assets::Texture2D> &textureTarget, 
     aiReturn ret;
     aiColor3D color;
 
-    uint const numDiffuseTextures = aimtl->GetTextureCount(type);
-    if (numDiffuseTextures > 1) {
-        RETURN_ERROR("aiMaterial should have 0 or 1 diffuse textures, has ", numDiffuseTextures);
+    uint const numTextures = aimtl->GetTextureCount(type);
+    if (numTextures > 1) {
+        RETURN_ERROR("aiMaterial should have 0 or 1 textures, has ", numTextures);
     }
 
-    if (numDiffuseTextures == 1) {
+    if (numTextures == 1) {
         ret = aimtl->GetTexture(type, 0, &str);
         if (ret != aiReturn_SUCCESS) {
             RETURN_ERROR("aiMaterial->GetTexture failed with return value ", ret);
@@ -131,7 +131,7 @@ bool TryLoadMaterialProperty(std::shared_ptr<assets::Texture2D> &textureTarget, 
 
     ret = aimtl->Get(propKey, ttype, idx, color);
     if (ret != aiReturn_SUCCESS) {
-        RETURN_ERROR("aiMaterial->Get(AI_MATKEY_COLOR_DIFFUSE) failed with return value ", ret);
+        RETURN_ERROR("aiMaterial->Get(AI_MATKEY_COLOR_[X]) failed with return value ", ret);
     };
 
     Apply(colorTarget, color);
@@ -148,19 +148,51 @@ std::shared_ptr<Material> LoadMaterial(aiMaterial const *material, aiScene const
 
     Path const folder = path.parent_path();
 
-    bool succeeded = false;
-    succeeded |= TryLoadMaterialProperty(mtl->diffuseTexture, mtl->diffuseColor,
+    bool succeeded = true;
+    succeeded &= TryLoadMaterialProperty(mtl->diffuseTexture, mtl->diffuseColor,
                                          material, aiTextureType_DIFFUSE, AI_MATKEY_COLOR_DIFFUSE, "diffuse",
                                          folder);
-    succeeded |= TryLoadMaterialProperty(mtl->specularTexture, mtl->specularColor,
+    succeeded &= TryLoadMaterialProperty(mtl->specularTexture, mtl->specularColor,
                                          material, aiTextureType_SPECULAR, AI_MATKEY_COLOR_SPECULAR, "specular",
                                          folder);
-    succeeded |= TryLoadMaterialProperty(mtl->ambientTexture, mtl->ambientColor,
+    succeeded &= TryLoadMaterialProperty(mtl->ambientTexture, mtl->ambientColor,
                                          material, aiTextureType_AMBIENT, AI_MATKEY_COLOR_AMBIENT, "ambient",
                                          folder);
+
     if (!succeeded) {
         return nullptr;
     }
+
+    {
+        aiTextureType type = aiTextureType_NORMALS;
+        auto numNormalTextures = material->GetTextureCount(type);
+        if (numNormalTextures == 0) {
+            type = aiTextureType_HEIGHT;
+            numNormalTextures = material->GetTextureCount(type);
+        }
+
+        if (numNormalTextures > 1) {
+            RETURN_ERROR("aiMaterial should have 0 or 1 textures, has ", numNormalTextures);
+        }
+
+        if (numNormalTextures == 1) {
+            aiString str;
+            auto ret = material->GetTexture(type, 0, &str);
+            if (ret != aiReturn_SUCCESS) {
+                RETURN_ERROR("aiMaterial->GetTexture failed with return value ", ret);
+            };
+
+            mtl->normalTexture = std::dynamic_pointer_cast<Texture2D>(
+                    LoadTexture(folder / filesystem::path(str.C_Str())));
+            if (mtl->normalTexture == nullptr) {
+                return nullptr;
+            }
+        }
+
+        // else numNormalTextures == 0: no normal map for material, this is fine
+    }
+
+
 
     aiReturn ret = material->Get(AI_MATKEY_SHININESS, mtl->shininess);
     if (ret != aiReturn_SUCCESS) {

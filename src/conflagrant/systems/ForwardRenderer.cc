@@ -136,13 +136,13 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
                             forwardShader->Texture(specularPrefix + "map", 1, material.specularTexture->texture);
                         }
                     }
-
-                    // todo implement normal mapping
-                    int hasNormalMap = 0;
-                    forwardShader->Uniform(prefix + "hasNormalMap", hasNormalMap);
-                    if (hasNormalMap == 1) {
-                        // forwardShader->Texture(prefix + "normalMap", GL_TEXTURE2, material.ambientTexture->texture);
-                        assert(false && "Unreachable code!");
+                    
+                    {
+                        int hasNormalMap = (material.normalTexture != nullptr) ? 1 : 0;
+                        forwardShader->Uniform(prefix + "hasNormalMap", hasNormalMap);
+                        if (hasNormalMap == 1) {
+                            forwardShader->Texture(prefix + "normalMap", 2, material.normalTexture->texture);
+                        }
                     }
 
                     forwardShader->Uniform(prefix + "shininess", material.shininess);

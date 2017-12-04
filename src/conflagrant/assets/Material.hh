@@ -29,6 +29,11 @@ struct Material : public Asset {
      * The material's shininess.
      */
     float shininess{1.0f};
+
+    /**
+     * The material's normal map.
+     */
+    std::shared_ptr<assets::Texture2D> normalTexture{nullptr};
 };
 } // namespace assets
 } // namespace cfl
