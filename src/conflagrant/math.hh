@@ -7,13 +7,67 @@
 
 namespace cfl {
 namespace math {
-template<typename T>
-inline T Clamp(T const &value, T const &minimum, T const &maximum) {
+
+#define PI_MANY_DECIMALS    3.14159265358979323846264338327
+#define IPI_MANY_DECIMALS   0.31830988618379067153776752674
+
+constexpr double PI_D = static_cast<double>(PI_MANY_DECIMALS);
+constexpr float PI_F = static_cast<float>(PI_MANY_DECIMALS);
+
+constexpr double IPI_D = static_cast<double>(PI_MANY_DECIMALS);
+constexpr float IPI_F = static_cast<float>(IPI_MANY_DECIMALS);
+
+constexpr double RAD2DEG_D = static_cast<double>(180 * IPI_MANY_DECIMALS);
+constexpr float RAD2DEG_F = static_cast<float>(180 * IPI_MANY_DECIMALS);
+
+constexpr double DEG2RAD_D = static_cast<double>(PI_MANY_DECIMALS / 180);
+constexpr float DEG2RAD_F = static_cast<float>(PI_MANY_DECIMALS / 180);
+
+template<typename TFov>
+inline TFov Clamp(TFov const &value, TFov const &minimum, TFov const &maximum) {
     if (value < minimum)
         return minimum;
     if (value > maximum)
         return maximum;
     return value;
+}
+
+template<typename TFov, typename TSize>
+inline TFov FocalLengthFromFovx(TFov fovxDegrees, TSize width) {
+    auto dfovxRadians = DEG2RAD_D * static_cast<double>(fovxDegrees);
+    auto dwidth = static_cast<double>(width);
+
+    return static_cast<TFov>(0.5 * width / tan(0.5 * dfovxRadians));
+}
+
+template<typename TFov, typename TSize>
+inline TFov FocalLengthFromFovy(TFov fovyDegrees, TSize height) {
+    auto dfovyRadians = DEG2RAD_D * static_cast<double>(fovyDegrees);
+    auto dheight = static_cast<double>(height);
+
+    return static_cast<TFov>(0.5 * dheight / tan(0.5 * dfovyRadians));
+}
+
+template<typename TFov, typename TSize>
+inline TFov Fovx(TFov fovyDegrees, TFov width, TSize height) {
+    auto dfovyDegrees = static_cast<double>(fovyDegrees);
+    auto df = FocalLengthFromFovy(fovyDegrees, height);
+    auto dwidth = static_cast<double>(width);
+
+    auto dfovx = RAD2DEG_D * 2 * atan2(0.5 * dwidth, df);
+
+    return static_cast<TFov>(dfovx);
+}
+
+template<typename TFov, typename TSize>
+inline TFov Fovy(TFov fovxDegrees, TSize width, TSize height) {
+    auto dfovxDegrees = static_cast<double>(fovxDegrees);
+    auto df = FocalLengthFromFovx(dfovxDegrees, width);
+    auto dheight = static_cast<double>(height);
+
+    auto dfovy = RAD2DEG_D * 2 * atan2(0.5 * dheight, df);
+
+    return static_cast<TFov>(dfovy);
 }
 } // namespace math
 } // namespace cfl

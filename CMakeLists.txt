@@ -98,8 +98,6 @@ add_subdirectory(external/imgui)
 cfl_use_include_dir(external/imgui)
 cfl_use_library(imgui)
 
-
-
 cfl_use_include_dir(external)
 
 include_directories(${EXTERNAL_INCLUDE_DIRS})
@@ -157,6 +155,7 @@ set(HH_FILES
         src/conflagrant/systems/CameraController.hh
         src/conflagrant/systems/EcsDebugger.hh
         src/conflagrant/systems/ForwardRenderer.hh
+        src/conflagrant/systems/system_util.hh
         src/conflagrant/assets/Mesh.hh
         src/conflagrant/assets/Model.hh
         src/conflagrant/assets/Material.hh

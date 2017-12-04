@@ -116,7 +116,6 @@ public:
         transform.EulerAnglesDegrees(eulerAngles);
 
         transform.hasChanged |= ImGui::DragFloat4("Quaternion", glm::value_ptr(transform.rotation), DragSpeed);
-
         transform.hasChanged |= ImGui::DragFloat("Scale", &transform.scale, DragSpeed);
 
         return true;

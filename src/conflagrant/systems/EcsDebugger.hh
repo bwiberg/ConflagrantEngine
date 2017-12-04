@@ -8,6 +8,8 @@
 #include <conflagrant/serialization/Serialize.hh>
 #include <conflagrant/System.hh>
 #include <conflagrant/SystemFactory.hh>
+#include <conflagrant/gl/Shader.hh>
+#include <conflagrant/gl/Mesh.hh>
 
 namespace cfl {
 namespace syst {
@@ -21,8 +23,11 @@ class EcsDebugger : public System, public entityx::System<EcsDebugger> {
     void
     DrawSystems(std::unordered_set<std::shared_ptr<SystemFactory>> &currentSystems, entityx::SystemManager &manager);
 
+    void LoadShaders();
 
 public:
+    EcsDebugger();
+
     inline static string GetName() {
         $
         return "EcsDebugger";

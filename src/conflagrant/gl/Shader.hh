@@ -5,6 +5,8 @@
 #include "VertexArray.hh"
 #include "Texture.hh"
 
+#include <fstream>
+
 namespace cfl {
 namespace gl {
 inline void CompileShader(GLuint program, GLenum type, const char *source) {
@@ -176,5 +178,33 @@ public:
         OGL(glProgramUniform1i(program, GetUniformLocation(name), unit));
     }
 };
+
+inline std::shared_ptr<gl::Shader> LoadShader(string const &vertexPathStr, string const &fragmentPathStr) {
+    Path vertexPath(vertexPathStr), fragmentPath(fragmentPathStr);
+    {
+        PathResolver resolver;
+        resolver.append(Path(BUILTIN_SHADER_DIR));
+
+        vertexPath = resolver.resolve(vertexPath);
+        fragmentPath = resolver.resolve(fragmentPath);
+    }
+
+    if (!vertexPath.is_file() || !fragmentPath.is_file()) {
+        LOG_ERROR(cfl::syst::ForwardRenderer)
+                << "Fatal error, couldn't locate built-in shader sources for 'forward' shader" << std::endl;
+        return nullptr;
+    }
+
+    std::stringstream buffer;
+
+    buffer << std::ifstream(vertexPath.str()).rdbuf();
+    string const forwardShaderVertex = buffer.str();
+    buffer.str("");
+
+    buffer << std::ifstream(fragmentPath.str()).rdbuf();
+    string const forwardShaderFragment = buffer.str();
+
+    return std::make_shared<gl::Shader>(forwardShaderVertex, forwardShaderFragment);
+}
 }
 }

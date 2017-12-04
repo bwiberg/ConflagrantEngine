@@ -1,4 +1,5 @@
 #include "ForwardRenderer.hh"
+#include "system_util.hh"
 
 #include <conflagrant/systems/CameraController.hh>
 #include <conflagrant/Engine.hh>
@@ -10,38 +11,9 @@
 #include <conflagrant/components/Skydome.hh>
 
 #include <imgui.h>
-#include <fstream>
 
 namespace cfl {
 namespace syst {
-std::shared_ptr<gl::Shader> LoadShader(string const &vertexPathStr, string const &fragmentPathStr) {
-    Path vertexPath(vertexPathStr), fragmentPath(fragmentPathStr);
-    {
-        PathResolver resolver;
-        resolver.append(Path(BUILTIN_SHADER_DIR));
-
-        vertexPath = resolver.resolve(vertexPath);
-        fragmentPath = resolver.resolve(fragmentPath);
-    }
-
-    if (!vertexPath.is_file() || !fragmentPath.is_file()) {
-        LOG_ERROR(cfl::syst::ForwardRenderer)
-                << "Fatal error, couldn't locate built-in shader sources for 'forward' shader" << std::endl;
-        return nullptr;
-    }
-
-    std::stringstream buffer;
-
-    buffer << std::ifstream(vertexPath.str()).rdbuf();
-    string const forwardShaderVertex = buffer.str();
-    buffer.str("");
-
-    buffer << std::ifstream(fragmentPath.str()).rdbuf();
-    string const forwardShaderFragment = buffer.str();
-
-    return std::make_shared<gl::Shader>(forwardShaderVertex, forwardShaderFragment);
-}
-
 ForwardRenderer::ForwardRenderer() {
     $
     LoadShaders();
@@ -49,40 +21,8 @@ ForwardRenderer::ForwardRenderer() {
 
 void ForwardRenderer::LoadShaders() {
     $
-    forwardShader = LoadShader("forward.vert", "forward.frag");
-    skydomeShader = LoadShader("forward_skydome.vert", "forward_skydome.frag");
-}
-
-void GetCameraInfo(entityx::EntityManager &entities, entityx::ComponentHandle<comp::Transform> &transform, mat4 &P) {
-    $
-    using entityx::ComponentHandle;
-
-    ComponentHandle<comp::ActiveCamera> active;
-    ComponentHandle<comp::PerspectiveCamera> perspective;
-    ComponentHandle<comp::OrthographicCamera> orthographic;
-
-    entityx::Entity activeCamera;
-    for (auto entity : entities.entities_with_components(transform, active, perspective)) {
-        activeCamera = entity;
-        break;
-    }
-
-    if (!activeCamera.valid()) {
-        for (auto entity : entities.entities_with_components(transform, active, orthographic)) {
-            activeCamera = entity;
-            break;
-        }
-    }
-
-    if (perspective) {
-        P = perspective->projection;
-    } else if (orthographic) {
-        P = orthographic->projection;
-    } else {
-        LOG_ERROR(cfl::ForwardRenderer::SetCameraMatrices)
-                << "No OrthographicCamera or PerspectiveCamera." << std::endl;
-        P = mat4(1);
-    }
+    forwardShader = gl::LoadShader("forward.vert", "forward.frag");
+    skydomeShader = gl::LoadShader("forward_skydome.vert", "forward_skydome.frag");
 }
 
 void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) {

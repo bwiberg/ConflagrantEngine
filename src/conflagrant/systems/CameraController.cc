@@ -1,42 +1,10 @@
 #include "CameraController.hh"
+#include "system_util.hh"
+
 #include <conflagrant/math.hh>
 
 namespace cfl {
 namespace syst {
-entityx::Entity GetActiveCamera(entityx::EntityManager &entities) {
-    $
-    using entityx::ComponentHandle;
-
-    ComponentHandle<comp::Transform> transform;
-    ComponentHandle<comp::ActiveCamera> active;
-    ComponentHandle<comp::PerspectiveCamera> perspective;
-    ComponentHandle<comp::OrthographicCamera> orthographic;
-
-    entityx::Entity activeCamera;
-    for (auto entity : entities.entities_with_components(transform, active, perspective)) {
-        activeCamera = entity;
-        break;
-    }
-
-    if (!activeCamera.valid()) {
-        for (auto entity : entities.entities_with_components(transform, active, orthographic)) {
-            activeCamera = entity;
-            break;
-        }
-    }
-
-    if (!activeCamera.valid()) {
-        activeCamera = entities.create();
-        activeCamera.assign<comp::Name>()->value = "(auto-created camera)";
-        activeCamera.assign<comp::Guid>();
-        activeCamera.assign<comp::Transform>()->Position(vec3(0, 0, 10));
-        activeCamera.assign<comp::PerspectiveCamera>();
-// activeCamera.assign<comp::OrthographicCamera>();
-        activeCamera.assign<comp::ActiveCamera>();
-    }
-
-    return activeCamera;
-}
 
 void CameraController::MoveCamera(comp::Transform &transform) {
     $
@@ -79,11 +47,11 @@ void CameraController::update(entityx::EntityManager &entities, entityx::EventMa
     $
     using entityx::ComponentHandle;
 
-    auto activeCamera = GetActiveCamera(entities);
+    ComponentHandle<comp::Transform> transform;
+    ComponentHandle<comp::PerspectiveCamera> perspective;
+    ComponentHandle<comp::OrthographicCamera> orthographic;
 
-    auto transform = activeCamera.component<comp::Transform>();
-    auto perspective = activeCamera.component<comp::PerspectiveCamera>();
-    auto orthographic = activeCamera.component<comp::OrthographicCamera>();
+    auto activeCamera = GetActiveCamera(entities, transform, perspective, orthographic);
 
     if (input->GetKeyDown(Key::F)) {
         isActive = !isActive;

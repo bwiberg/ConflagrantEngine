@@ -1,14 +1,24 @@
 #include "EcsDebugger.hh"
+#include "system_util.hh"
 
 #include <conflagrant/SystemFactory.hh>
 #include <conflagrant/ComponentFactory.hh>
 #include <conflagrant/components/Name.hh>
 #include <conflagrant/Engine.hh>
+#include <conflagrant/math.hh>
 
 #include <imgui.h>
 #include <algorithm>
 
 namespace cfl {
+syst::EcsDebugger::EcsDebugger() {
+    LoadShaders();
+}
+
+void syst::EcsDebugger::LoadShaders() {
+
+}
+
 void syst::EcsDebugger::DrawEntityEditor(entityx::Entity &entity) {
     $
     ImGui::Begin("Entity Editor");
