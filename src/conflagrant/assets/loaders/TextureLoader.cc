@@ -52,12 +52,12 @@ std::shared_ptr<Asset> LoadTexture(Path const &path) {
 #define RETURN(ptr) return std::static_pointer_cast<Asset>(ptr)
 
     if (height == 0) {
-        gl::Texture1D texture(width, internalFormat, format, GL_UNSIGNED_BYTE, image);
+        gl::Texture1D texture(width, internalFormat, format, GL_UNSIGNED_BYTE, image, true);
         stbi_image_free(image);
         RETURN(std::make_shared<Texture1D>(std::move(texture)));
     }
 
-    gl::Texture2D texture(width, height, internalFormat, format, GL_UNSIGNED_BYTE, image);
+    gl::Texture2D texture(width, height, internalFormat, format, GL_UNSIGNED_BYTE, image, false, true);
     stbi_image_free(image);
     RETURN(std::make_shared<Texture2D>(std::move(texture)));
 }

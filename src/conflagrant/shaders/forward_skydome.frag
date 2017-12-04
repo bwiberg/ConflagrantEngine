@@ -11,7 +11,7 @@ uniform vec3 EyePos;
 out vec4 out_Color;
 
 void main(void) {
-    vec3 sky = texture(skydomeColor, fIn_TexCoord).rgb;
+    vec3 sky = textureLod(skydomeColor, fIn_TexCoord, 0).rgb;
     vec3 ground = vec3(0.3, 0.3, 0.3);
 
     float ksky = step(0, fIn_ModelY);

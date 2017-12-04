@@ -48,7 +48,9 @@ out vec4 out_Color;
 vec4 GetPropertyColor(MaterialProperty prop) {
     vec4 color = vec4(prop.color, 1);
     if (prop.hasMap != 0) {
-        color = texture(prop.map, vec2(fIn_TexCoord.s, 1 - fIn_TexCoord.t));
+        vec2 st = vec2(fIn_TexCoord.s, 1 - fIn_TexCoord.t);
+        float mipmapLevel = textureQueryLod(prop.map, st).x;
+        color = textureLod(prop.map, st, mipmapLevel);
     }
 
     return color;
@@ -86,8 +88,8 @@ void main(void) {
 
     vec3 N = fIn_WorldTBN[2];
     if (material.hasNormalMap != 0) {
-        // N = 2.0 * texture(material.normalMap, fIn_TexCoord).rgb - vec3(1.0);
-        // N = normalize(fIn_WorldTBN * N);
+        N = 2.0 * texture(material.normalMap, fIn_TexCoord).rgb - vec3(1.0);
+        N = normalize(fIn_WorldTBN * N);
     }
 
     vec4 diffuse = GetPropertyColor(material.diffuse);

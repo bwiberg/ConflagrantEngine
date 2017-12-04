@@ -99,7 +99,7 @@ struct Texture2D : public GlTextureBase {
                      GLvoid const *pixels,
                      bool isTextureCube = false, bool createMipmap = false)
             : GlTextureBase(isTextureCube ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D,
-                            internalFormat, format, type),
+                            internalFormat, format, type, createMipmap),
               width(width), height(height) {
         $
         Bind();
