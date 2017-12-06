@@ -2,9 +2,28 @@
 
 #define MAX_POINTLIGHTS 16
 #define MAX_DIRECTIONALLIGHTS 16
-#define SHADOWMAP_BIAS 0.005
 
+#define SINGLE_SAMPLE 0
+#define PCF 1
+    #define PCF_RADIUS 1
+#define POISSON 2
+#define STRATIFIED_POISSON 3
+    #define POISSON_SAMPLES 16
+    #define POISSON_VALUE 700.0
+
+#define SHADOWMAP_METHOD STRATIFIED_POISSON
+
+#define SHADOWMAP_BIAS 0.005
 #define USE_SAMPLER2DSHADOW 1
+
+#if USE_SAMPLER2DSHADOW == 1
+    #define SAMPLER2DSHADOW sampler2DShadow
+    #define SAMPLE_SHADOWMAP(shadowMap, projCoords, bias) texture(shadowMap, projCoords, bias)
+#else // USE_SAMPLER2DSHADOW != 1
+    #define SAMPLER2DSHADOW sampler2D
+    #define SAMPLE_SHADOWMAP(shadowMap, projCoords, bias) texture(l.shadowMap, projCoords.xy).r
+#endif // USE_SAMPLER2DSHADOW
+
 
 in mat3 fIn_WorldTBN;
 in vec3 fIn_WorldPosition;
@@ -59,6 +78,12 @@ uniform vec3 EyePos;
 
 out vec4 out_Color;
 
+float random(vec3 seed, int i){
+	vec4 seed4 = vec4(seed,i);
+	float dot_product = dot(seed4, vec4(12.9898,78.233,45.164,94.673));
+	return fract(sin(dot_product) * 43758.5453);
+}
+
 vec4 GetPropertyColor(MaterialProperty prop) {
     vec4 color = vec4(prop.color, 1);
     if (prop.hasMap != 0) {
@@ -74,6 +99,49 @@ float Attenuate(float d) {
     return 1.0 / (AttenuationConstant + AttenuationLinear * d + AttenuationQuadratic * d * d);
 }
 
+float ComputeVisibilityPCF(SAMPLER2DSHADOW shadowMap, vec3 projCoords, float bias) {
+    float shadow = 0.0;
+    vec3 pcfMult = vec3(1.0 / textureSize(shadowMap, 0), 0);
+    for (int x = -PCF_RADIUS; x <= PCF_RADIUS; ++x) {
+        for (int y = -PCF_RADIUS; y <= PCF_RADIUS; ++y) {
+            float closestDepth = SAMPLE_SHADOWMAP(shadowMap, (projCoords + vec3(x, y, 0) * pcfMult), bias);
+            shadow += projCoords.z - SHADOWMAP_BIAS < closestDepth ? 1.0 : 0.0;
+        }
+    }
+    int samples = 2 * PCF_RADIUS + 1;
+    return (shadow / (samples * samples));
+}
+
+float ComputeVisibilityPoisson(SAMPLER2DSHADOW shadowMap, vec3 projCoords, float bias, vec3 seed) {
+    const vec2 poissonDisk[16] = vec2[](
+       vec2( -0.94201624, -0.39906216 ),
+       vec2( 0.94558609, -0.76890725 ),
+       vec2( -0.094184101, -0.92938870 ),
+       vec2( 0.34495938, 0.29387760 ),
+       vec2( -0.91588581, 0.45771432 ),
+       vec2( -0.81544232, -0.87912464 ),
+       vec2( -0.38277543, 0.27676845 ),
+       vec2( 0.97484398, 0.75648379 ),
+       vec2( 0.44323325, -0.97511554 ),
+       vec2( 0.53742981, -0.47373420 ),
+       vec2( -0.26496911, -0.41893023 ),
+       vec2( 0.79197514, 0.19090188 ),
+       vec2( -0.24188840, 0.99706507 ),
+       vec2( -0.81409955, 0.91437590 ),
+       vec2( 0.19984126, 0.78641367 ),
+       vec2( 0.14383161, -0.14100790 )
+    );
+
+    float shadow = 0.0;
+    for (int i = 0; i < POISSON_SAMPLES; ++i) {
+        int index = int(16.0 * random(seed, i)) % 16;
+        float closestDepth = SAMPLE_SHADOWMAP(shadowMap, (projCoords + vec3(poissonDisk[index], 0) / POISSON_VALUE), bias);
+        shadow += projCoords.z - SHADOWMAP_BIAS < closestDepth ? 1.0 : 0.0;
+    }
+
+    return shadow / POISSON_SAMPLES;
+}
+
 float ComputeVisibility(DirectionalLight l, vec4 lightspacePosition, vec3 N) {
     float visibility;
     if (l.hasShadowMap == 0) {
@@ -83,12 +151,21 @@ float ComputeVisibility(DirectionalLight l, vec4 lightspacePosition, vec3 N) {
         projCoords = 0.5 * projCoords + 0.5;
 
         float bias = max(10 * SHADOWMAP_BIAS * (1.0 - dot(N, l.direction)), SHADOWMAP_BIAS);
-#if USE_SAMPLER2DSHADOW == 1
-        float closestDepth = texture(l.shadowMap, projCoords, bias);
-#else
-        float closestDepth = texture(l.shadowMap, projCoords.xy).r;
-#endif
+
+        float closestDepth = SAMPLE_SHADOWMAP(l.shadowMap, projCoords, bias);
+
+#if SHADOWMAP_METHOD == SINGLE_SAMPLE
         visibility = projCoords.z - SHADOWMAP_BIAS < closestDepth ? 1.0 : 0.0;
+#elif SHADOWMAP_METHOD == PCF
+        visibility = ComputeVisibilityPCF(l.shadowMap, projCoords, bias);
+#elif SHADOWMAP_METHOD == POISSON
+        visibility = ComputeVisibilityPoisson(l.shadowMap, projCoords, bias, vec3(0, 0, 0));
+#elif SHADOWMAP_METHOD == STRATIFIED_POISSON
+        visibility = ComputeVisibilityPoisson(l.shadowMap, projCoords, bias, fIn_WorldPosition);
+#else
+        visibility = 0.0;
+#endif
+
         if (projCoords.z > 1.0) {
             visibility = 1.0;
         }
