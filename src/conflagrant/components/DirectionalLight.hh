@@ -14,6 +14,7 @@ struct DirectionalLight {
     float horizontal, vertical;
     vec3 color{1.0f, 1.0f, 1.0f};
     float intensity{1.0f};
+    bool castShadows{false};
 
     inline static string const &GetName() {
         $
@@ -28,6 +29,7 @@ struct DirectionalLight {
         SERIALIZE(json["intensity"], comp.intensity);
         SERIALIZE(json["horizontal"], comp.horizontal);
         SERIALIZE(json["vertical"], comp.vertical);
+        SERIALIZE(json["castShadows"], comp.castShadows);
         return true;
     }
 
@@ -40,6 +42,7 @@ struct DirectionalLight {
         ImGui::DragFloat("Vertical angle", &comp.vertical, DragSpeed, -90, 90);
         ImGui::DragFloat3("Color", glm::value_ptr(comp.color), DragSpeed);
         ImGui::DragFloat("Intensity", &comp.intensity, DragSpeed);
+        ImGui::Checkbox("Casts shadows", &comp.castShadows);
 
         return true;
     }

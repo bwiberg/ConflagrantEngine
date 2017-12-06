@@ -4,6 +4,8 @@
 #include "Texture.hh"
 #include "Renderbuffer.hh"
 
+#include <unordered_map>
+
 namespace cfl {
 namespace gl {
 struct GlFramebufferFactory {
@@ -18,15 +20,67 @@ struct GlFramebufferFactory {
 
 struct Framebuffer : public GlObject<GlFramebufferFactory> {
     GLsizei const width{0}, height{0};
-    Texture2D colorTexture;
-    Renderbuffer depthStencilRb; // depth and stencil renderbuffer (will NOT be sampled => renderbuffer > texture)
+
+    std::unordered_map<GLenum, std::shared_ptr<Texture2D>> textureAttachments;
+    std::unordered_map<GLenum, std::shared_ptr<Renderbuffer>> renderbufferAttachments;
 
     inline Framebuffer(Framebuffer &&o) noexcept
             : GlObject<GlFramebufferFactory>(std::move(o)),
-              width(o.width), height(o.height), colorTexture(std::move(colorTexture)),
-              depthStencilRb(std::move(depthStencilRb)) { }
+              width(o.width), height(o.height),
+              textureAttachments(std::move(o.textureAttachments)),
+              renderbufferAttachments(std::move(o.renderbufferAttachments)) {}
 
     inline Framebuffer(GLsizei width, GLsizei height)
+            : width(width), height(height) {}
+
+    inline void Attach(GLenum attachment, std::shared_ptr<Texture2D> const &texture2D) {
+        textureAttachments[attachment] = texture2D;
+
+        texture2D->Bind();
+        OGL(glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_2D, texture2D->ID(), 0));
+        texture2D->Unbind();
+    }
+
+    inline void Attach(GLenum attachment, std::shared_ptr<Renderbuffer> const &renderbuffer) {
+        renderbufferAttachments[attachment] = renderbuffer;
+
+        renderbuffer->Bind();
+        OGL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment, GL_RENDERBUFFER, renderbuffer->ID()));
+        renderbuffer->Unbind();
+    }
+
+    inline void SetDrawBuffer(GLenum buffer) {
+        OGL(glNamedFramebufferDrawBuffer(id, buffer));
+    }
+
+    inline void SetReadBuffer(GLenum buffer) {
+        OGL(glNamedFramebufferReadBuffer(id, buffer));
+    }
+
+    inline bool CheckIsComplete() const {
+        return glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
+    }
+
+    inline void Bind() const {
+        OGL(glBindFramebuffer(GL_FRAMEBUFFER, id));
+    }
+
+    inline static void Unbind() {
+        OGL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+    }
+};
+
+struct FramebufferOld : public GlObject<GlFramebufferFactory> {
+    GLsizei const width{0}, height{0};
+    Texture2D colorTexture;
+    Renderbuffer depthStencilRb; // depth and stencil renderbuffer (will NOT be sampled => renderbuffer > texture)
+
+    inline FramebufferOld(FramebufferOld &&o) noexcept
+            : GlObject<GlFramebufferFactory>(std::move(o)),
+              width(o.width), height(o.height), colorTexture(std::move(colorTexture)),
+              depthStencilRb(std::move(depthStencilRb)) {}
+
+    inline FramebufferOld(GLsizei width, GLsizei height)
             : width(width), height(height),
               colorTexture(width, height, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, NULL, false, false),
               depthStencilRb(GL_DEPTH24_STENCIL8, width, height) {
@@ -37,15 +91,15 @@ struct Framebuffer : public GlObject<GlFramebufferFactory> {
         colorTexture.Bind();
         colorTexture.TexParameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         colorTexture.TexParameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        OGL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture.id, 0));
+        OGL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture.ID(), 0));
 
         // configure depth and stencil renderbuffer
         depthStencilRb.Bind();
-        OGL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depthStencilRb.id));
+        OGL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depthStencilRb.ID()));
 
         // check if framebuffer is complete
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-            LOG_ERROR(cfl::gl::Framebuffer::Framebuffer()) << "fbo is incomplete" << std::endl;
+            LOG_ERROR(cfl::gl::FramebufferOld::Framebuffer()) << "fbo is incomplete" << std::endl;
         }
 
         Unbind();
@@ -55,7 +109,7 @@ struct Framebuffer : public GlObject<GlFramebufferFactory> {
         OGL(glBindFramebuffer(GL_FRAMEBUFFER, id));
     }
 
-    inline static void Unbind() const {
+    inline static void Unbind() {
         OGL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
     }
 };

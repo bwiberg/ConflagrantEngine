@@ -66,28 +66,14 @@ void CameraController::update(entityx::EntityManager &entities, entityx::EventMa
     }
 
     uvec2 size;
-    if (perspective) {
-        if (window->SizeHasChanged(size) || perspective->hasChanged) {
-            perspective->projection = glm::perspectiveFov(glm::radians(perspective->fov),
-                                                          static_cast<float>(size.x),
-                                                          static_cast<float>(size.y),
-                                                          perspective->zNear, perspective->zFar);
-            perspective->hasChanged = false;
+    if (window->SizeHasChanged(size)) {
+        if (perspective) {
+            perspective->Size(size);
         }
-    } else if (orthographic) {
-        if (window->SizeHasChanged(size) || orthographic->hasChanged) {
-            float right = orthographic->size * size.x / 2;
-            float left = -right;
-            float bottom = orthographic->size * size.y / 2;
-            float top = -bottom;
 
-            orthographic->projection = glm::ortho(left, right, bottom, top, orthographic->zNear,
-                                                  orthographic->zFar);
-            orthographic->hasChanged = false;
+        if (orthographic) {
+            orthographic->Size(size);
         }
-    } else {
-        LOG_ERROR(cfl::syst::CameraController)
-                << "Active camera entity does not have Perspective-/OrthographicCamera" << std::endl;
     }
 }
 

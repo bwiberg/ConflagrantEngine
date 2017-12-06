@@ -3,18 +3,100 @@
 #include <conflagrant/types.hh>
 #include <conflagrant/GL.hh>
 #include <conflagrant/serialization/Serialize.hh>
+#include <conflagrant/geometry.hh>
 
 #include <imgui.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace cfl {
 namespace comp {
-struct OrthographicCamera {
-    float size{0.001f}, zNear{0.01f}, zFar{100.0f};
+class OrthographicCamera {
+    float scale{0.001f}, zNear{0.01f}, zFar{100.0f};
+    uvec2 size;
 
     bool hasChanged{true};
 
     mat4 projection;
+    geometry::Frustum frustum;
+
+    inline void UpdateProjectionAndFrustum() {
+        using namespace geometry;
+
+        if (!hasChanged) {
+            return;
+        }
+        hasChanged = false;
+
+        float const Width = scale * size.x / 2;
+        float const Height = scale * size.y / 2;
+        float const Top = -Height;
+        projection = glm::ortho(-Width, Width, -Height, Height, zNear, zFar);
+
+        vec3 const FarForward = zFar * Forward;
+        vec3 const NearForward = zNear * Forward;
+
+        vec3 const Zero{};
+
+        frustum = Frustum{.sides = {
+                Plane{.center = NearForward, .normal = Backward},   // near
+                Plane{.center = FarForward, .normal = Forward},     // far
+                Plane{.center = Zero, .normal = Up},                // top
+                Plane{.center = Zero, .normal = Right},             // right
+                Plane{.center = Zero, .normal = Down},              // bottom
+                Plane{.center = Zero, .normal = Left},              // left
+        }};
+
+        hasChanged = false;
+    }
+
+public:
+    inline float Scale() const {
+        return scale;
+    }
+
+    inline void Scale(float scale) {
+        this->scale = scale;
+        hasChanged = true;
+    }
+
+    inline float ZNear() const {
+        return zNear;
+    }
+
+    inline void ZNear(float zNear) {
+        this->zNear = zNear;
+        hasChanged = true;
+    }
+
+    inline float ZFar() const {
+        return zFar;
+    }
+
+    inline void ZFar(float zFar) {
+        this->zFar = zFar;
+        hasChanged = true;
+    }
+
+    inline uvec2 Size() const {
+        return size;
+    }
+
+    inline void Size(uvec2 size) {
+        this->size = size;
+        hasChanged = true;
+    }
+
+    inline mat4 const &GetProjection() const {
+        $
+        const_cast<OrthographicCamera *>(this)->UpdateProjectionAndFrustum();
+        return projection;
+    }
+
+    inline geometry::Frustum const &GetFrustum() const {
+        $
+        const_cast<OrthographicCamera *>(this)->UpdateProjectionAndFrustum();
+        return frustum;
+    }
 
     inline static string const GetName() {
         $
@@ -24,7 +106,7 @@ struct OrthographicCamera {
     template<typename TSerializer>
     static bool Serialize(Json::Value &json, OrthographicCamera &camera) {
         $
-        SERIALIZE(json["size"], camera.size);
+        SERIALIZE(json["scale"], camera.scale);
         SERIALIZE(json["near"], camera.zNear);
         SERIALIZE(json["far"], camera.zFar);
         camera.hasChanged = true;
@@ -36,7 +118,7 @@ struct OrthographicCamera {
         float const DragSpeed = (input.GetKey(Key::LEFT_CONTROL) || input.GetKey(Key::LEFT_SHIFT))
                                 ? 0.01f : 0.5f;
 
-        camera.hasChanged |= ImGui::DragFloat("Size", &camera.size, DragSpeed);
+        camera.hasChanged |= ImGui::DragFloat("Scale", &camera.scale, DragSpeed);
         camera.hasChanged |= ImGui::DragFloat("Near clip", &camera.zNear, DragSpeed);
         camera.hasChanged |= ImGui::DragFloat("Far clip", &camera.zFar, DragSpeed);
 

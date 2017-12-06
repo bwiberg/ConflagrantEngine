@@ -8,6 +8,7 @@
 #include <conflagrant/components/Transform.hh>
 #include <conflagrant/components/PointLight.hh>
 #include <conflagrant/components/DirectionalLight.hh>
+#include <conflagrant/components/DirectionalLightShadow.hh>
 #include <conflagrant/components/Skydome.hh>
 
 #include <imgui.h>
@@ -22,16 +23,13 @@ void ForwardRenderer::LoadShaders() {
     $
     forwardShader = gl::LoadShader("forward.vert", "forward.frag");
     skydomeShader = gl::LoadShader("forward_skydome.vert", "forward_skydome.frag");
+    shadowmapLightpassShader = gl::LoadShader("shadowmap_lightpass.vert", "shadowmap_lightpass.frag");
+    shadowmapVisShader = gl::LoadShader("shadowmap_visualization.vert", "shadowmap_visualization.frag");
 }
 
 void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) {
     $
     renderStats = RenderStats{};
-
-    uvec2 size = window->GetSize();
-    OGL(glViewport(0, 0, size.x, size.y));
-    OGL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-    OGL(glClearColor(0.0f, 0.0f, 0.0f, 0.0f));
 
     using entityx::ComponentHandle;
     ComponentHandle<comp::Transform> transform, cameraTransform;
@@ -44,6 +42,8 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
     GetCameraInfo(entities, cameraTransform, P);
 
     mat4 Vinv = glm::inverse(cameraTransform->GetMatrix());
+
+    GLenum forwardShaderTextureCount = 0;
 
     forwardShader->Bind();
 
@@ -71,11 +71,16 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
         renderStats.numPointLights = static_cast<size_t>(ilight);
     }
 
+    entityx::ComponentHandle<comp::DirectionalLightShadow> directionalLightShadow;
+
     {
         DOLLAR("Upload DirectionalLight data")
         int ilight = 0;
         std::stringstream ss;
-        for (auto const &entity : entities.entities_with_components(directionalLight)) {
+        entityx::ComponentHandle<comp::DirectionalLightShadow> lightShadow;
+        entityx::ComponentHandle<comp::OrthographicCamera> lightCamera;
+
+        for (auto entity : entities.entities_with_components(directionalLight)) {
             ss << "directionalLights" << "[" << ilight << "]" << ".";
             string const prefix = ss.str();
 
@@ -87,11 +92,154 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
             forwardShader->Uniform(prefix + "intensity", directionalLight->intensity);
             forwardShader->Uniform(prefix + "color", directionalLight->color);
 
+            // shadow mapping
+            {
+                if (directionalLight->castShadows) {
+                    if (!entity.has_component<comp::DirectionalLightShadow>()) {
+                        lightShadow = entity.assign<comp::DirectionalLightShadow>();
+                    } else {
+                        lightShadow = entity.component<comp::DirectionalLightShadow>();
+                    }
+                    directionalLightShadow = lightShadow;
+
+                    if (!entity.has_component<comp::OrthographicCamera>()) {
+                        lightCamera = entity.assign<comp::OrthographicCamera>();
+                    } else {
+                        lightCamera = entity.component<comp::OrthographicCamera>();
+                    }
+
+                    if (lightShadow->hasChanged) {
+                        lightShadow->Reset();
+                        lightShadow->hasChanged = false;
+                    }
+
+                    // todo remove this temporary code
+                    static float Distance = 10.0f;
+                    static float Extents = 0.01f;
+                    static float zNear = 1.0f, zFar = 12.0f;
+
+                    ImGui::Begin("Shadow map");
+                    ImGui::DragFloat("Distance", &Distance, 1.0f, 0.0f);
+                    ImGui::DragFloat("Extents", &Extents, 0.01f, 0.0f);
+                    ImGui::DragFloat("zNear", &zNear, 0.1f, 0.0f);
+                    ImGui::DragFloat("zFar", &zFar, 0.1f, 0.0f);
+                    ImGui::End();
+
+                    lightCamera->ZFar(zFar);
+                    lightCamera->ZNear(zNear);
+                    lightCamera->Scale(Extents);
+                    lightCamera->Size(uvec2(lightShadow->width, lightShadow->height));
+
+                    mat4 V = glm::lookAt(Distance * direction, vec3(0.f), geometry::Up);
+                    // mat4 P = glm::ortho(-Extents, Extents, -Extents, Extents, zNear, zFar);
+                    mat4 P = lightCamera->GetProjection();
+
+                    lightShadow->framebuffer->Bind();
+                    OGL(glViewport(0, 0, static_cast<GLsizei>(lightShadow->width),
+                                   static_cast<GLsizei>(lightShadow->height)));
+                    OGL(glClear(GL_DEPTH_BUFFER_BIT));
+
+                    // setup shader and V/P matrices
+                    shadowmapLightpassShader->Bind();
+                    shadowmapLightpassShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
+                    shadowmapLightpassShader->Uniform("P", P);
+                    shadowmapLightpassShader->Uniform("V", V);
+
+                    OGL(glDisable(GL_CULL_FACE));
+                    // render scene
+                    {
+                        DOLLAR("Shadowmap: Render entities with Model")
+
+                        for (auto const &entityRender : entities.entities_with_components(transform, model)) {
+                            shadowmapLightpassShader->Uniform("M", transform->GetMatrix());
+
+                            for (auto const &part : model->value->parts) {
+                                {
+                                    auto const &material = *part.second;
+
+                                    // diffuse texture is neccessary since it contains alpha color
+                                    {
+                                        string const diffusePrefix = "material.diffuse.";
+                                        shadowmapLightpassShader->Uniform(diffusePrefix + "color",
+                                                                          material.diffuseColor);
+
+                                        int hasDiffuseMap = (material.diffuseTexture != nullptr) ? 1 : 0;
+                                        shadowmapLightpassShader->Uniform(diffusePrefix + "hasMap", hasDiffuseMap);
+                                        if (hasDiffuseMap == 1) {
+                                            shadowmapLightpassShader->Texture(diffusePrefix + "map", 0,
+                                                                              material.diffuseTexture->texture);
+                                        }
+                                    }
+                                }
+
+                                // render mesh
+                                {
+                                    auto &mesh = *part.first;
+                                    if (mesh.glMeshNeedsUpdate) {
+                                        mesh.UploadToGL();
+                                        mesh.glMeshNeedsUpdate = false;
+                                    }
+
+                                    mesh.glMesh->DrawElements();
+                                }
+                            }
+                        }
+                    }
+
+                    lightShadow->framebuffer->Unbind();
+
+                    // feed uniforms
+                    forwardShader->Bind();
+                    forwardShader->Uniform(prefix + "hasShadowMap", 1);
+                    forwardShader->Texture(prefix + "shadowMap",
+                                           forwardShaderTextureCount++,
+                                           *lightShadow->depthTexture);
+                    forwardShader->Uniform(prefix + "VP", P * V);
+                } else {
+                    forwardShader->Uniform(prefix + "hasShadowMap", 0);
+                }
+            }
+
             ilight++;
             ss.str("");
         }
         forwardShader->Uniform("numDirectionalLights", ilight);
         renderStats.numDirectionalLights = static_cast<size_t>(ilight);
+    }
+
+    uvec2 size = window->GetSize();
+    OGL(glViewport(0, 0, size.x, size.y));
+    OGL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+    OGL(glClearColor(0.0f, 0.0f, 0.0f, 0.0f));
+
+    static bool renderShadowMap = false;
+    ImGui::Begin("Shadow");
+    ImGui::Checkbox("Render shadow map", &renderShadowMap);
+    ImGui::End();
+
+    if (directionalLightShadow && renderShadowMap) {
+        auto quadModel = assets::AssetManager::LoadAsset<assets::Model>("fullscreen_quad.obj");
+        if (!quadModel) {
+            LOG_INFO(cfl::syst::ForwardRenderer::update) << "fullscreen_quad.obj failed to load";
+            return;
+        }
+
+        OGL(glDisable(GL_CULL_FACE));
+
+        auto &mesh = quadModel->parts[0].first;
+        auto &mmesh = *mesh;
+
+        if (mesh->glMeshNeedsUpdate) {
+            mesh->UploadToGL();
+            mesh->glMeshNeedsUpdate = false;
+        }
+
+        shadowmapVisShader->Bind();
+        shadowmapVisShader->Texture("shadowMap", 0, *directionalLightShadow->depthTexture);
+        mesh->glMesh->DrawElements();
+        shadowmapVisShader->Unbind();
+
+        return;
     }
 
     {
@@ -108,6 +256,7 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
 
                 {
                     auto const &material = *part.second;
+                    auto textureCount = forwardShaderTextureCount;
 
                     {
                         string const diffusePrefix = prefix + "diffuse.";
@@ -116,7 +265,9 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
                         int hasDiffuseMap = (material.diffuseTexture != nullptr) ? 1 : 0;
                         forwardShader->Uniform(diffusePrefix + "hasMap", hasDiffuseMap);
                         if (hasDiffuseMap == 1) {
-                            forwardShader->Texture(diffusePrefix + "map", 0, material.diffuseTexture->texture);
+                            forwardShader->Texture(diffusePrefix + "map",
+                                                   textureCount++,
+                                                   material.diffuseTexture->texture);
                         }
                     }
 
@@ -127,15 +278,19 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
                         int hasSpecularMap = (material.specularTexture != nullptr) ? 1 : 0;
                         forwardShader->Uniform(specularPrefix + "hasMap", hasSpecularMap);
                         if (hasSpecularMap == 1) {
-                            forwardShader->Texture(specularPrefix + "map", 1, material.specularTexture->texture);
+                            forwardShader->Texture(specularPrefix + "map",
+                                                   textureCount++,
+                                                   material.specularTexture->texture);
                         }
                     }
-                    
+
                     {
                         int hasNormalMap = (material.normalTexture != nullptr) ? 1 : 0;
                         forwardShader->Uniform(prefix + "hasNormalMap", hasNormalMap);
                         if (hasNormalMap == 1) {
-                            forwardShader->Texture(prefix + "normalMap", 2, material.normalTexture->texture);
+                            forwardShader->Texture(prefix + "normalMap",
+                                                   textureCount++,
+                                                   material.normalTexture->texture);
                         }
                     }
 
@@ -177,7 +332,7 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
         mat4 MVP;
 
         for (auto const &entity : entities.entities_with_components(skydome)) {
-            MVP = P * Vinv * glm::rotate(glm::degrees(skydome->rotationDegrees), vec3(0, 1, 0));
+            MVP = P * Vinv * glm::rotate(glm::degrees(skydome->rotationDegrees), geometry::Up);
 
             skydomeShader->Texture("skydomeColor", 0, skydome->texture->texture);
             skydomeShader->Uniform("radius", skydome->radius);

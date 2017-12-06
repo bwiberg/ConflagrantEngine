@@ -31,7 +31,7 @@ struct Renderbuffer : public GlObject<GlRenderbufferFactory> {
         OGL(glBindRenderbuffer(GL_RENDERBUFFER, id));
     }
 
-    inline static void Unbind() const {
+    inline static void Unbind() {
         OGL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
     }
 };

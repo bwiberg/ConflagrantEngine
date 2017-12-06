@@ -130,6 +130,7 @@ set(HH_FILES
         src/conflagrant/ComponentFactory.hh
         src/conflagrant/SystemFactory.hh
         src/conflagrant/types.hh
+        src/conflagrant/geometry.hh
         src/conflagrant/events.hh
         src/conflagrant/GL.hh
         src/conflagrant/CL.hh
@@ -149,8 +150,10 @@ set(HH_FILES
         src/conflagrant/components/PerspectiveCamera.hh
         src/conflagrant/components/OrthographicCamera.hh
         src/conflagrant/components/DirectionalLight.hh
+        src/conflagrant/components/DirectionalLightShadow.hh
         src/conflagrant/components/PointLight.hh
         src/conflagrant/components/Skydome.hh
+        src/conflagrant/components/BoundingSphere.hh
         src/conflagrant/System.hh
         src/conflagrant/systems/CameraController.hh
         src/conflagrant/systems/EcsDebugger.hh
@@ -185,6 +188,7 @@ set(CC_FILES
         src/conflagrant/Engine.cc
         src/conflagrant/Time.cc
         src/conflagrant/logging.cc
+        src/conflagrant/geometry.cc
         src/conflagrant/assets/AssetManager.cc
         src/conflagrant/assets/loaders/ModelLoader.cc
         src/conflagrant/assets/loaders/TextureLoader.cc

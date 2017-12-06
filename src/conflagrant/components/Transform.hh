@@ -19,77 +19,72 @@ class Transform {
     float scale{1.0f};
     vec3 pivot{0.0f, 0.0f, 0.0f};
 
+    inline void UpdateMatrix() {
+        if (!hasChanged) {
+            return;
+        }
+        hasChanged = false;
+
+        matrix =
+                glm::translate(position) *
+                glm::translate(pivot) *
+                glm::scale(glm::vec3(scale)) *
+                glm::toMat4(rotation) *
+                glm::translate(-pivot);
+    }
+
 public:
     inline vec3 const &Position() const {
-        $
         return position;
     }
 
     inline void Position(vec3 const &value) {
-        $
         position = value;
         hasChanged = true;
     }
 
     inline quat const &Quaternion() const {
-        $
         return rotation;
     }
 
     inline void Quaternion(quat const &value) {
-        $
         rotation = value;
         hasChanged = true;
     }
 
     inline vec3 EulerAnglesDegrees() const {
-        $
         return glm::degrees(glm::eulerAngles(rotation));
     }
 
     inline void EulerAnglesDegrees(vec3 const &value) {
-        $
         rotation = glm::quat(glm::radians(value));
         hasChanged = true;
     }
 
     inline float Scale() const {
-        $
         return scale;
     }
 
     inline void Scale(float value) {
-        $
         scale = value;
     }
 
     inline vec3 const &Pivot() const {
-        $
         return pivot;
     }
 
     inline void Pivot(vec3 const &value) {
-        $
         pivot = value;
         hasChanged = true;
     }
 
-    inline mat4 const &GetMatrix() {
+    inline mat4 const &GetMatrix() const {
         $
-        if (hasChanged) {
-            hasChanged = false;
-            matrix =
-                    glm::translate(position) *
-                    glm::translate(pivot) *
-                    glm::scale(glm::vec3(scale)) *
-                    glm::toMat4(rotation) *
-                    glm::translate(-pivot);
-        }
+        const_cast<Transform *>(this)->UpdateMatrix();
         return matrix;
     }
 
     inline static string const GetName() {
-        $
         return "Transform";
     }
 

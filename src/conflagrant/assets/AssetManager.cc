@@ -30,7 +30,8 @@ std::shared_ptr<Asset> AssetManager::InternalLoadAsset(std::string const &path_)
 
     asset = AssetLoadersByExtension[extension](assetPath);
     auto &a = *asset;
-    return LoadedAssetsByPath[path_] = asset;
+    LoadedAssetsByPath[path_] = asset;
+    return asset;
 }
 
 std::shared_ptr<Asset> AssetManager::GetPreloadedAsset(string const &path) {
