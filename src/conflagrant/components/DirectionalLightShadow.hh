@@ -19,6 +19,8 @@ struct DirectionalLightShadow {
 
     uint width{2048}, height{2048};
     float distanceFromScene{10.f};
+    GLint filterMethod{GL_NEAREST};
+
     bool hasChanged{true};
 
     inline bool Reset() {
@@ -29,8 +31,8 @@ struct DirectionalLightShadow {
                                                        GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT,
                                                        nullptr /* no uploaded data, simply allocate gpu memory */);
         depthTexture->Bind();
-        depthTexture->TexParameter(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        depthTexture->TexParameter(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        depthTexture->TexParameter(GL_TEXTURE_MIN_FILTER, filterMethod);
+        depthTexture->TexParameter(GL_TEXTURE_MAG_FILTER, filterMethod);
         vec4 border{1};
         depthTexture->TexParameter(GL_TEXTURE_BORDER_COLOR, glm::value_ptr(border));
         depthTexture->TexParameter(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -54,6 +56,18 @@ struct DirectionalLightShadow {
         ivec2 size(comp.width, comp.height);
         comp.hasChanged |= ImGui::InputInt2("Texture width", glm::value_ptr(size));
         comp.hasChanged |= ImGui::DragFloat("Distance from scene", &comp.distanceFromScene, 1.0f, 0.0f);
+
+        auto label = comp.filterMethod == GL_NEAREST ? "Nearest neighbour" : "Linear interp.";
+        bool clicked = ImGui::Button(label);
+        comp.hasChanged |= clicked;
+
+        if (clicked) {
+            if (comp.filterMethod == GL_NEAREST) {
+                comp.filterMethod = GL_LINEAR;
+            } else {
+                comp.filterMethod = GL_NEAREST;
+            }
+        }
 
         if (comp.hasChanged) {
             comp.width = static_cast<uint>(size.x);
