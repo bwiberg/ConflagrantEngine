@@ -10,6 +10,7 @@
 #define STRATIFIED_POISSON 3
     #define POISSON_SAMPLES 16
     #define POISSON_VALUE 700.0
+    #define POISSON_CENTER_WEIGHT 0
 
 #define SHADOWMAP_METHOD STRATIFIED_POISSON
 
@@ -133,13 +134,19 @@ float ComputeVisibilityPoisson(SAMPLER2DSHADOW shadowMap, vec3 projCoords, float
     );
 
     float shadow = 0.0;
+
+    if (POISSON_CENTER_WEIGHT > 0) {
+        float closestDepth = SAMPLE_SHADOWMAP(shadowMap, projCoords, bias);
+        shadow += projCoords.z - SHADOWMAP_BIAS < closestDepth ? float(POISSON_CENTER_WEIGHT) : 0.0;
+    }
+
     for (int i = 0; i < POISSON_SAMPLES; ++i) {
         int index = int(16.0 * random(seed, i)) % 16;
         float closestDepth = SAMPLE_SHADOWMAP(shadowMap, (projCoords + vec3(poissonDisk[index], 0) / POISSON_VALUE), bias);
         shadow += projCoords.z - SHADOWMAP_BIAS < closestDepth ? 1.0 : 0.0;
     }
 
-    return shadow / POISSON_SAMPLES;
+    return shadow / (POISSON_SAMPLES + POISSON_CENTER_WEIGHT);
 }
 
 float ComputeVisibility(DirectionalLight l, vec4 lightspacePosition, vec3 N) {
