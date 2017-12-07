@@ -18,6 +18,7 @@ struct DirectionalLightShadow {
     std::shared_ptr<gl::Texture2D> depthTexture;
 
     uint width{2048}, height{2048};
+    float distanceFromScene{10.f};
     bool hasChanged{true};
 
     inline bool Reset() {
@@ -52,6 +53,8 @@ struct DirectionalLightShadow {
     inline static bool DrawWithImGui(DirectionalLightShadow &comp, InputManager const &input) {
         ivec2 size(comp.width, comp.height);
         comp.hasChanged |= ImGui::InputInt2("Texture width", glm::value_ptr(size));
+        comp.hasChanged |= ImGui::DragFloat("Distance from scene", &comp.distanceFromScene, 1.0f, 0.0f);
+
         if (comp.hasChanged) {
             comp.width = static_cast<uint>(size.x);
             comp.height = static_cast<uint>(size.y);

@@ -113,26 +113,10 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
                         lightShadow->hasChanged = false;
                     }
 
-                    // todo remove this temporary code
-                    static float Distance = 10.0f;
-                    static float Extents = 0.01f;
-                    static float zNear = 1.0f, zFar = 12.0f;
-
-                    ImGui::Begin("Shadow map");
-                    ImGui::DragFloat("Distance", &Distance, 1.0f, 0.0f);
-                    ImGui::DragFloat("Extents", &Extents, 0.01f, 0.0f);
-                    ImGui::DragFloat("zNear", &zNear, 0.1f, 0.0f);
-                    ImGui::DragFloat("zFar", &zFar, 0.1f, 0.0f);
-                    ImGui::End();
-
-                    lightCamera->ZFar(zFar);
-                    lightCamera->ZNear(zNear);
-                    lightCamera->Scale(Extents);
                     lightCamera->Size(uvec2(lightShadow->width, lightShadow->height));
 
-                    mat4 V = glm::lookAt(Distance * direction, vec3(0.f), geometry::Up);
-                    // mat4 P = glm::ortho(-Extents, Extents, -Extents, Extents, zNear, zFar);
-                    mat4 P = lightCamera->GetProjection();
+                    mat4 V = glm::lookAt(lightShadow->distanceFromScene * direction, vec3(0.f), geometry::Up);
+                    mat4 Pshadow = lightCamera->GetProjection();
 
                     lightShadow->framebuffer->Bind();
                     OGL(glViewport(0, 0, static_cast<GLsizei>(lightShadow->width),
@@ -142,7 +126,7 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
                     // setup shader and V/P matrices
                     shadowmapLightpassShader->Bind();
                     shadowmapLightpassShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
-                    shadowmapLightpassShader->Uniform("P", P);
+                    shadowmapLightpassShader->Uniform("P", Pshadow);
                     shadowmapLightpassShader->Uniform("V", V);
 
                     OGL(glDisable(GL_CULL_FACE));
@@ -194,7 +178,7 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
                     forwardShader->Texture(prefix + "shadowMap",
                                            forwardShaderTextureCount++,
                                            *lightShadow->depthTexture);
-                    forwardShader->Uniform(prefix + "VP", P * V);
+                    forwardShader->Uniform(prefix + "VP", Pshadow * V);
                 } else {
                     forwardShader->Uniform(prefix + "hasShadowMap", 0);
                 }
