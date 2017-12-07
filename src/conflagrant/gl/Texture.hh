@@ -48,6 +48,10 @@ struct GlTextureBase : public GlObject<GlTextureFactory> {
     inline void TexParameter(GLenum pname, GLint const *params) {
         OGL(glTextureParameteriv(id, pname, params));
     }
+
+    inline void GenerateMipmap() {
+        OGL(glGenerateTextureMipmap(id));
+    }
 };
 
 struct Texture1D : public GlTextureBase {
@@ -118,7 +122,7 @@ struct Texture2D : public GlTextureBase {
                                  type, pixels));
             }
         }
-        if (hasMipmap) glGenerateTextureMipmap(id);
+        if (hasMipmap) GenerateMipmap();
     }
 };
 
