@@ -3,7 +3,7 @@
 #include <conflagrant/types.hh>
 #include <conflagrant/GL.hh>
 #include <crossguid/Guid.hpp>
-#include <conflagrant/serialization/Serialize.hh>
+#include <conflagrant/serialization/serialize.hh>
 #include <conflagrant/serialization/crossguid.hh>
 
 #include <imgui.h>
@@ -11,19 +11,18 @@
 namespace cfl {
 namespace comp {
 struct Guid {
+    static constexpr auto ComponentName = "Guid";
+    static constexpr auto RuntimeOnly = false;
+
     inline Guid() : value(xg::newGuid()) {}
 
     xg::Guid value;
 
-    inline static string const GetName() {
+    inline static bool Serialize(BaseSerializer const &serializer, Json::Value &json,
+                                 Guid &guid) {
         $
-        return "Guid";
-    }
-
-    template<typename TSerializer>
-    static bool Serialize(Json::Value &json, Guid &guid) {
-        $
-        return cfl::Serialize<TSerializer>(json, guid.value);
+        SERIALIZE(cfl::comp::Guid, json, guid.value);
+        return true;
     }
 
     inline static bool DrawWithImGui(Guid &guid, InputManager const &input) {

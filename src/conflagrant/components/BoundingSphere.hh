@@ -2,7 +2,7 @@
 
 #include <conflagrant/types.hh>
 #include <conflagrant/GL.hh>
-#include <conflagrant/serialization/Serialize.hh>
+#include <conflagrant/serialization/serialize.hh>
 #include <conflagrant/InputManager.hh>
 #include <conflagrant/geometry.hh>
 
@@ -11,18 +11,9 @@
 namespace cfl {
 namespace comp {
 struct BoundingSphere {
+    static constexpr auto ComponentName = "BoundingSphere";
+
     geometry::Sphere sphere;
-
-    inline static string const &GetName() {
-        static const string name = "BoundingSphere";
-        return name;
-    }
-
-    template<typename TSerializer>
-    static bool Serialize(Json::Value &json, BoundingSphere &comp) {
-        // SERIALIZE(json, ...);
-        return true;
-    }
 
     inline static bool DrawWithImGui(BoundingSphere &comp, InputManager const &input) {
         ImGui::Text("Center: %4.3f, %4.3f, %4.3f", comp.sphere.center.x, comp.sphere.center.y, comp.sphere.center.z);

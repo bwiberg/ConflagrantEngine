@@ -1,19 +1,23 @@
 #pragma once
 
-#include <entityx/Entity.h>
-#include <entityx/System.h>
-
 #include <conflagrant/types.hh>
 #include <conflagrant/GL.hh>
-#include <conflagrant/serialization/Serialize.hh>
 #include <conflagrant/System.hh>
 #include <conflagrant/SystemFactory.hh>
 #include <conflagrant/gl/Shader.hh>
 #include <conflagrant/gl/Mesh.hh>
+#include <conflagrant/serialization/serialize.hh>
+
+#include <entityx/Entity.h>
+#include <entityx/System.h>
 
 namespace cfl {
 namespace syst {
 class EcsDebugger : public System, public entityx::System<EcsDebugger> {
+public:
+    static constexpr auto SystemName = "EcsDebugger";
+
+private:
     std::unordered_set<std::shared_ptr<SystemFactory>> currentSystems;
 
     entityx::Entity currentEntity;
@@ -28,23 +32,13 @@ class EcsDebugger : public System, public entityx::System<EcsDebugger> {
 public:
     EcsDebugger();
 
-    inline static string GetName() {
-        $
-        return "EcsDebugger";
-    }
-
     void update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) override;
 
-    template<typename TSerializer>
-    static bool Serialize(Json::Value &json, EcsDebugger &sys) {
+    inline static bool Serialize(BaseSerializer const& serializer, Json::Value &json,
+                          EcsDebugger &sys) {
         $
-        json["name"] = GetName();
+        json["name"] = SystemName;
         return true;
-    }
-
-    static bool DrawWithImGui(EcsDebugger &sys, InputManager const &input) {
-        $
-        return false;
     }
 };
 } // namespace syst

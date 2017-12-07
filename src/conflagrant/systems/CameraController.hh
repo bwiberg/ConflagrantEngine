@@ -3,7 +3,7 @@
 #include <conflagrant/System.hh>
 #include <conflagrant/types.hh>
 #include <conflagrant/GL.hh>
-#include <conflagrant/serialization/Serialize.hh>
+#include <conflagrant/serialization/serialize.hh>
 #include <conflagrant/components/ActiveCamera.hh>
 #include <conflagrant/components/PerspectiveCamera.hh>
 #include <conflagrant/components/OrthographicCamera.hh>
@@ -18,6 +18,10 @@
 namespace cfl {
 namespace syst {
 class CameraController : public cfl::System, public entityx::System<CameraController> {
+public:
+    static constexpr auto SystemName = "CameraController";
+
+private:
     float movementSpeed{3};
     float turnSpeed{0.3};
 
@@ -28,15 +32,10 @@ class CameraController : public cfl::System, public entityx::System<CameraContro
 public:
     void update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) override;
 
-    inline static string GetName() {
+    inline static bool Serialize(BaseSerializer const& serializer, Json::Value &json,
+                                 CameraController &sys) {
         $
-        return "CameraController";
-    }
-
-    template<typename TSerializer>
-    static bool Serialize(Json::Value &json, CameraController &sys) {
-        $
-        json["name"] = GetName();
+        json["name"] = SystemName;
         return true;
     }
 

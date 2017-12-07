@@ -2,7 +2,7 @@
 
 #include <conflagrant/types.hh>
 #include <conflagrant/GL.hh>
-#include <conflagrant/serialization/Serialize.hh>
+#include <conflagrant/serialization/serialize.hh>
 #include <conflagrant/geometry.hh>
 
 #include <imgui.h>
@@ -11,6 +11,10 @@
 namespace cfl {
 namespace comp {
 class OrthographicCamera {
+public:
+    static constexpr auto ComponentName = "OrthographicCamera";
+
+private:
     float scale{0.001f}, zNear{0.01f}, zFar{100.0f};
     uvec2 size;
 
@@ -98,18 +102,13 @@ public:
         return frustum;
     }
 
-    inline static string const GetName() {
+    inline static bool Serialize(BaseSerializer const& serializer, Json::Value &json,
+                                 OrthographicCamera &camera) {
         $
-        return "OrthographicCamera";
-    }
-
-    template<typename TSerializer>
-    static bool Serialize(Json::Value &json, OrthographicCamera &camera) {
-        $
-        SERIALIZE(json["scale"], camera.scale);
-        SERIALIZE(json["near"], camera.zNear);
-        SERIALIZE(json["far"], camera.zFar);
-        camera.hasChanged = true;
+        SERIALIZE(cfl::comp::OrthographicCamera, json["scale"], camera.scale);
+        SERIALIZE(cfl::comp::OrthographicCamera, json["near"], camera.zNear);
+        SERIALIZE(cfl::comp::OrthographicCamera, json["far"], camera.zFar);
+        camera.hasChanged |= serializer.IsDeserializer();
         return true;
     }
 

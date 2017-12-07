@@ -2,7 +2,7 @@
 
 #include <conflagrant/types.hh>
 #include <conflagrant/GL.hh>
-#include <conflagrant/serialization/Serialize.hh>
+#include <conflagrant/serialization/serialize.hh>
 #include <conflagrant/geometry.hh>
 
 #include <imgui.h>
@@ -11,6 +11,10 @@
 namespace cfl {
 namespace comp {
 class PerspectiveCamera {
+public:
+    static constexpr auto ComponentName = "PerspectiveCamera";
+
+private:
     float fov{60.0f}, zNear{0.01f}, zFar{100.0f};
     uvec2 size;
 
@@ -108,16 +112,12 @@ public:
         return frustum;
     }
 
-    inline static string const GetName() {
-        return "PerspectiveCamera";
-    }
-
-    template<typename TSerializer>
-    static bool Serialize(Json::Value &json, PerspectiveCamera &camera) {
-        SERIALIZE(json["fov"], camera.fov);
-        SERIALIZE(json["zNear"], camera.zNear);
-        SERIALIZE(json["zFar"], camera.zFar);
-        camera.hasChanged = true;
+    inline static bool Serialize(BaseSerializer const& serializer, Json::Value &json,
+                                 PerspectiveCamera &camera) {
+        SERIALIZE(cfl::comp::PerspectiveCamera, json["fov"], camera.fov);
+        SERIALIZE(cfl::comp::PerspectiveCamera, json["zNear"], camera.zNear);
+        SERIALIZE(cfl::comp::PerspectiveCamera, json["zFar"], camera.zFar);
+        camera.hasChanged |= serializer.IsDeserializer();
         return true;
     }
 

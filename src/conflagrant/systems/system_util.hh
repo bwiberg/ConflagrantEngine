@@ -23,13 +23,24 @@ inline entityx::Entity GetActiveCamera(entityx::EntityManager &entities,
     $
 
     entityx::ComponentHandle<comp::ActiveCamera> active;
-    for (auto entity : entities.entities_with_components(outTransform, active, outPerspective)) {
+
+    // 1. Check if we have any Perspective- or OrthographicCamera's with ActiveCamera attached
+    for (auto entity : entities.entities_with_components(outTransform, active, outPerspective))
+        return entity;
+    for (auto entity : entities.entities_with_components(outTransform, active, outOrtographic))
+        return entity;
+
+    // 2. Check if we have any Perspective- or OrthographicCamera's without ActiveCamera attached
+    //    => if so, attach ActiveCamera and return
+    for (auto entity : entities.entities_with_components(outTransform, outPerspective)) {
+        entity.assign<comp::ActiveCamera>();
+        return entity;
+    }
+    for (auto entity : entities.entities_with_components(outTransform, outOrtographic)) {
+        entity.assign<comp::ActiveCamera>();
         return entity;
     }
 
-    for (auto entity : entities.entities_with_components(outTransform, active, outOrtographic)) {
-        return entity;
-    }
 
     entityx::Entity newActiveCamera = entities.create();
     newActiveCamera.assign<comp::Name>()->value = "(auto-created camera)";
@@ -38,7 +49,6 @@ inline entityx::Entity GetActiveCamera(entityx::EntityManager &entities,
 
     outTransform = newActiveCamera.assign<comp::Transform>();
     outTransform->Position(vec3(0, 0, 10));
-
     outPerspective = newActiveCamera.assign<comp::PerspectiveCamera>();
 
     return newActiveCamera;

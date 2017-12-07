@@ -1,31 +1,17 @@
 #pragma once
 
 #include <conflagrant/types.hh>
-#include "Serialize.hh"
+#include "serialize.hh"
 
 namespace cfl {
-template<typename TSerializer>
-struct _PathSerializerHelper;
-
-template<>
-struct _PathSerializerHelper<Serializer> {
-    static bool Serialize(Json::Value &json, Path &value) {
+inline bool Serialize(BaseSerializer const& serializer, Json::Value &json, Path &value) {
+    if (serializer.IsSerializer()) {
         json = value.str();
-        return true;
-    }
-};
-
-template<>
-struct _PathSerializerHelper<Deserializer> {
-    static bool Serialize(Json::Value &json, Path &value) {
-        if (json.empty()) return false;
+    } else {
+        if (json.empty() || !json.isString()) return false;
         value.set(json.asString());
-        return true;
     }
-};
 
-template<typename TSerializer>
-static bool Serialize(Json::Value &json, Path &value) {
-    _PathSerializerHelper<TSerializer>::Serialize(json, value);
+    return true;
 };
 } // namespace cfl

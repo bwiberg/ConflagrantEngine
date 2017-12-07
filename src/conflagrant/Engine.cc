@@ -18,7 +18,7 @@ Engine::~Engine() {
 }
 
 bool Engine::LoadScene(string const &pathToJson) {
-#define RETURN_ERROR(message) LOG_ERROR(cfl::Engine::LoadScene) << (message) << std::endl; return false;
+#define RETURN_ERROR(message) LOG_ERROR(cfl::Engine::LoadScene) << (message); return false;
 
     Path path(pathToJson);
     if (!path.is_file()) {
@@ -32,8 +32,8 @@ bool Engine::LoadScene(string const &pathToJson) {
 
     std::ifstream file(pathToJson);
     if (!file.is_open()) {
-        std::cout << "Could not open '" << pathToJson << "' for reading. Exiting." << std::endl;
-        return -1;
+        LOG_ERROR(cfl::Engine::LoadScene) << "Could not open '" << pathToJson << "' for reading. Exiting.";
+        return false;
     }
 
     Json::Value json;
@@ -55,7 +55,7 @@ bool Engine::LoadScene(string const &pathToJson) {
                 for (auto const &jsonAssetPath : jsonAssetPaths) {
                     if (!jsonAssetPath.isString()) {
                         LOG_INFO(cfl::Engine::LoadScene)
-                                << "Encountered element in 'assetPaths' that is not a string." << std::endl;
+                                << "Encountered element in 'assetPaths' that is not a string.";
                         continue;
                     }
 
@@ -64,7 +64,7 @@ bool Engine::LoadScene(string const &pathToJson) {
                     if (!assetsPath.exists() || !assetsPath.is_directory()) {
                         LOG_INFO(cfl::Engine::LoadScene) << "Encountered relative assetPath '" << relativeAssetsPath
                                                          << "' that expands to '" << assetsPath
-                                                         << "' which isn't a valid directory." << std::endl;
+                                                         << "' which isn't a valid directory.";
                         continue;
                     }
 
@@ -95,7 +95,7 @@ bool Engine::LoadScene(string const &pathToJson) {
 }
 
 bool Engine::LoadScene(Json::Value &json) {
-#define RETURN_ERROR(message) LOG_ERROR(cfl::Engine::LoadScene) << (message) << std::endl; return false;
+#define RETURN_ERROR(message) LOG_ERROR(cfl::Engine::LoadScene) << (message); return false;
     return LoadScene([this, &json](std::shared_ptr<entityx::EntityManager> entities,
                                    std::shared_ptr<entityx::SystemManager> systems) {
         if (!json.isObject()) {
@@ -132,7 +132,7 @@ bool Engine::LoadScene(std::function<bool(std::shared_ptr<entityx::EntityManager
     systems = std::make_shared<entityx::SystemManager>(*entities, *events);
 
     if (!loadSceneFunction(entities, systems)) {
-        LOG_ERROR(cfl::Engine::LoadScene) << "Provided loadSceneFunction returns false." << std::endl;
+        LOG_ERROR(cfl::Engine::LoadScene) << "Provided loadSceneFunction returns false.";
         return false;
     }
 
@@ -142,7 +142,7 @@ bool Engine::LoadScene(std::function<bool(std::shared_ptr<entityx::EntityManager
 
 bool Engine::CreateSystems(Json::Value &json) {
     if (!json.isArray()) {
-        LOG_ERROR(cfl::Engine::CreateSystems) << "Json is not an array." << std::endl;
+        LOG_ERROR(cfl::Engine::CreateSystems) << "Json is not an array.";
         return false;
     }
 
@@ -155,7 +155,7 @@ bool Engine::CreateSystems(Json::Value &json) {
         auto it = SystemFactoriesByName.find(systemName);
         if (it == SystemFactoriesByName.end()) {
             LOG_ERROR(cfl::Engine::CreateSystems) << "System with name '" << systemName << "' does not have a factory."
-                                                  << " Have you forgot to register the system?" << std::endl;
+                                                  << " Have you forgot to register the system?";
             return false;
         }
 
@@ -164,8 +164,7 @@ bool Engine::CreateSystems(Json::Value &json) {
 
         auto system = factory->Create(*systems, jsonSystem);
         if (!system) {
-            LOG_ERROR(cfl::Engine::CreateSystems) << "Failed to create system with name '" << systemName << "'."
-                                                  << std::endl;
+            LOG_ERROR(cfl::Engine::CreateSystems) << "Failed to create system with name '" << systemName << "'.";
             return false;
         }
 
@@ -184,14 +183,14 @@ bool Engine::CreateSystems(Json::Value &json) {
 
 bool Engine::CreateEntities(Json::Value &jsonEntities) {
     if (!jsonEntities.isArray()) {
-        LOG_ERROR(cfl::Engine::CreateEntities) << "Json is not an array." << std::endl;
+        LOG_ERROR(cfl::Engine::CreateEntities) << "Json is not an array.";
         return false;
     }
 
     Json::ArrayIndex const NumEntities = jsonEntities.size();
     for (Json::ArrayIndex i = 0; i < NumEntities; ++i) {
         if (!CreateEntity(jsonEntities[i])) {
-            LOG_ERROR(cfl::Engine::CreateEntities) << "Failed to create entity from Json." << std::endl;
+            LOG_ERROR(cfl::Engine::CreateEntities) << "Failed to create entity from Json.";
             return false;
         }
     }
@@ -204,7 +203,7 @@ bool Engine::CreateEntity(Json::Value &jsonEntity) {
 #define RETURN_ERROR() { entity.destroy(); return false; }
 
     if (!jsonEntity.isObject()) {
-        LOG_ERROR(cfl::Engine::CreateEntity) << "Json is not an object." << std::endl;
+        LOG_ERROR(cfl::Engine::CreateEntity) << "Json is not an object.";
         RETURN_ERROR();
     }
 
@@ -215,13 +214,18 @@ bool Engine::CreateEntity(Json::Value &jsonEntity) {
         if (it == ComponentFactoriesByName.end()) {
             LOG_ERROR(cfl::Engine::CreateEntity) << "Component with name '" << componentName
                                                  << "' does not have a factory. "
-                                                 << "Have you forgot to register the component?" << std::endl;
+                                                 << "Have you forgot to register the component?";
             RETURN_ERROR();
         }
 
-        if (!it->second->Create(entity, jsonEntity[componentName])) {
-            LOG_ERROR(cfl::Engine::CreateEntity) << "Failed to create component with name '" << componentName << "'."
-                                                 << std::endl;
+        auto &factory = *it->second;
+        if (!factory.IsSerializable()) {
+            LOG_ERROR(cfl::Engine::CreateEntity) << "Component with name '" << componentName
+                                                 << "' is not serializable (i.e. do not specify it in your scene file)";
+        }
+
+        if (!factory.Create(entity, jsonEntity[componentName])) {
+            LOG_ERROR(cfl::Engine::CreateEntity) << "Failed to create component with name '" << componentName << "'.";
             RETURN_ERROR();
         }
     }
@@ -272,12 +276,12 @@ int Engine::Run(bool singleTimestep) {
 
 bool Engine::SaveScene(Json::Value &json) {
     if (!SaveSystems(json["systems"])) {
-        LOG_ERROR(cfl::Engine::SaveScene) << "Failed to save systems to Json" << std::endl;
+        LOG_ERROR(cfl::Engine::SaveScene) << "Failed to save systems to Json";
         return false;
     }
 
     if (!SaveEntities(json["entities"])) {
-        LOG_ERROR(cfl::Engine::SaveScene) << "Failed to save entities to Json" << std::endl;
+        LOG_ERROR(cfl::Engine::SaveScene) << "Failed to save entities to Json";
         return false;
     }
 
@@ -341,7 +345,7 @@ bool Engine::SaveEntity(entityx::Entity &entity, Json::Value &json) {
         auto const &name = pair.first;
         auto const &factory = *pair.second;
 
-        if (!factory.HasComponent(entity)) {
+        if (!factory.IsSerializable() || !factory.HasComponent(entity)) {
             continue;
         }
 

@@ -1,12 +1,12 @@
 #pragma once
 
-#include <entityx/System.h>
-
 #include <conflagrant/types.hh>
 #include <conflagrant/GL.hh>
 #include <conflagrant/System.hh>
-
 #include <conflagrant/gl/Shader.hh>
+#include <conflagrant/serialization/serialize.hh>
+
+#include <entityx/System.h>
 
 namespace cfl {
 namespace syst {
@@ -19,6 +19,10 @@ struct RenderStats {
 };
 
 class ForwardRenderer : public cfl::System, public entityx::System<ForwardRenderer> {
+public:
+    static constexpr auto SystemName = "ForwardRenderer";
+
+private:
     std::shared_ptr<gl::Shader> forwardShader, skydomeShader, shadowmapLightpassShader, shadowmapVisShader;
 
     RenderStats renderStats;
@@ -30,15 +34,10 @@ public:
 
     void update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) override;
 
-    inline static string GetName() {
+    inline static bool Serialize(BaseSerializer const& serializer, Json::Value &json,
+                                 ForwardRenderer &sys) {
         $
-        return "ForwardRenderer";
-    }
-
-    template<typename TSerializer>
-    static bool Serialize(Json::Value &json, ForwardRenderer &sys) {
-        $
-        json["name"] = GetName();
+        json["name"] = SystemName;
         return true;
     }
 

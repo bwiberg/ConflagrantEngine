@@ -15,17 +15,13 @@ namespace comp {
  * @brief Component that references a Mesh asset
  */
 struct Mesh {
+    static constexpr auto ComponentName = "Mesh";
+
     std::shared_ptr<assets::Mesh> value;
 
-    inline static string const GetName() {
+    inline static bool Serialize(BaseSerializer const &serializer, Json::Value &json,
+                                 Mesh &mesh) {
         $
-        return "Mesh";
-    }
-
-    template<typename TSerializer>
-    static bool Serialize(Json::Value &json, Mesh &mesh) {
-        $
-        // SERIALIZE(json, name.value);
         return true;
     }
 

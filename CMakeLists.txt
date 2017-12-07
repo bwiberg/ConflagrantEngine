@@ -135,6 +135,7 @@ set(HH_FILES
         src/conflagrant/GL.hh
         src/conflagrant/CL.hh
         src/conflagrant/Window.hh
+        src/conflagrant/factory_util.hh
         src/conflagrant/assets/Asset.hh
         src/conflagrant/assets/AssetLoader.hh
         src/conflagrant/assets/AssetManager.hh
@@ -173,7 +174,7 @@ set(HH_FILES
         src/conflagrant/gl/Mesh.hh
         src/conflagrant/gl/VertexArray.hh
         src/conflagrant/gl/Shader.hh
-        src/conflagrant/serialization/Serialize.hh
+        src/conflagrant/serialization/serialize.hh
         src/conflagrant/serialization/array.hh
         src/conflagrant/serialization/vector.hh
         src/conflagrant/serialization/crossguid.hh

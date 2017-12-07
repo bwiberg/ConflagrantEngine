@@ -39,6 +39,7 @@ void syst::EcsDebugger::DrawEntityEditor(entityx::Entity &entity) {
         auto const &name = kvp.first;
         auto &factory = *kvp.second;
 
+        if (!factory.IsImGuiDrawable()) continue;
         if (!factory.HasComponent(entity)) continue;
         if (!ImGui::CollapsingHeader(name.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) continue;
 
@@ -57,12 +58,10 @@ void syst::EcsDebugger::DrawSystems(std::unordered_set<std::shared_ptr<SystemFac
     ImGui::Begin("Systems");
 
     for (auto &factory : engine->orderedSystemFactories) {
-        auto const &name = factory->GetName();
-        if (name == syst::EcsDebugger::GetName()) {
-            continue;
-        }
-
+        if (!factory->IsImGuiDrawable()) continue;
         if (!factory->HasSystem(manager)) continue;
+
+        auto const &name = factory->GetName();
 
         bool isSelected = currentSystems.find(factory) != currentSystems.end();
 

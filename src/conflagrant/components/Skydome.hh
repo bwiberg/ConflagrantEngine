@@ -2,7 +2,7 @@
 
 #include <conflagrant/types.hh>
 #include <conflagrant/GL.hh>
-#include <conflagrant/serialization/Serialize.hh>
+#include <conflagrant/serialization/serialize.hh>
 #include <conflagrant/InputManager.hh>
 #include <conflagrant/assets/Mesh.hh>
 
@@ -13,6 +13,8 @@
 namespace cfl {
 namespace comp {
 struct Skydome {
+    static constexpr auto ComponentName = "Skydome";
+
     string texturePath;
     std::shared_ptr<assets::Model> _model;
     std::shared_ptr<assets::Mesh> mesh;
@@ -20,15 +22,14 @@ struct Skydome {
 
     float radius{50.f}, rotationDegrees{0.f};
 
-    inline static string const &GetName() {
-        static const string name = "Skydome";
-        return name;
-    }
+    inline static bool Serialize(BaseSerializer const &serializer, Json::Value &json,
+                                 Skydome &comp) {
+        SERIALIZE(cfl::comp::Skydome, json["texturePath"], comp.texturePath);
+        if (serializer.IsDeserializer()) {
+            return comp.ReloadSkydome();
+        }
 
-    template<typename TSerializer>
-    static bool Serialize(Json::Value &json, Skydome &comp) {
-        SERIALIZE(json["texturePath"], comp.texturePath);
-        return ReloadSkydome(comp);
+        return true;
     }
 
     inline static bool DrawWithImGui(Skydome &comp, InputManager const &input) {
@@ -37,16 +38,13 @@ struct Skydome {
         return true;
     }
 
-    inline static bool ReloadSkydome(Skydome &skydome) {
+    inline bool ReloadSkydome() {
         $
-        skydome.texture = assets::AssetManager::LoadAsset<assets::Texture2D>(skydome.texturePath);
-        skydome._model = assets::AssetManager::LoadAsset<assets::Model>("sphere.obj");
-        skydome.mesh = skydome._model->parts[0].first;
-        auto &tex = *skydome.texture;
-        auto &model = *skydome._model;
-        auto &mesh = *skydome.mesh;
+        texture = assets::AssetManager::LoadAsset<assets::Texture2D>(texturePath);
+        _model = assets::AssetManager::LoadAsset<assets::Model>("sphere.obj");
+        mesh = _model->parts[0].first;
 
-        return skydome.texture != nullptr && skydome._model != nullptr && skydome.mesh != nullptr;
+        return texture != nullptr && _model != nullptr && mesh != nullptr;
     }
 };
 } // namespace comp

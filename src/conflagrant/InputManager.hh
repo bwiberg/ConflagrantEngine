@@ -24,7 +24,7 @@ class InputManager final {
 
     std::array<State, static_cast<int>(input::Key::NUM_ENUM_ENTRIES_Key)> keyStates;
 
-    std::array<State, static_cast<int>(input::Key::NUM_ENUM_ENTRIES_Key)> mouseButtonStates;
+    std::array<State, static_cast<int>(input::MouseButton::NUM_ENUM_ENTRIES_MouseButton)> mouseButtonStates;
 
     dvec2 mousePosition, prevMousePosition;
 

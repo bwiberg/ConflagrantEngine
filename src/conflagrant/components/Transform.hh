@@ -2,7 +2,7 @@
 
 #include <conflagrant/types.hh>
 #include <conflagrant/GL.hh>
-#include <conflagrant/serialization/Serialize.hh>
+#include <conflagrant/serialization/serialize.hh>
 #include <conflagrant/serialization/glm.hh>
 
 #include <imgui.h>
@@ -12,6 +12,10 @@
 namespace cfl {
 namespace comp {
 class Transform {
+public:
+    static constexpr auto ComponentName = "Transform";
+
+private:
     mat4 matrix;
     bool hasChanged{true};
     vec3 position{0.0f, 0.0f, 0.0f};
@@ -84,18 +88,14 @@ public:
         return matrix;
     }
 
-    inline static string const GetName() {
-        return "Transform";
-    }
-
-    template<typename TSerializer>
-    static bool Serialize(Json::Value &json, Transform &transform) {
+    inline static bool Serialize(BaseSerializer const &serializer, Json::Value &json,
+                                 Transform &transform) {
         $
-        SERIALIZE_CUSTOM(json["pivot"], transform.pivot);
-        SERIALIZE_CUSTOM(json["position"], transform.position);
-        SERIALIZE_CUSTOM(json["orientation"], transform.rotation);
-        SERIALIZE(json["scale"], transform.scale);
-        transform.hasChanged = true;
+        SERIALIZE(cfl::comp::Transform, json["pivot"], transform.pivot);
+        SERIALIZE(cfl::comp::Transform, json["position"], transform.position);
+        SERIALIZE(cfl::comp::Transform, json["orientation"], transform.rotation);
+        SERIALIZE(cfl::comp::Transform, json["scale"], transform.scale);
+        transform.hasChanged |= serializer.IsDeserializer();
         return true;
     }
 

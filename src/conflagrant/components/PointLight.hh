@@ -2,7 +2,7 @@
 
 #include <conflagrant/types.hh>
 #include <conflagrant/GL.hh>
-#include <conflagrant/serialization/Serialize.hh>
+#include <conflagrant/serialization/serialize.hh>
 #include <conflagrant/serialization/glm.hh>
 #include <conflagrant/InputManager.hh>
 
@@ -11,20 +11,16 @@
 namespace cfl {
 namespace comp {
 struct PointLight {
+    static constexpr auto ComponentName = "PointLight";
+
     vec3 color{1.0f, 1.0f, 1.0f};
     float intensity{1.0f};
 
-    inline static string const &GetName() {
+    inline static bool Serialize(BaseSerializer const &serializer, Json::Value &json,
+                                 PointLight &comp) {
         $
-        static const string name = "PointLight";
-        return name;
-    }
-
-    template<typename TSerializer>
-    static bool Serialize(Json::Value &json, PointLight &comp) {
-        $
-        SERIALIZE_CUSTOM(json["color"], comp.color);
-        SERIALIZE(json["intensity"], comp.intensity);
+        SERIALIZE(cfl::comp::PointLight, json["color"], comp.color);
+        SERIALIZE(cfl::comp::PointLight, json["intensity"], comp.intensity);
         return true;
     }
 

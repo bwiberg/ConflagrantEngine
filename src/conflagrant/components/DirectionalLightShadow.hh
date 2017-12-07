@@ -2,7 +2,7 @@
 
 #include <conflagrant/types.hh>
 #include <conflagrant/GL.hh>
-#include <conflagrant/serialization/Serialize.hh>
+#include <conflagrant/serialization/serialize.hh>
 #include <conflagrant/InputManager.hh>
 #include <conflagrant/gl/Framebuffer.hh>
 #include <conflagrant/gl/Texture.hh>
@@ -12,6 +12,8 @@
 namespace cfl {
 namespace comp {
 struct DirectionalLightShadow {
+    static constexpr auto ComponentName = "DirectionalLightShadow";
+
     std::shared_ptr<gl::Framebuffer> framebuffer;
     std::shared_ptr<gl::Texture2D> depthTexture;
 
@@ -44,17 +46,6 @@ struct DirectionalLightShadow {
             return false;
         }
 
-        return true;
-    }
-
-    inline static string const &GetName() {
-        static const string name = "DirectionalLightShadow";
-        return name;
-    }
-
-    template<typename TSerializer>
-    static bool Serialize(Json::Value &json, DirectionalLightShadow &comp) {
-        // SERIALIZE(json, ...);
         return true;
     }
 

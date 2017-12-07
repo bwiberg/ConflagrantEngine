@@ -2,7 +2,7 @@
 
 #include <conflagrant/types.hh>
 #include <conflagrant/GL.hh>
-#include <conflagrant/serialization/Serialize.hh>
+#include <conflagrant/serialization/serialize.hh>
 
 #include <conflagrant/assets/Asset.hh>
 #include <conflagrant/assets/Mesh.hh>

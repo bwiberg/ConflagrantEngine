@@ -11,23 +11,23 @@ void CameraController::MoveCamera(comp::Transform &transform) {
     mat4 const &matrix = transform.GetMatrix();
     vec3 position = transform.Position();
 
-    vec3 const Forward = glm::normalize(mat3(matrix) * vec3(0.0f, 0.0f, -1.0f));
-    vec3 const Right = glm::normalize(mat3(matrix) * vec3(1.0f, 0.0f, 0.0f));
-    vec3 const Up = glm::normalize(mat3(matrix) * vec3(0.0f, 1.0f, 0.0f));
+    vec3 const CamForward = glm::normalize(mat3(matrix) * geometry::Backward);
+    vec3 const CamRight = glm::normalize(mat3(matrix) * geometry::Right);
+    vec3 const CamUp = glm::normalize(mat3(matrix) * geometry::Up);
 
-    float const inputUp = (input->GetKey(Key::W) || input->GetKey(Key::UP)) ? 1.0f : 0.0f;
-    float const inputDown = (input->GetKey(Key::S) || input->GetKey(Key::DOWN)) ? 1.0f : 0.0f;
-    float const inputRight = (input->GetKey(Key::D) || input->GetKey(Key::RIGHT)) ? 1.0f : 0.0f;
-    float const inputLeft = (input->GetKey(Key::A) || input->GetKey(Key::LEFT)) ? 1.0f : 0.0f;
+    float const InputUp = (input->GetKey(Key::W) || input->GetKey(Key::UP)) ? 1.0f : 0.0f;
+    float const InputDown = (input->GetKey(Key::S) || input->GetKey(Key::DOWN)) ? 1.0f : 0.0f;
+    float const InputRight = (input->GetKey(Key::D) || input->GetKey(Key::RIGHT)) ? 1.0f : 0.0f;
+    float const InputLeft = (input->GetKey(Key::A) || input->GetKey(Key::LEFT)) ? 1.0f : 0.0f;
 
-    float const amountForward = inputUp - inputDown;
-    float const amountRight = inputRight - inputLeft;
+    float const AmountForward = InputUp - InputDown;
+    float const AmountRight = InputRight - InputLeft;
 
-    vec3 const moveForward = amountForward * Forward;
-    vec3 const moveSideways = amountRight * Right;
+    vec3 const MoveForward = AmountForward * CamForward;
+    vec3 const MoveSideways = AmountRight * CamRight;
 
-    float speed = input->GetKey(Key::LEFT_SHIFT) ? 4.0f : 1.0f;
-    position += static_cast<float>(Time::DeltaTime()) * speed * movementSpeed * (moveForward + moveSideways);
+    float const Speed = input->GetKey(Key::LEFT_SHIFT) ? 4.0f : 1.0f;
+    position += static_cast<float>(Time::DeltaTime()) * Speed * movementSpeed * (MoveForward + MoveSideways);
     transform.Position(position);
 
     dvec2 const delta = input->GetDeltaMousePositionPixel();

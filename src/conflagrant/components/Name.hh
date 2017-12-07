@@ -2,24 +2,21 @@
 
 #include <conflagrant/types.hh>
 #include <conflagrant/GL.hh>
-#include <conflagrant/serialization/Serialize.hh>
+#include <conflagrant/serialization/serialize.hh>
 
 #include <imgui.h>
 
 namespace cfl {
 namespace comp {
 struct Name {
+    static constexpr auto ComponentName = "Name";
+
     string value;
 
-    inline static string const GetName() {
+    inline static bool Serialize(BaseSerializer const &serializer, Json::Value &json,
+                                 Name &name) {
         $
-        return "Name";
-    }
-
-    template<typename TSerializer>
-    static bool Serialize(Json::Value &json, Name &name) {
-        $
-        SERIALIZE(json, name.value);
+        SERIALIZE(cfl::comp::Name, json, name.value);
         return true;
     }
 

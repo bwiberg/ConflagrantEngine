@@ -2,7 +2,7 @@
 
 #include <conflagrant/types.hh>
 #include <conflagrant/GL.hh>
-#include <conflagrant/serialization/Serialize.hh>
+#include <conflagrant/serialization/serialize.hh>
 #include <conflagrant/serialization/glm.hh>
 #include <conflagrant/InputManager.hh>
 
@@ -11,25 +11,21 @@
 namespace cfl {
 namespace comp {
 struct DirectionalLight {
+    static constexpr auto ComponentName = "DirectionalLight";
+
     float horizontal, vertical;
     vec3 color{1.0f, 1.0f, 1.0f};
     float intensity{1.0f};
     bool castShadows{false};
 
-    inline static string const &GetName() {
+    inline static bool Serialize(BaseSerializer const& serializer, Json::Value &json,
+                                 DirectionalLight &comp) {
         $
-        static const string name = "DirectionalLight";
-        return name;
-    }
-
-    template<typename TSerializer>
-    static bool Serialize(Json::Value &json, DirectionalLight &comp) {
-        $
-        SERIALIZE_CUSTOM(json["color"], comp.color);
-        SERIALIZE(json["intensity"], comp.intensity);
-        SERIALIZE(json["horizontal"], comp.horizontal);
-        SERIALIZE(json["vertical"], comp.vertical);
-        SERIALIZE(json["castShadows"], comp.castShadows);
+        SERIALIZE(cfl::comp::DirectionalLight, json["color"], comp.color);
+        SERIALIZE(cfl::comp::DirectionalLight, json["intensity"], comp.intensity);
+        SERIALIZE(cfl::comp::DirectionalLight, json["horizontal"], comp.horizontal);
+        SERIALIZE(cfl::comp::DirectionalLight, json["vertical"], comp.vertical);
+        SERIALIZE(cfl::comp::DirectionalLight, json["castShadows"], comp.castShadows);
         return true;
     }
 
