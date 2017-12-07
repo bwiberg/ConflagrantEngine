@@ -5,19 +5,12 @@
 #include <conflagrant/System.hh>
 #include <conflagrant/gl/Shader.hh>
 #include <conflagrant/serialization/serialize.hh>
+#include <conflagrant/RenderStats.hh>
 
 #include <entityx/System.h>
 
 namespace cfl {
 namespace syst {
-struct RenderStats {
-    size_t numVertices{0};
-    size_t numTriangles{0};
-    size_t numMeshes{0};
-    size_t numPointLights{0};
-    size_t numDirectionalLights{0};
-};
-
 class ForwardRenderer : public cfl::System, public entityx::System<ForwardRenderer> {
 public:
     static constexpr auto SystemName = "ForwardRenderer";
