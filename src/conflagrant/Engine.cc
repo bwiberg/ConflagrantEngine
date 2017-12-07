@@ -43,7 +43,7 @@ bool Engine::LoadScene(string const &pathToJson) {
     Path defaultAssetsPath = jsonDirectory / Path("assets");
     assets::AssetManager::AddAssetsPath(defaultAssetsPath);
 
-    return LoadScene([this, &json, &jsonDirectory](std::shared_ptr<entityx::EntityManager> entities,
+    bool success = LoadScene([this, &json, &jsonDirectory](std::shared_ptr<entityx::EntityManager> entities,
                                                    std::shared_ptr<entityx::SystemManager> systems) {
         if (!json.isObject()) {
             RETURN_ERROR("Json is not an object.");
@@ -91,6 +91,12 @@ bool Engine::LoadScene(string const &pathToJson) {
 
         return true;
     });
+
+    if (success) {
+        currentScenePath = std::make_unique<cfl::Path>(std::move(path));
+    }
+
+    return success;
 #undef RETURN_ERROR
 }
 
@@ -266,6 +272,32 @@ int Engine::Run(bool singleTimestep) {
 
         if (window) window->FinishFrame();
         dollar::clear();
+
+        if (currentScenePath && input->AllKeysHeldAtLeastOneKeyDown({Key::LEFT_CONTROL, Key::S})) {
+            // save scene to loaded json file
+            Json::Value savedScene;
+            if (!SaveScene(savedScene)) {
+                LOG_ERROR(cfl::Engine::Run) << "Failed to export current scene to Json::Value";
+                continue;
+            }
+
+            std::ofstream file(currentScenePath->str());
+            if (!file.is_open()) {
+                LOG_ERROR(cfl::Engine::Run) << "Could not open '" << currentScenePath->str() << "' for writing.";
+                continue;
+            }
+
+            file << savedScene;
+
+            file.close();
+            if (file.bad()) {
+                LOG_ERROR(cfl::Engine::Run) << "Failed to write to '"  << currentScenePath->str() << "'.";
+                continue;
+            }
+
+            LOG_INFO(cfl::Engine::Run) << "Successfully saved scene to '" << currentScenePath->str() << "'.";
+        }
+
     } while (!shouldStop);
 
     shouldStop = false;

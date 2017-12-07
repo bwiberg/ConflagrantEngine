@@ -45,6 +45,8 @@ class Engine {
 
     std::vector<std::shared_ptr<System>> systemVector;
 
+    std::unique_ptr<Path> currentScenePath{nullptr};
+
 public:
     std::vector<std::shared_ptr<SystemFactory>> orderedSystemFactories;
 

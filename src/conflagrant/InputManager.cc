@@ -149,6 +149,24 @@ bool InputManager::GetKeyUp(input::Key key) const {
     return keyStates[static_cast<int>(key)] == State::RELEASED;
 }
 
+bool InputManager::AllKeysHeldAtLeastOneKeyDown(std::initializer_list<input::Key> keys) const {
+    bool atLeastOneKeyDown = false;
+
+    for (auto key : keys) {
+        auto state = keyStates[static_cast<int>(key)];
+        switch (state) {
+            case State::PRESSED:
+                atLeastOneKeyDown = true;
+            case State::HELD_DOWN:
+                continue;
+            default:
+                return false;
+        }
+    }
+
+    return atLeastOneKeyDown;
+}
+
 std::vector<input::Key> InputManager::GetAllKeys_Slow() const {
     unsigned long constexpr GuessMaxKeysHeld = 6;
     std::vector<input::Key> keys(0);

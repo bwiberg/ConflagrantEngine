@@ -67,6 +67,11 @@ public:
 
     bool GetKeyUp(input::Key key) const;
 
+    /**
+     * Useful for checking if e.g. Ctrl+S occurred this frame.
+     */
+    bool AllKeysHeldAtLeastOneKeyDown(std::initializer_list<input::Key> keys) const;
+
     std::vector<input::Key> GetAllKeys_Slow() const;
 
     std::vector<input::MouseButton> GetAllMouseButtons() const;

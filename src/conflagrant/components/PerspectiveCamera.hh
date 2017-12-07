@@ -16,7 +16,7 @@ public:
 
 private:
     float fov{60.0f}, zNear{0.01f}, zFar{100.0f};
-    uvec2 size;
+    uvec2 size{1, 1};
 
     bool hasChanged{true};
 
