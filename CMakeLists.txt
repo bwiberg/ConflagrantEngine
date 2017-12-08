@@ -137,6 +137,7 @@ set(HH_FILES
         src/conflagrant/Window.hh
         src/conflagrant/factory_util.hh
         src/conflagrant/RenderStats.hh
+        src/conflagrant/ShaderSourceManager.hh
         src/conflagrant/assets/Asset.hh
         src/conflagrant/assets/AssetLoader.hh
         src/conflagrant/assets/AssetManager.hh
@@ -191,6 +192,7 @@ set(CC_FILES
         src/conflagrant/Time.cc
         src/conflagrant/logging.cc
         src/conflagrant/geometry.cc
+        src/conflagrant/ShaderSourceManager.cc
         src/conflagrant/assets/AssetManager.cc
         src/conflagrant/assets/loaders/ModelLoader.cc
         src/conflagrant/assets/loaders/TextureLoader.cc

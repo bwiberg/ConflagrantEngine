@@ -25,6 +25,8 @@
 #include <conflagrant/systems/EcsDebugger.hh>
 #include <conflagrant/systems/ForwardRenderer.hh>
 
+#include <conflagrant/ShaderSourceManager.hh>
+
 namespace cfl {
 bool InitDefaults() {
     using cfl::assets::AssetManager;
@@ -56,6 +58,8 @@ bool InitDefaults() {
     REGISTER_SYSTEM(cfl::syst::CameraController);
     REGISTER_SYSTEM(cfl::syst::EcsDebugger);
     REGISTER_SYSTEM(cfl::syst::ForwardRenderer);
+
+    REGISTER_SHADER_FOLDER(BUILTIN_SHADER_DIR);
 
     return true;
 }

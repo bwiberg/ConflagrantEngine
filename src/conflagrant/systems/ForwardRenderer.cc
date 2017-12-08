@@ -10,6 +10,7 @@
 #include <conflagrant/components/DirectionalLight.hh>
 #include <conflagrant/components/DirectionalLightShadow.hh>
 #include <conflagrant/components/Skydome.hh>
+#include <conflagrant/ShaderSourceManager.hh>
 
 #include <imgui.h>
 
@@ -21,10 +22,10 @@ ForwardRenderer::ForwardRenderer() {
 
 void ForwardRenderer::LoadShaders() {
     $
-    forwardShader = gl::LoadShader("forward.vert", "forward.frag");
-    skydomeShader = gl::LoadShader("forward_skydome.vert", "forward_skydome.frag");
-    shadowmapLightpassShader = gl::LoadShader("shadowmap_lightpass.vert", "shadowmap_lightpass.frag");
-    shadowmapVisShader = gl::LoadShader("shadowmap_visualization.vert", "shadowmap_visualization.frag");
+    forwardShader = LoadShader("forward.vert", "forward.frag");
+    skydomeShader = LoadShader("forward_skydome.vert", "forward_skydome.frag");
+    shadowmapLightpassShader = LoadShader("shadowmap_lightpass.vert", "shadowmap_lightpass.frag");
+    shadowmapVisShader = LoadShader("shadowmap_visualization.vert", "shadowmap_visualization.frag");
 }
 
 void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) {
