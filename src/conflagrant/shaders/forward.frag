@@ -1,55 +1,14 @@
 #version 410
 
-#define MAX_POINTLIGHTS 16
-#define MAX_DIRECTIONALLIGHTS 16
-
-#define SINGLE_SAMPLE 0
-#define PCF 1
-    #define PCF_RADIUS 1
-#define POISSON 2
-#define STRATIFIED_POISSON 3
-    #define POISSON_SAMPLES 16
-    #define POISSON_VALUE 700.0
-    #define POISSON_CENTER_WEIGHT 0
-
-#define SHADOWMAP_METHOD STRATIFIED_POISSON
-
-#define SHADOWMAP_BIAS 0.005
-#define USE_SAMPLER2DSHADOW 1
-
-#if USE_SAMPLER2DSHADOW == 1
-    #define SAMPLER2DSHADOW sampler2DShadow
-    #define SAMPLE_SHADOWMAP(shadowMap, projCoords, bias) texture(shadowMap, projCoords, bias)
-#else // USE_SAMPLER2DSHADOW != 1
-    #define SAMPLER2DSHADOW sampler2D
-    #define SAMPLE_SHADOWMAP(shadowMap, projCoords, bias) texture(l.shadowMap, projCoords.xy).r
-#endif // USE_SAMPLER2DSHADOW
-
+#include "common/Definitions.glsl"
 
 in mat3 fIn_WorldTBN;
 in vec3 fIn_WorldPosition;
 in vec2 fIn_TexCoord;
 in vec4 fIn_DirectionalLightSpacePositions[MAX_DIRECTIONALLIGHTS];
 
-struct PointLight {
-    vec3 worldPosition;
-    float intensity;
-    vec3 color;
-};
-
-struct DirectionalLight {
-    vec3 direction;
-    float intensity;
-    vec3 color;
-
-    int hasShadowMap;
-#if USE_SAMPLER2DSHADOW == 1
-    sampler2DShadow shadowMap;
-#else
-    sampler2D shadowMap;
-#endif
-    mat4 VP;
-};
+#include "common/PointLight.glsl"
+#include "common/DirectionalLight.glsl"
 
 uniform PointLight pointLights[MAX_POINTLIGHTS];
 uniform int numPointLights = 0;
@@ -60,19 +19,8 @@ uniform float AttenuationConstant = 1.0f;
 uniform float AttenuationLinear = 0.1f;
 uniform float AttenuationQuadratic = 0.01f;
 
-struct MaterialProperty {
-    sampler2D map;
-    vec3 color;
-    int hasMap;
-};
-
-uniform struct {
-    MaterialProperty diffuse;
-    MaterialProperty specular;
-    sampler2D normalMap;
-    int hasNormalMap;
-    float shininess;
-} material;
+#include "common/Material.glsl"
+uniform Material material;
 
 uniform float time;
 uniform vec3 EyePos;
@@ -80,20 +28,9 @@ uniform vec3 EyePos;
 out vec4 out_Color;
 
 float random(vec3 seed, int i){
-	vec4 seed4 = vec4(seed,i);
+	vec4 seed4 = vec4(seed, i);
 	float dot_product = dot(seed4, vec4(12.9898,78.233,45.164,94.673));
 	return fract(sin(dot_product) * 43758.5453);
-}
-
-vec4 GetPropertyColor(MaterialProperty prop) {
-    vec4 color = vec4(prop.color, 1);
-    if (prop.hasMap != 0) {
-        vec2 st = vec2(fIn_TexCoord.s, 1 - fIn_TexCoord.t);
-        float mipmapLevel = textureQueryLod(prop.map, st).x;
-        color = textureLod(prop.map, st, mipmapLevel);
-    }
-
-    return color;
 }
 
 float Attenuate(float d) {
@@ -240,9 +177,5 @@ void main(void) {
         result += kDiffuse;
     }
 
-    float v = ComputeVisibility(directionalLights[0], fIn_DirectionalLightSpacePositions[0], N);
-    //result = vec3(v, v, v);
-    vec4 k = fIn_DirectionalLightSpacePositions[0];
-    //result = abs(k.xyz / k.w);
     out_Color =  vec4(result, alpha);
 }
