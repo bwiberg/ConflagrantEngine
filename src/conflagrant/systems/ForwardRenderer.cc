@@ -23,6 +23,7 @@ ForwardRenderer::ForwardRenderer() {
 void ForwardRenderer::LoadShaders() {
     $
     forwardShader = LoadShader("forward.vert", "forward.frag");
+    wireframeShader = LoadShader("wireframe.vert", "wireframe.frag");
     skydomeShader = LoadShader("forward_skydome.vert", "forward_skydome.frag");
     shadowmapLightpassShader = LoadShader("shadowmap_lightpass.vert", "shadowmap_lightpass.frag");
     shadowmapVisShader = LoadShader("shadowmap_visualization.vert", "shadowmap_visualization.frag");
@@ -41,7 +42,7 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
     {
         DOLLAR("Upload DirectionalLight data")
         UploadDirectionalLights<true>(entities, *forwardShader, *shadowmapLightpassShader,
-                                      forwardShaderTextureCount, renderStats);
+                                      forwardShaderTextureCount, renderStats, cullModelsAndMeshes);
     }
 
     mat4 P;
@@ -50,6 +51,8 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
 
     GetCameraInfo(entities, cameraTransform, frustum, P);
     mat4 V = glm::inverse(cameraTransform->GetMatrix());
+    frustum = cameraTransform->GetMatrix() * frustum;
+
     uvec2 size = window->GetSize();
     OGL(glViewport(0, 0, size.x, size.y));
     OGL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
@@ -68,7 +71,11 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
         OGL(glCullFace(GL_BACK));
         OGL(glEnable(GL_DEPTH_TEST));
 
-        RenderModels(entities, *forwardShader, forwardShaderTextureCount, renderStats);
+        if (cullModelsAndMeshes) {
+            RenderModels(entities, *forwardShader, forwardShaderTextureCount, renderStats, &frustum);
+        } else {
+            RenderModels(entities, *forwardShader, forwardShaderTextureCount, renderStats);
+        }
 
         forwardShader->Unbind();
     }
@@ -78,19 +85,36 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
         DOLLAR("Skydome")
 
         // only use rotational part for skydome
-        V = glm::inverse(glm::toMat4(cameraTransform->Quaternion()));
+        auto const skydomeV = glm::inverse(glm::toMat4(cameraTransform->Quaternion()));
 
         skydomeShader->Bind();
-        forwardShader->Uniform("EyePos", cameraTransform->Position());
-        forwardShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
+        skydomeShader->Uniform("EyePos", cameraTransform->Position());
+        skydomeShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
 
         OGL(glEnable(GL_CULL_FACE));
         OGL(glCullFace(GL_FRONT));
         OGL(glEnable(GL_DEPTH_TEST));
 
-        RenderSkydomes(entities, *skydomeShader, 0, renderStats, P, V);
+        RenderSkydomes(entities, *skydomeShader, 0, renderStats, P, skydomeV);
 
         skydomeShader->Unbind();
+    }
+
+    if (renderBoundingSpheres) {
+        DOLLAR("Bounding spheres")
+
+        wireframeShader->Bind();
+        wireframeShader->Uniform("V", V);
+        wireframeShader->Uniform("P", P);
+        wireframeShader->Uniform("EyePos", cameraTransform->Position());
+        wireframeShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
+
+        OGL(glDisable(GL_CULL_FACE));
+        OGL(glEnable(GL_DEPTH_TEST));
+
+        RenderBoundingSpheres(entities, *wireframeShader, forwardShaderTextureCount, renderStats,
+                              renderBoundingSpheresAsWireframe);
+        wireframeShader->Unbind();
     }
 }
 
@@ -106,13 +130,24 @@ bool ForwardRenderer::DrawWithImGui(ForwardRenderer &sys, InputManager const &in
         sys.window->SetSwapInterval(swapInterval == 0 ? 1 : 0);
     }
 
+    ImGui::Checkbox("Cull models and meshes", &sys.cullModelsAndMeshes);
+    ImGui::Checkbox("Render bounding spheres", &sys.renderBoundingSpheres);
+    if (sys.renderBoundingSpheres) {
+        ImGui::Checkbox("- as wireframe", &sys.renderBoundingSpheresAsWireframe);
+    }
     ImGui::LabelText("FPS", std::to_string(Time::ComputeFPS()).c_str());
+
 
     ImGui::Text("Render Stats");
 
     ImGui::LabelText("Vertices", std::to_string(sys.renderStats.numVertices).c_str());
     ImGui::LabelText("Triangles", std::to_string(sys.renderStats.numTriangles).c_str());
-    ImGui::LabelText("Meshes", std::to_string(sys.renderStats.numMeshes).c_str());
+
+    ImGui::LabelText("Rendered models", std::to_string(sys.renderStats.numRenderedModels).c_str());
+    ImGui::LabelText("Culled models", std::to_string(sys.renderStats.numCulledModels).c_str());
+    ImGui::LabelText("Rendered meshes", std::to_string(sys.renderStats.numRenderedMeshes).c_str());
+    ImGui::LabelText("Culled meshes", std::to_string(sys.renderStats.numCulledMeshes).c_str());
+
     ImGui::LabelText("Point lights", std::to_string(sys.renderStats.numPointLights).c_str());
     ImGui::LabelText("Directional lights", std::to_string(sys.renderStats.numDirectionalLights).c_str());
 

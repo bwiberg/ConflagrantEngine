@@ -20,8 +20,8 @@ struct Sphere;
 struct Plane;
 struct Frustum;
 
-#define DECLARE_INTERSECT(type, name) IntersectionType ComputeIntersection(type const &name);
-#define DEFINE_INTERSECT(type, itype, iname) inline IntersectionType type::ComputeIntersection(itype const& iname)
+#define DECLARE_INTERSECT(type, name) IntersectionType ComputeIntersection(type const &name) const;
+#define DEFINE_INTERSECT(type, itype, iname) inline IntersectionType type::ComputeIntersection(itype const& iname) const
 
 struct Sphere {
     vec3 center;
@@ -63,17 +63,24 @@ struct Frustum {
     DECLARE_INTERSECT(Sphere, sphere);
 };
 
+inline Sphere Transform(Sphere const &sphere, mat4 const &matrix, float radiusScale) {
+    return Sphere{
+            .center = vec3(matrix * vec4(sphere.center, 1.f)),
+            .radius = radiusScale * sphere.radius
+    };
+}
+
 inline Sphere operator*(mat4 const &transform, Sphere const &sphere) {
     return Sphere{
             .center = vec3(transform * vec4(sphere.center, 1.f)),
-            .radius = transform[0][0] * sphere.radius
+            .radius = sphere.radius
     };
 }
 
 inline Plane operator*(mat4 const &transform, Plane const &plane) {
     return Plane{
             .center = vec3(transform * vec4(plane.center, 1.f)),
-            .normal = vec3(transform * vec4(plane.normal, 0.f))
+            .normal = glm::normalize(vec3(transform * vec4(plane.normal, 0.f)))
     };
 }
 
@@ -124,20 +131,26 @@ DEFINE_INTERSECT(Plane, Sphere, sphere) {
 
 DEFINE_INTERSECT(Frustum, Sphere, sphere) {
     // Algorithm:
+    // if sphere is OUTSIDE any plane, then it is OUTSIDE the entire frustum as well
     // ONLY if sphere is INSIDE all frustum planes it is INSIDE the frustum itself
     // if sphere is OUTSIDE or INTERSECTS any frustum plane, then it is OUTSIDE/INTERSECTS
     // the entire frustum as well
 
+    bool anyInside = false;
     for (uint i = 0; i < Frustum::NumSides; ++i) {
         auto type = sides[i].ComputeIntersection(sphere);
-        if (type == IntersectionType::INSIDE) {
-            continue;
+        if (type == IntersectionType::OUTSIDE) {
+            return IntersectionType::OUTSIDE;
         }
 
-        return type;
+        // INTERSECTS or INSIDE
+
+        if (type == IntersectionType::INSIDE) {
+            anyInside = true;
+        }
     }
 
-    return IntersectionType::INSIDE;
+    return anyInside ? IntersectionType::INSIDE : IntersectionType::INTERSECTS;
 }
 
 #undef DECLARE_INTERSECT

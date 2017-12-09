@@ -33,21 +33,20 @@ private:
 
         float const Width = scale * size.x / 2;
         float const Height = scale * size.y / 2;
-        float const Top = -Height;
         projection = glm::ortho(-Width, Width, -Height, Height, zNear, zFar);
 
-        vec3 const FarForward = zFar * Forward;
-        vec3 const NearForward = zNear * Forward;
+        vec3 const FarForward = zFar * Backward;
+        vec3 const NearForward = zNear * Backward;
 
         vec3 const Zero{};
 
         frustum = Frustum{.sides = {
-                Plane{.center = NearForward, .normal = Backward},   // near
-                Plane{.center = FarForward, .normal = Forward},     // far
-                Plane{.center = Zero, .normal = Up},                // top
-                Plane{.center = Zero, .normal = Right},             // right
-                Plane{.center = Zero, .normal = Down},              // bottom
-                Plane{.center = Zero, .normal = Left},              // left
+                Plane{.center = NearForward,          .normal = Forward},     // near
+                Plane{.center = FarForward,           .normal = Backward},    // far
+                Plane{.center = Up * Height,   .normal = Up},          // top
+                Plane{.center = Right * Width, .normal = Right},       // right
+                Plane{.center = Down * Height, .normal = Down},        // bottom
+                Plane{.center = Left * Width,  .normal = Left},        // left
         }};
 
         hasChanged = false;
@@ -102,7 +101,7 @@ public:
         return frustum;
     }
 
-    inline static bool Serialize(BaseSerializer const& serializer, Json::Value &json,
+    inline static bool Serialize(BaseSerializer const &serializer, Json::Value &json,
                                  OrthographicCamera &camera) {
         $
         SERIALIZE(cfl::comp::OrthographicCamera, json["scale"], camera.scale);

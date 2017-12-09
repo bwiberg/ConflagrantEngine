@@ -20,6 +20,24 @@ struct BoundingSphere {
         ImGui::Text("Radius: %4.3f", comp.sphere.radius);
         return true;
     }
+
+    inline void Reset(comp::Model &model) {
+        // update bounding volumes
+        vec3 min(std::numeric_limits<float>::max()), max(std::numeric_limits<float>::min());
+
+        for (auto const& part : model.value->parts) {
+            auto const& center = part.first->boundingSphere.center;
+            vec3 radius(part.first->boundingSphere.radius);
+
+            min = glm::min(min, center - radius);
+            max = glm::max(max, center + radius);
+        }
+
+        vec3 const center = 0.5f * (min + max);
+        float const radius = glm::max(glm::distance(min, center), glm::distance(max, center));
+        sphere.center = center;
+        sphere.radius = radius;
+    }
 };
 } // namespace comp
 } // namespace cfl

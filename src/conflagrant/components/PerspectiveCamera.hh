@@ -40,11 +40,11 @@ private:
                                          static_cast<float>(size.x),
                                          static_cast<float>(size.y),
                                          zNear, zFar);
-        vec3 const FarForward = zFar * Forward;
-        vec3 const NearForward = zNear * Forward;
+        vec3 const FarForward = zFar * Backward;
+        vec3 const NearForward = zNear * Backward;
 
-        float const FarWidth = glm::tan(glm::radians(fov) / 2) * zFar;
-        float const FarHeight = FarWidth * size.y / size.x;
+        float const FarWidth = 0.5f * glm::tan(glm::radians(fov)) * zFar;
+        float const FarHeight = size.y * FarWidth / size.x;
 
         vec3 const FarTopLeft = FarForward + FarHeight * Up + FarWidth * Left;
         vec3 const FarTopRight = FarForward + FarHeight * Up + FarWidth * Right;
@@ -54,12 +54,12 @@ private:
         vec3 const Zero{};
 
         frustum = Frustum{.sides = {
-                Plane{.center = NearForward, .normal = Backward},                           // near
-                Plane{.center = FarForward, .normal = Forward},                             // far
-                Plane{.center = Zero, .normal = NormCross(FarTopLeft, FarTopRight)},        // top
-                Plane{.center = Zero, .normal = NormCross(FarTopRight, FarBottomRight)},    // right
-                Plane{.center = Zero, .normal = NormCross(FarBottomRight, FarBottomLeft)},  // bottom
-                Plane{.center = Zero, .normal = NormCross(FarBottomLeft, FarTopLeft)},      // left
+                Plane{.center = NearForward,    .normal = Forward},                                     // near
+                Plane{.center = FarForward,     .normal = Backward},                                    // far
+                Plane{.center = Zero,           .normal = - NormCross(FarTopLeft, FarTopRight)},        // top
+                Plane{.center = Zero,           .normal = - NormCross(FarTopRight, FarBottomRight)},    // right
+                Plane{.center = Zero,           .normal = - NormCross(FarBottomRight, FarBottomLeft)},  // bottom
+                Plane{.center = Zero,           .normal = - NormCross(FarBottomLeft, FarTopLeft)},      // left
         }};
     }
 

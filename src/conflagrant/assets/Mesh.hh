@@ -6,6 +6,7 @@
 #include <conflagrant/gl/Mesh.hh>
 
 #include <vector>
+#include <conflagrant/geometry.hh>
 
 namespace cfl {
 namespace assets {
@@ -28,7 +29,7 @@ struct Mesh : public Asset {
             : vertices(vertices),
               triangles(triangles) {}
 
-    bool UploadToGL();
+    bool Update();
 
     /**
      * @brief The vertices of the mesh.
@@ -43,16 +44,21 @@ struct Mesh : public Asset {
     /**
      * @brief Set this flag if the glMesh field needs to be updated.
      */
-    bool glMeshNeedsUpdate{true};
+    bool needsUpdate{true};
 
     /**
      * @brief GPU representation of mesh
      */
     std::shared_ptr<gl::Mesh> glMesh{nullptr};
+
+    /**
+     * @brief A sphere containing the entire mesh
+     */
+    geometry::Sphere boundingSphere;
 };
 
-inline bool Mesh::UploadToGL() {
-    if (!glMeshNeedsUpdate) return false;
+inline bool Mesh::Update() {
+    if (!needsUpdate) return false;
 
     if (!glMesh) {
         glMesh = std::make_shared<gl::Mesh>();
@@ -66,6 +72,20 @@ inline bool Mesh::UploadToGL() {
 
     glMesh->BufferVertexData(sizeof(Vertex) * vertices.size(), vertices.data(), GL_DYNAMIC_DRAW);
     glMesh->BufferIndexData(GL_UNSIGNED_INT, 3 * triangles.size(), triangles.data(), GL_DYNAMIC_DRAW, GL_TRIANGLES);
+
+    // update bounding volumes
+    vec3 min(std::numeric_limits<float>::max()), max(std::numeric_limits<float>::min());
+
+    for (auto const& vertex : vertices) {
+        auto const& position = vertex.position;
+        min = glm::min(min, position);
+        max = glm::max(max, position);
+    }
+
+    vec3 const center = 0.5f * (min + max);
+    float const radius = glm::max(glm::distance(min, center), glm::distance(max, center));
+    boundingSphere.center = center;
+    boundingSphere.radius = radius;
 
     return true;
 }

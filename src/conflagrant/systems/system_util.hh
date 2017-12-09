@@ -16,6 +16,8 @@
 #include <conflagrant/gl/Shader.hh>
 #include <conflagrant/RenderStats.hh>
 #include <conflagrant/Time.hh>
+#include <conflagrant/components/BoundingSphere.hh>
+#include <conflagrant/math.hh>
 
 #include <entityx/Entity.h>
 
@@ -91,13 +93,25 @@ void UploadDirectionalLights(entityx::EntityManager &entities, gl::Shader &shade
 
 void RenderFullscreenQuad();
 
+void RenderUnitSphere(float radius);
+
+void RenderBoundingSpheres(entityx::EntityManager &entities,
+                           gl::Shader &shader, GLenum const nextTextureUnit,
+                           RenderStats &renderStats,
+                           float wireframe = true, geometry::Frustum const *frustum = nullptr);
+
 void RenderSkydomes(entityx::EntityManager &entities,
                     gl::Shader &shader, GLenum const nextTextureUnit,
                     RenderStats &renderStats, mat4 const &P, mat4 const &V);
 
 template<bool UseDiffuse = true, bool UseSpecular = true, bool UseNormal = true, bool UseShininess = true>
+inline void RenderModel(comp::Transform &transform, comp::Model &model,
+                        gl::Shader &shader, GLenum const nextTextureUnit,
+                        RenderStats &renderStats, geometry::Frustum const *frustum = nullptr);
+
+template<bool UseDiffuse = true, bool UseSpecular = true, bool UseNormal = true, bool UseShininess = true>
 void RenderModels(entityx::EntityManager &entities, gl::Shader &shader,
-                  GLenum const nextTextureUnit, RenderStats &renderStats);
+                  GLenum const nextTextureUnit, RenderStats &renderStats, geometry::Frustum const *frustum = nullptr);
 
 template<bool UseShadows = false>
 inline void UploadPointLights(entityx::EntityManager &entities,
@@ -126,7 +140,7 @@ inline void UploadPointLights(entityx::EntityManager &entities,
 template<bool UseShadows = true>
 inline void UploadDirectionalLights(entityx::EntityManager &entities,
                                     gl::Shader &shader, gl::Shader &lightpassShader, GLenum &nextTextureUnit,
-                                    RenderStats &renderStats) {
+                                    RenderStats &renderStats, bool cullModelsAndMeshes = false) {
     int ilight = 0;
     std::stringstream ss;
     entityx::ComponentHandle<comp::DirectionalLight> light;
@@ -166,7 +180,10 @@ inline void UploadDirectionalLights(entityx::EntityManager &entities,
             camera->Size(uvec2(shadow->width, shadow->height));
 
             mat4 lightV = glm::lookAt(shadow->distanceFromScene * direction, vec3(0.f), geometry::Up);
-            mat4 lightP = camera->GetProjection();
+            auto const &lightP = camera->GetProjection();
+            auto const &frustum = camera->GetFrustum();
+
+            auto const transformedFrustum = glm::inverse(lightV) * frustum;
 
             shadow->framebuffer->Bind();
             OGL(glViewport(0, 0, static_cast<GLsizei>(shadow->width),
@@ -183,7 +200,12 @@ inline void UploadDirectionalLights(entityx::EntityManager &entities,
 
             {
                 DOLLAR("Shadowmap: Render entities with Model")
-                RenderModels<true, false, false, false>(entities, lightpassShader, 0, renderStats);
+                if (cullModelsAndMeshes) {
+                    RenderModels<true, false, false, false>(entities, lightpassShader, 0, renderStats,
+                                                            &transformedFrustum);
+                } else {
+                    RenderModels<true, false, false, false>(entities, lightpassShader, 0, renderStats);
+                }
             }
 
             shadow->framebuffer->Unbind();
@@ -207,22 +229,114 @@ inline void UploadDirectionalLights(entityx::EntityManager &entities,
 inline void RenderFullscreenQuad() {
     auto quadModel = assets::AssetManager::LoadAsset<assets::Model>("fullscreen_quad.obj");
     if (!quadModel) {
-        LOG_INFO(cfl::syst::ForwardRenderer::update) << "fullscreen_quad.obj failed to load";
+        LOG_ERROR(cfl::RenderFullscreenQuad) << "fullscreen_quad.obj failed to load";
         return;
     }
 
     OGL(glDisable(GL_CULL_FACE));
 
     auto &mesh = quadModel->parts[0].first;
-    auto &mmesh = *mesh;
 
-    if (mesh->glMeshNeedsUpdate) {
-        mesh->UploadToGL();
-        mesh->glMeshNeedsUpdate = false;
+    if (mesh->needsUpdate) {
+        mesh->Update();
+        mesh->needsUpdate = false;
     }
 
     mesh->glMesh->DrawElements();
 }
+
+inline void RenderUnitSphere(float radius) {
+    static constexpr auto RadiusToIcosphereLevelFactor = 0.025f;
+
+    auto icosphereLevel = math::Clamp(static_cast<int>(radius * RadiusToIcosphereLevelFactor),
+                                      2, 5);
+
+    std::stringstream ss;
+    ss << "icosphere" << icosphereLevel << ".obj";
+
+    auto sphereModel = assets::AssetManager::LoadAsset<assets::Model>(ss.str());
+    if (!sphereModel) {
+        LOG_ERROR(cfl::RenderUnitSphere) << ss.str() << " failed to load";
+        return;
+    }
+
+    auto &mesh = sphereModel->parts[0].first;
+
+    if (mesh->needsUpdate) {
+        mesh->Update();
+        mesh->needsUpdate = false;
+    }
+
+    mesh->glMesh->DrawElements();
+}
+
+inline void RenderBoundingSpheres(entityx::EntityManager &entities,
+                                  gl::Shader &shader, GLenum const nextTextureUnit,
+                                  RenderStats &renderStats,
+                                  float wireframe, geometry::Frustum const *frustum) {
+    if (wireframe) {
+        OGL(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
+    }
+
+    entityx::ComponentHandle<comp::Transform> transform;
+    entityx::ComponentHandle<comp::BoundingSphere> boundingSphere;
+    entityx::ComponentHandle<comp::Model> model;
+
+    string const diffusePrefix = "material.diffuse.";
+    shader.Uniform(diffusePrefix + "color", vec3(1));
+    shader.Uniform(diffusePrefix + "hasMap", 0);
+
+    for (auto entity : entities.entities_with_components(transform, boundingSphere)) {
+        if (frustum &&
+            frustum->ComputeIntersection(
+                    geometry::Transform(boundingSphere->sphere, transform->GetMatrix(), transform->Scale())) ==
+            geometry::IntersectionType::OUTSIDE) {
+            continue;
+        }
+
+        auto const M = transform->GetMatrix()
+                       * glm::translate(boundingSphere->sphere.center)
+                       * glm::scale(vec3(boundingSphere->sphere.radius));
+        shader.Uniform("M", M);
+
+        RenderUnitSphere(boundingSphere->sphere.radius);
+    }
+
+    for (auto entity : entities.entities_with_components(transform, model)) {
+        if (model->value->parts.size() < 2) {
+            // the model's single bounding sphere is exactly the same as the entire model's bounding sphere
+            // ==> skip it
+            continue;
+        }
+
+        for (auto const &part : model->value->parts) {
+            auto &mesh = *part.first;
+            if (mesh.needsUpdate) {
+                mesh.Update();
+                mesh.needsUpdate = false;
+            }
+
+            if (frustum &&
+                frustum->ComputeIntersection(
+                        geometry::Transform(boundingSphere->sphere, transform->GetMatrix(), transform->Scale())) ==
+                geometry::IntersectionType::OUTSIDE) {
+                continue;
+            }
+
+            auto const M = transform->GetMatrix()
+                           * glm::translate(mesh.boundingSphere.center)
+                           * glm::scale(vec3(mesh.boundingSphere.radius));
+            shader.Uniform("M", M);
+
+            RenderUnitSphere(mesh.boundingSphere.radius);
+        }
+    }
+
+    if (wireframe) {
+        OGL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
+    }
+}
+
 
 inline void RenderSkydomes(entityx::EntityManager &entities,
                            gl::Shader &shader, GLenum const nextTextureUnit,
@@ -238,95 +352,130 @@ inline void RenderSkydomes(entityx::EntityManager &entities,
         shader.Uniform("MVP", MVP);
 
         auto &mesh = *skydome->mesh;
-        if (mesh.glMeshNeedsUpdate) {
-            mesh.UploadToGL();
-            mesh.glMeshNeedsUpdate = false;
+        if (mesh.needsUpdate) {
+            mesh.Update();
+            mesh.needsUpdate = false;
         }
 
         mesh.glMesh->DrawElements();
 
-        renderStats.numMeshes++;
+        renderStats.numRenderedMeshes++;
         renderStats.numTriangles += mesh.triangles.size();
         renderStats.numVertices += mesh.vertices.size();
     }
 }
 
 template<bool UseDiffuse = true, bool UseSpecular = true, bool UseNormal = true, bool UseShininess = true>
-inline void RenderModels(entityx::EntityManager &entities,
-                         gl::Shader &shader, GLenum const nextTextureUnit,
-                         RenderStats &renderStats) {
+inline void RenderModel(comp::Transform &transform, comp::Model &model,
+                        gl::Shader &shader, GLenum const nextTextureUnit,
+                        RenderStats &renderStats, geometry::Frustum const *frustum) {
     static constexpr bool UseMaterial = UseDiffuse || UseSpecular || UseNormal || UseShininess;
     static constexpr bool RenderMesh = true;
 
+    auto const &M = transform.GetMatrix();
+    shader.Uniform("M", M);
+
+    for (auto const &part : model.value->parts) {
+        if (UseMaterial) {
+            string const prefix = "material.";
+            auto const &material = *part.second;
+            auto textureCount = nextTextureUnit;
+
+            if (UseDiffuse) {
+                string const diffusePrefix = prefix + "diffuse.";
+                shader.Uniform(diffusePrefix + "color", material.diffuseColor);
+
+                int hasDiffuseMap = (material.diffuseTexture != nullptr) ? 1 : 0;
+                shader.Uniform(diffusePrefix + "hasMap", hasDiffuseMap);
+                if (hasDiffuseMap == 1) {
+                    shader.Texture(diffusePrefix + "map",
+                                   textureCount++,
+                                   material.diffuseTexture->texture);
+                }
+            }
+
+            if (UseSpecular) {
+                string const specularPrefix = prefix + "specular.";
+                shader.Uniform(specularPrefix + "color", material.specularColor);
+
+                int hasSpecularMap = (material.specularTexture != nullptr) ? 1 : 0;
+                shader.Uniform(specularPrefix + "hasMap", hasSpecularMap);
+                if (hasSpecularMap == 1) {
+                    shader.Texture(specularPrefix + "map",
+                                   textureCount++,
+                                   material.specularTexture->texture);
+                }
+            }
+
+            if (UseNormal) {
+                int hasNormalMap = (material.normalTexture != nullptr) ? 1 : 0;
+                shader.Uniform(prefix + "hasNormalMap", hasNormalMap);
+                if (hasNormalMap == 1) {
+                    shader.Texture(prefix + "normalMap",
+                                   textureCount++,
+                                   material.normalTexture->texture);
+                }
+            }
+
+            if (UseShininess) {
+                shader.Uniform(prefix + "shininess", material.shininess);
+            }
+        }
+
+        if (RenderMesh) {
+            auto &mesh = *part.first;
+            if (mesh.needsUpdate) {
+                mesh.Update();
+                mesh.needsUpdate = false;
+            }
+
+            if (frustum &&
+                frustum->ComputeIntersection(geometry::Transform(mesh.boundingSphere, M, transform.Scale())) ==
+                geometry::IntersectionType::OUTSIDE) {
+                renderStats.numCulledMeshes++;
+                continue;
+            }
+
+            mesh.glMesh->DrawElements();
+
+            renderStats.numRenderedMeshes++;
+            renderStats.numTriangles += mesh.triangles.size();
+            renderStats.numVertices += mesh.vertices.size();
+        }
+    }
+};
+
+template<bool UseDiffuse = true, bool UseSpecular = true, bool UseNormal = true, bool UseShininess = true>
+inline void RenderModels(entityx::EntityManager &entities,
+                         gl::Shader &shader, GLenum const nextTextureUnit,
+                         RenderStats &renderStats, geometry::Frustum const *frustum) {
     entityx::ComponentHandle<comp::Transform> transform;
     entityx::ComponentHandle<comp::Model> model;
 
     shader.Bind();
 
     for (auto entity : entities.entities_with_components(transform, model)) {
-        shader.Uniform("M", transform->GetMatrix());
-
-        for (auto const &part : model->value->parts) {
-            if (UseMaterial) {
-                string const prefix = "material.";
-                auto const &material = *part.second;
-                auto textureCount = nextTextureUnit;
-
-                if (UseDiffuse) {
-                    string const diffusePrefix = prefix + "diffuse.";
-                    shader.Uniform(diffusePrefix + "color", material.diffuseColor);
-
-                    int hasDiffuseMap = (material.diffuseTexture != nullptr) ? 1 : 0;
-                    shader.Uniform(diffusePrefix + "hasMap", hasDiffuseMap);
-                    if (hasDiffuseMap == 1) {
-                        shader.Texture(diffusePrefix + "map",
-                                       textureCount++,
-                                       material.diffuseTexture->texture);
-                    }
-                }
-
-                if (UseSpecular) {
-                    string const specularPrefix = prefix + "specular.";
-                    shader.Uniform(specularPrefix + "color", material.specularColor);
-
-                    int hasSpecularMap = (material.specularTexture != nullptr) ? 1 : 0;
-                    shader.Uniform(specularPrefix + "hasMap", hasSpecularMap);
-                    if (hasSpecularMap == 1) {
-                        shader.Texture(specularPrefix + "map",
-                                       textureCount++,
-                                       material.specularTexture->texture);
-                    }
-                }
-
-                if (UseNormal) {
-                    int hasNormalMap = (material.normalTexture != nullptr) ? 1 : 0;
-                    shader.Uniform(prefix + "hasNormalMap", hasNormalMap);
-                    if (hasNormalMap == 1) {
-                        shader.Texture(prefix + "normalMap",
-                                       textureCount++,
-                                       material.normalTexture->texture);
-                    }
-                }
-
-                if (UseShininess) {
-                    shader.Uniform(prefix + "shininess", material.shininess);
-                }
+        if (frustum) {
+            auto boundingSphere = entity.component<comp::BoundingSphere>();
+            if (!boundingSphere) {
+                boundingSphere = entity.assign<comp::BoundingSphere>();
+                boundingSphere->Reset(*model);
             }
 
-            if (RenderMesh) {
-                auto &mesh = *part.first;
-                if (mesh.glMeshNeedsUpdate) {
-                    mesh.UploadToGL();
-                    mesh.glMeshNeedsUpdate = false;
-                }
+            auto const &M = transform->GetMatrix();
+            auto intersection = frustum->ComputeIntersection(
+                    geometry::Transform(boundingSphere->sphere, M, transform->Scale()));
 
-                mesh.glMesh->DrawElements();
-
-                renderStats.numMeshes++;
-                renderStats.numTriangles += mesh.triangles.size();
-                renderStats.numVertices += mesh.vertices.size();
+            if (intersection == geometry::IntersectionType::OUTSIDE) {
+                renderStats.numCulledModels++;
+                renderStats.numCulledMeshes += model->value->parts.size();
+                continue;
             }
         }
+
+        renderStats.numRenderedModels++;
+        RenderModel<UseDiffuse, UseSpecular, UseNormal, UseShininess>(*transform, *model, shader, nextTextureUnit,
+                                                                      renderStats, frustum);
     }
 
     shader.Unbind();

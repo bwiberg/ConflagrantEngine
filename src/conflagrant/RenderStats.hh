@@ -7,7 +7,10 @@ namespace cfl {
 struct RenderStats {
     size_t numVertices{0};
     size_t numTriangles{0};
-    size_t numMeshes{0};
+    size_t numRenderedModels{0};
+    size_t numCulledModels{0};
+    size_t numRenderedMeshes{0};
+    size_t numCulledMeshes{0};
     size_t numPointLights{0};
     size_t numDirectionalLights{0};
 };
