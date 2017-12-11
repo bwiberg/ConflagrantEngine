@@ -345,7 +345,7 @@ inline void RenderSkydomes(entityx::EntityManager &entities,
 
     entityx::ComponentHandle<comp::Skydome> skydome;
     for (auto entity : entities.entities_with_components(skydome)) {
-        MVP = P * V * glm::rotate(glm::degrees(skydome->rotationDegrees), geometry::Up);
+        MVP = P * V * glm::rotate(glm::radians(skydome->rotationDegrees), geometry::Up);
 
         shader.Texture("skydomeColor", nextTextureUnit, skydome->texture->texture);
         shader.Uniform("radius", skydome->radius);

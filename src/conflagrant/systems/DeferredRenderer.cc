@@ -24,6 +24,8 @@ void syst::DeferredRenderer::LoadShaders() {
     geometryShader = LoadShader("deferred/geometry.vert", "deferred/geometry.frag");
     directionalLightShadowShader = LoadShader("shadowmap_lightpass.vert", "shadowmap_lightpass.frag");
     lightsShader = LoadShader("deferred/lights.vert", "deferred/lights.frag");
+    skydomeShader = LoadShader("forward_skydome.vert", "forward_skydome.frag");
+    wireframeShader = LoadShader("wireframe.vert", "wireframe.frag");
 }
 
 bool syst::DeferredRenderer::UpdateFramebuffer(GLsizei const width, GLsizei const height) {
@@ -84,6 +86,7 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
     auto const height = static_cast<GLsizei>(size.y);
 
     if (size != lastWindowSize) {
+        lastWindowSize = size;
         if (!UpdateFramebuffer(width, height)) {
             return;
         }
@@ -172,14 +175,50 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
         DOLLAR("Deferred: Blit framebuffer depth")
 
         framebuffer->Bind(GL_READ_FRAMEBUFFER);
-        OGL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
 
+        OGL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
         OGL(glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT, GL_NEAREST));
         OGL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+
+        framebuffer->Unbind();
     }
 
-    // render forward-only stuff
+    {
+        DOLLAR("Deferred: Render skydome")
 
+        // only use rotational part for skydome
+        auto const skydomeV = glm::inverse(glm::toMat4(cameraTransform->Quaternion()));
+
+        skydomeShader->Bind();
+
+        skydomeShader->Uniform("EyePos", cameraTransform->Position());
+        skydomeShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
+
+        OGL(glEnable(GL_CULL_FACE));
+        OGL(glCullFace(GL_FRONT));
+        OGL(glEnable(GL_DEPTH_TEST));
+
+        RenderSkydomes(entities, *skydomeShader, 0, renderStats, P, skydomeV);
+
+        skydomeShader->Unbind();
+    }
+
+    if (renderBoundingSpheres) {
+        DOLLAR("Bounding spheres")
+
+        wireframeShader->Bind();
+        wireframeShader->Uniform("V", V);
+        wireframeShader->Uniform("P", P);
+        wireframeShader->Uniform("EyePos", cameraTransform->Position());
+        wireframeShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
+
+        OGL(glDisable(GL_CULL_FACE));
+        OGL(glEnable(GL_DEPTH_TEST));
+
+        RenderBoundingSpheres(entities, *wireframeShader, 0, renderStats,
+                              renderBoundingSpheresAsWireframe);
+        wireframeShader->Unbind();
+    }
 }
 
 bool syst::DeferredRenderer::DrawWithImGui(syst::DeferredRenderer &sys, InputManager const &input) {
@@ -195,6 +234,10 @@ bool syst::DeferredRenderer::DrawWithImGui(syst::DeferredRenderer &sys, InputMan
     }
 
     ImGui::Checkbox("Cull models and meshes", &sys.cullModelsAndMeshes);
+    ImGui::Checkbox("Render bounding spheres", &sys.renderBoundingSpheres);
+    if (sys.renderBoundingSpheres) {
+        ImGui::Checkbox("- as wireframe", &sys.renderBoundingSpheresAsWireframe);
+    }
     ImGui::LabelText("FPS", std::to_string(Time::ComputeFPS()).c_str());
 
 

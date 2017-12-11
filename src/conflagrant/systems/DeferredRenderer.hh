@@ -21,14 +21,16 @@ private:
     std::shared_ptr<gl::Shader>
             geometryShader,
             directionalLightShadowShader,
-            lightsShader;
+            lightsShader,
+            skydomeShader,
+            wireframeShader;
 
     std::shared_ptr<gl::Framebuffer> framebuffer;
     std::shared_ptr<gl::Texture2D> positionTexture, normalShininessTexture, albedoSpecularTexture;
     std::shared_ptr<gl::Renderbuffer> depthRenderbuffer;
 
     RenderStats renderStats;
-    bool cullModelsAndMeshes{true};
+    bool cullModelsAndMeshes{true}, renderBoundingSpheres{false}, renderBoundingSpheresAsWireframe{true};
 
     uvec2 lastWindowSize{0, 0};
 

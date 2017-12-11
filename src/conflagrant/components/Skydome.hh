@@ -34,7 +34,7 @@ struct Skydome {
 
     inline static bool DrawWithImGui(Skydome &comp, InputManager const &input) {
         ImGui::DragFloat("Radius", &comp.radius, 1.0f, 0.0f);
-        ImGui::DragFloat("Rotation", &comp.rotationDegrees, 1.0f, 0.0f);
+        ImGui::DragFloat("Rotation", &comp.rotationDegrees, 1.f, 0.f, 360.f);
         return true;
     }
 
