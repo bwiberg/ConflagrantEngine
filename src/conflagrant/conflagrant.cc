@@ -22,6 +22,7 @@
 #include <conflagrant/components/BoundingSphere.hh>
 
 #include <conflagrant/systems/CameraController.hh>
+#include <conflagrant/systems/DeferredRenderer.hh>
 #include <conflagrant/systems/EcsDebugger.hh>
 #include <conflagrant/systems/ForwardRenderer.hh>
 
@@ -56,6 +57,7 @@ bool InitDefaults() {
     REGISTER_COMPONENT(cfl::comp::BoundingSphere);
 
     REGISTER_SYSTEM(cfl::syst::CameraController);
+    REGISTER_SYSTEM(cfl::syst::DeferredRenderer);
     REGISTER_SYSTEM(cfl::syst::EcsDebugger);
     REGISTER_SYSTEM(cfl::syst::ForwardRenderer);
 

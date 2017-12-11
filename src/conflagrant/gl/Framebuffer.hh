@@ -57,60 +57,20 @@ struct Framebuffer : public GlObject<GlFramebufferFactory> {
         OGL(glNamedFramebufferReadBuffer(id, buffer));
     }
 
+    inline void SetDrawBuffers(GLsizei N, GLenum const *buffers) {
+        OGL(glDrawBuffers(N, buffers));
+    }
+
     inline bool CheckIsComplete() const {
         return glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
     }
 
-    inline void Bind() const {
-        OGL(glBindFramebuffer(GL_FRAMEBUFFER, id));
+    inline void Bind(GLenum target = GL_FRAMEBUFFER) const {
+        OGL(glBindFramebuffer(target, id));
     }
 
-    inline static void Unbind() {
-        OGL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
-    }
-};
-
-struct FramebufferOld : public GlObject<GlFramebufferFactory> {
-    GLsizei const width{0}, height{0};
-    Texture2D colorTexture;
-    Renderbuffer depthStencilRb; // depth and stencil renderbuffer (will NOT be sampled => renderbuffer > texture)
-
-    inline FramebufferOld(FramebufferOld &&o) noexcept
-            : GlObject<GlFramebufferFactory>(std::move(o)),
-              width(o.width), height(o.height), colorTexture(std::move(colorTexture)),
-              depthStencilRb(std::move(depthStencilRb)) {}
-
-    inline FramebufferOld(GLsizei width, GLsizei height)
-            : width(width), height(height),
-              colorTexture(width, height, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, NULL, false, false),
-              depthStencilRb(GL_DEPTH24_STENCIL8, width, height) {
-
-        Bind();
-
-        // configure RGB color texture
-        colorTexture.Bind();
-        colorTexture.TexParameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        colorTexture.TexParameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        OGL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture.ID(), 0));
-
-        // configure depth and stencil renderbuffer
-        depthStencilRb.Bind();
-        OGL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depthStencilRb.ID()));
-
-        // check if framebuffer is complete
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-            LOG_ERROR(cfl::gl::FramebufferOld::Framebuffer()) << "fbo is incomplete" << std::endl;
-        }
-
-        Unbind();
-    }
-
-    inline void Bind() const {
-        OGL(glBindFramebuffer(GL_FRAMEBUFFER, id));
-    }
-
-    inline static void Unbind() {
-        OGL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+    inline static void Unbind(GLenum target = GL_FRAMEBUFFER) {
+        OGL(glBindFramebuffer(target, 0));
     }
 };
 }

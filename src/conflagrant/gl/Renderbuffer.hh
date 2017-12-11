@@ -22,9 +22,12 @@ struct Renderbuffer : public GlObject<GlRenderbufferFactory> {
             : GlObject<GlRenderbufferFactory>(std::move(o)),
               width(o.width), height(o.height), internalFormat(o.internalFormat) {}
 
-    inline Renderbuffer(GLenum internalFormat, GLsizei width, GLsizei height)
+    inline Renderbuffer(GLsizei width, GLsizei height, GLenum internalFormat)
             : width(width), height(height), internalFormat(internalFormat) {
-        OGL(glNamedRenderbufferStorage(id, internalFormat, width, height));
+        Bind();
+        OGL(glRenderbufferStorage(GL_RENDERBUFFER, internalFormat, width, height));
+        //OGL(glNamedRenderbufferStorage(id, internalFormat, width, height));
+        Unbind();
     }
 
     inline void Bind() const {

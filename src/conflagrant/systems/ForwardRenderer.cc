@@ -1,5 +1,6 @@
 #include "ForwardRenderer.hh"
 #include "system_util.hh"
+#include "DeferredRenderer.hh"
 
 #include <conflagrant/systems/CameraController.hh>
 #include <conflagrant/Engine.hh>
@@ -30,6 +31,15 @@ void ForwardRenderer::LoadShaders() {
 }
 
 void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) {
+    auto const& factories = engine->orderedSystemFactories;
+    auto itForward = std::find_if(factories.begin(), factories.end(), [](std::shared_ptr<SystemFactory> const factory) {
+        return factory->GetName() == "ForwardRenderer";
+    });
+    auto itDeferred = std::find_if(factories.begin(), factories.end(), [](std::shared_ptr<SystemFactory> const factory) {
+        return factory->GetName() == "DeferredRenderer";
+    });
+    if (itForward > itDeferred) return;
+
     $
     renderStats = RenderStats{};
     GLenum forwardShaderTextureCount = 0;
@@ -55,8 +65,8 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
 
     uvec2 size = window->GetSize();
     OGL(glViewport(0, 0, size.x, size.y));
-    OGL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     OGL(glClearColor(0.0f, 0.0f, 0.0f, 0.0f));
+    OGL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
     {
         DOLLAR("Models")

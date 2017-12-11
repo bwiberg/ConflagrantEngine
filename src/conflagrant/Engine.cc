@@ -2,7 +2,6 @@
 #include "Time.hh"
 
 #include <conflagrant/ComponentFactory.hh>
-#include <conflagrant/SystemFactory.hh>
 
 #include <fstream>
 
@@ -44,7 +43,7 @@ bool Engine::LoadScene(string const &pathToJson) {
     assets::AssetManager::AddAssetsPath(defaultAssetsPath);
 
     bool success = LoadScene([this, &json, &jsonDirectory](std::shared_ptr<entityx::EntityManager> entities,
-                                                   std::shared_ptr<entityx::SystemManager> systems) {
+                                                           std::shared_ptr<entityx::SystemManager> systems) {
         if (!json.isObject()) {
             RETURN_ERROR("Json is not an object.");
         }
@@ -291,7 +290,7 @@ int Engine::Run(bool singleTimestep) {
 
             file.close();
             if (file.bad()) {
-                LOG_ERROR(cfl::Engine::Run) << "Failed to write to '"  << currentScenePath->str() << "'.";
+                LOG_ERROR(cfl::Engine::Run) << "Failed to write to '" << currentScenePath->str() << "'.";
                 continue;
             }
 

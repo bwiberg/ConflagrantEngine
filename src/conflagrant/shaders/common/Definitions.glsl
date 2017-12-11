@@ -2,8 +2,8 @@
 // common definitions //
 ////////////////////////
 
-#define MAX_POINTLIGHTS 16
-#define MAX_DIRECTIONALLIGHTS 16
+#define MAX_POINTLIGHTS 1
+#define MAX_DIRECTIONALLIGHTS 1
 
 ///////////////////////////
 // shadowmap definitions //

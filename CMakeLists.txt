@@ -160,6 +160,7 @@ set(HH_FILES
         src/conflagrant/System.hh
         src/conflagrant/systems/CameraController.hh
         src/conflagrant/systems/EcsDebugger.hh
+        src/conflagrant/systems/DeferredRenderer.hh
         src/conflagrant/systems/ForwardRenderer.hh
         src/conflagrant/systems/system_util.hh
         src/conflagrant/assets/Mesh.hh
@@ -204,6 +205,7 @@ set(CC_FILES
         src/conflagrant/Factory.cc
         src/conflagrant/systems/CameraController.cc
         src/conflagrant/systems/EcsDebugger.cc
+        src/conflagrant/systems/DeferredRenderer.cc
         src/conflagrant/systems/ForwardRenderer.cc
         src/conflagrant/glfw/imgui_impl_glfw_gl3.cpp
         )

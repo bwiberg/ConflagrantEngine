@@ -60,8 +60,10 @@ void main(void) {
             fIn_DirectionalLightSpacePositions[i], E);
     }
 
+    result += 0.1 * diffuse.rgb;
+
     if (numPointLights == 0 && numDirectionalLights == 0) {
-        result += diffuse.rgb;
+        result = diffuse.rgb;
     }
 
     out_Color =  vec4(result, alpha);
