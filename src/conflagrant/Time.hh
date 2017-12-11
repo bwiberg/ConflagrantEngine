@@ -28,6 +28,8 @@ public:
 
     static time_t DeltaTime();
 
+    static time_t ComputeAverageFrametime(size_t numSamples = NumFrameTimeSamples);
+
     static time_t ComputeFPS(size_t numSamples = NumFrameTimeSamples);
 };
 } // namespace cfl

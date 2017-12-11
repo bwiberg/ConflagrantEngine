@@ -10,9 +10,7 @@
 #include <json/json.h>
 #include <dollar/dollar.hpp>
 
-#define USE_DOLLAR 1
-
-#if USE_DOLLAR == 0
+#if !defined(CFL_DEBUG) && !defined(FORCE_USE_DOLLAR)
 #undef $
 #define $
 #undef DOLLAR

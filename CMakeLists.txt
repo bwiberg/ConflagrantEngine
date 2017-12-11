@@ -26,16 +26,16 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 ### pass build type variable ###
 ################################
 
+# add_definitions(-DFORCE_USE_DOLLAR)
+
 if ((${CMAKE_BUILD_TYPE} STREQUAL Debug) OR (${CMAKE_BUILD_TYPE} STREQUAL RelWithDebInfo))
     message(STATUS "Build type: Debug")
-    set(CFL_DEBUG 1)
+    add_definitions(-DCFL_DEBUG)
 elseif (${CMAKE_BUILD_TYPE} STREQUAL Release)
     message(STATUS "Build type: Release")
-    set(CFL_DEBUG 0)
 else ()
     message(AUTHOR_WARNING "Could not make out build type.")
 endif ()
-add_definitions(-DCFL_DEBUG=${CFL_DEBUG})
 
 #########################################
 ### set CMake custom module directory ###

@@ -41,7 +41,7 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
     if (itForward > itDeferred) return;
 
     $
-    renderStats = RenderStats{};
+    renderStats.Reset();
     GLenum forwardShaderTextureCount = 0;
 
     {
@@ -76,6 +76,7 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
         forwardShader->Uniform("P", P);
         forwardShader->Uniform("EyePos", cameraTransform->Position());
         forwardShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
+        renderStats.UniformCalls += 4;
 
         OGL(glEnable(GL_CULL_FACE));
         OGL(glCullFace(GL_BACK));
@@ -100,6 +101,7 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
         skydomeShader->Bind();
         skydomeShader->Uniform("EyePos", cameraTransform->Position());
         skydomeShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
+        renderStats.UniformCalls += 2;
 
         OGL(glEnable(GL_CULL_FACE));
         OGL(glCullFace(GL_FRONT));
@@ -118,6 +120,7 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
         wireframeShader->Uniform("P", P);
         wireframeShader->Uniform("EyePos", cameraTransform->Position());
         wireframeShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
+        renderStats.UniformCalls += 4;
 
         OGL(glDisable(GL_CULL_FACE));
         OGL(glEnable(GL_DEPTH_TEST));
@@ -145,21 +148,12 @@ bool ForwardRenderer::DrawWithImGui(ForwardRenderer &sys, InputManager const &in
     if (sys.renderBoundingSpheres) {
         ImGui::Checkbox("- as wireframe", &sys.renderBoundingSpheresAsWireframe);
     }
-    ImGui::LabelText("FPS", std::to_string(Time::ComputeFPS()).c_str());
 
+    ImGui::LabelText("FPS", std::to_string(Time::ComputeFPS()).c_str());
+    ImGui::LabelText("ms/frame", std::to_string(Time::ComputeAverageFrametime()).c_str());
 
     ImGui::Text("Render Stats");
-
-    ImGui::LabelText("Vertices", std::to_string(sys.renderStats.numVertices).c_str());
-    ImGui::LabelText("Triangles", std::to_string(sys.renderStats.numTriangles).c_str());
-
-    ImGui::LabelText("Rendered models", std::to_string(sys.renderStats.numRenderedModels).c_str());
-    ImGui::LabelText("Culled models", std::to_string(sys.renderStats.numCulledModels).c_str());
-    ImGui::LabelText("Rendered meshes", std::to_string(sys.renderStats.numRenderedMeshes).c_str());
-    ImGui::LabelText("Culled meshes", std::to_string(sys.renderStats.numCulledMeshes).c_str());
-
-    ImGui::LabelText("Point lights", std::to_string(sys.renderStats.numPointLights).c_str());
-    ImGui::LabelText("Directional lights", std::to_string(sys.renderStats.numDirectionalLights).c_str());
+    sys.renderStats.DrawWithImGui();
 
     return true;
 }

@@ -129,12 +129,14 @@ inline void UploadPointLights(entityx::EntityManager &entities,
         shader.Uniform(prefix + "worldPosition", transform->Position());
         shader.Uniform(prefix + "intensity", pointLight->intensity);
         shader.Uniform(prefix + "color", pointLight->color);
+        renderStats.UniformCalls += 3;
 
         ilight++;
         ss.str("");
     }
     shader.Uniform("numPointLights", ilight);
-    renderStats.numPointLights = static_cast<size_t>(ilight);
+    renderStats.UniformCalls++;
+    renderStats.PointLights = static_cast<size_t>(ilight);
 }
 
 template<bool UseShadows = true>
@@ -158,6 +160,7 @@ inline void UploadDirectionalLights(entityx::EntityManager &entities,
         shader.Uniform(prefix + "direction", direction);
         shader.Uniform(prefix + "intensity", light->intensity);
         shader.Uniform(prefix + "color", light->color);
+        renderStats.UniformCalls += 3;
 
         if (UseShadows && light->castShadows) {
             if (!entity.has_component<comp::DirectionalLightShadow>()) {
@@ -195,6 +198,7 @@ inline void UploadDirectionalLights(entityx::EntityManager &entities,
             lightpassShader.Uniform("time", static_cast<float>(Time::CurrentTime()));
             lightpassShader.Uniform("P", lightP);
             lightpassShader.Uniform("V", lightV);
+            renderStats.UniformCalls += 3;
 
             OGL(glDisable(GL_CULL_FACE));
 
@@ -215,18 +219,21 @@ inline void UploadDirectionalLights(entityx::EntityManager &entities,
             shader.Uniform(prefix + "hasShadowMap", 1);
             shader.Texture(prefix + "shadowMap", nextTextureUnit++, *shadow->depthTexture);
             shader.Uniform(prefix + "VP", lightP * lightV);
+            renderStats.UniformCalls += 3;
         } else {
             shader.Uniform(prefix + "hasShadowMap", 0);
+            renderStats.UniformCalls += 1;
         }
 
         ilight++;
         ss.str("");
     }
     shader.Uniform("numDirectionalLights", ilight);
-    renderStats.numDirectionalLights = static_cast<size_t>(ilight);
+    renderStats.UniformCalls++;
+    renderStats.DirectionalLights = static_cast<size_t>(ilight);
 }
 
-inline void RenderFullscreenQuad() {
+inline void RenderFullscreenQuad(RenderStats &renderStats) {
     auto quadModel = assets::AssetManager::LoadAsset<assets::Model>("fullscreen_quad.obj");
     if (!quadModel) {
         LOG_ERROR(cfl::RenderFullscreenQuad) << "fullscreen_quad.obj failed to load";
@@ -243,9 +250,10 @@ inline void RenderFullscreenQuad() {
     }
 
     mesh->glMesh->DrawElements();
+    renderStats.DrawCalls++;
 }
 
-inline void RenderUnitSphere(float radius) {
+inline void RenderUnitSphere(float radius, RenderStats &renderStats) {
     static constexpr auto RadiusToIcosphereLevelFactor = 0.025f;
 
     auto icosphereLevel = math::Clamp(static_cast<int>(radius * RadiusToIcosphereLevelFactor),
@@ -268,6 +276,7 @@ inline void RenderUnitSphere(float radius) {
     }
 
     mesh->glMesh->DrawElements();
+    renderStats.DrawCalls++;
 }
 
 inline void RenderBoundingSpheres(entityx::EntityManager &entities,
@@ -285,6 +294,7 @@ inline void RenderBoundingSpheres(entityx::EntityManager &entities,
     string const diffusePrefix = "material.diffuse.";
     shader.Uniform(diffusePrefix + "color", vec3(1));
     shader.Uniform(diffusePrefix + "hasMap", 0);
+    renderStats.UniformCalls += 2;
 
     for (auto entity : entities.entities_with_components(transform, boundingSphere)) {
         if (frustum &&
@@ -298,8 +308,9 @@ inline void RenderBoundingSpheres(entityx::EntityManager &entities,
                        * glm::translate(boundingSphere->sphere.center)
                        * glm::scale(vec3(boundingSphere->sphere.radius));
         shader.Uniform("M", M);
+        renderStats.UniformCalls++;
 
-        RenderUnitSphere(boundingSphere->sphere.radius);
+        RenderUnitSphere(boundingSphere->sphere.radius, renderStats);
     }
 
     for (auto entity : entities.entities_with_components(transform, model)) {
@@ -327,8 +338,9 @@ inline void RenderBoundingSpheres(entityx::EntityManager &entities,
                            * glm::translate(mesh.boundingSphere.center)
                            * glm::scale(vec3(mesh.boundingSphere.radius));
             shader.Uniform("M", M);
+            renderStats.UniformCalls++;
 
-            RenderUnitSphere(mesh.boundingSphere.radius);
+            RenderUnitSphere(mesh.boundingSphere.radius, renderStats);
         }
     }
 
@@ -350,6 +362,7 @@ inline void RenderSkydomes(entityx::EntityManager &entities,
         shader.Texture("skydomeColor", nextTextureUnit, skydome->texture->texture);
         shader.Uniform("radius", skydome->radius);
         shader.Uniform("MVP", MVP);
+        renderStats.UniformCalls += 3;
 
         auto &mesh = *skydome->mesh;
         if (mesh.needsUpdate) {
@@ -358,10 +371,11 @@ inline void RenderSkydomes(entityx::EntityManager &entities,
         }
 
         mesh.glMesh->DrawElements();
+        renderStats.DrawCalls++;
 
-        renderStats.numRenderedMeshes++;
-        renderStats.numTriangles += mesh.triangles.size();
-        renderStats.numVertices += mesh.vertices.size();
+        renderStats.MeshesRendered++;
+        renderStats.Triangles += mesh.triangles.size();
+        renderStats.Vertices += mesh.vertices.size();
     }
 }
 
@@ -374,6 +388,7 @@ inline void RenderModel(comp::Transform &transform, comp::Model &model,
 
     auto const &M = transform.GetMatrix();
     shader.Uniform("M", M);
+    renderStats.UniformCalls++;
 
     for (auto const &part : model.value->parts) {
         if (UseMaterial) {
@@ -383,42 +398,53 @@ inline void RenderModel(comp::Transform &transform, comp::Model &model,
 
             if (UseDiffuse) {
                 string const diffusePrefix = prefix + "diffuse.";
-                shader.Uniform(diffusePrefix + "color", material.diffuseColor);
-
                 int hasDiffuseMap = (material.diffuseTexture != nullptr) ? 1 : 0;
+
+                shader.Uniform(diffusePrefix + "color", material.diffuseColor);
                 shader.Uniform(diffusePrefix + "hasMap", hasDiffuseMap);
+                renderStats.UniformCalls += 3;
+
                 if (hasDiffuseMap == 1) {
                     shader.Texture(diffusePrefix + "map",
                                    textureCount++,
                                    material.diffuseTexture->texture);
+                    renderStats.UniformCalls++;
                 }
+
             }
 
             if (UseSpecular) {
                 string const specularPrefix = prefix + "specular.";
-                shader.Uniform(specularPrefix + "color", material.specularColor);
-
                 int hasSpecularMap = (material.specularTexture != nullptr) ? 1 : 0;
+
+                shader.Uniform(specularPrefix + "color", material.specularColor);
                 shader.Uniform(specularPrefix + "hasMap", hasSpecularMap);
+                renderStats.UniformCalls += 2;
+
                 if (hasSpecularMap == 1) {
                     shader.Texture(specularPrefix + "map",
                                    textureCount++,
                                    material.specularTexture->texture);
+                    renderStats.UniformCalls++;
                 }
             }
 
             if (UseNormal) {
                 int hasNormalMap = (material.normalTexture != nullptr) ? 1 : 0;
                 shader.Uniform(prefix + "hasNormalMap", hasNormalMap);
+                renderStats.UniformCalls++;
+
                 if (hasNormalMap == 1) {
                     shader.Texture(prefix + "normalMap",
                                    textureCount++,
                                    material.normalTexture->texture);
+                    renderStats.UniformCalls++;
                 }
             }
 
             if (UseShininess) {
                 shader.Uniform(prefix + "shininess", material.shininess);
+                renderStats.UniformCalls++;
             }
         }
 
@@ -432,15 +458,16 @@ inline void RenderModel(comp::Transform &transform, comp::Model &model,
             if (frustum &&
                 frustum->ComputeIntersection(geometry::Transform(mesh.boundingSphere, M, transform.Scale())) ==
                 geometry::IntersectionType::OUTSIDE) {
-                renderStats.numCulledMeshes++;
+                renderStats.MeshesCulled++;
                 continue;
             }
 
             mesh.glMesh->DrawElements();
+            renderStats.DrawCalls++;
 
-            renderStats.numRenderedMeshes++;
-            renderStats.numTriangles += mesh.triangles.size();
-            renderStats.numVertices += mesh.vertices.size();
+            renderStats.MeshesRendered++;
+            renderStats.Triangles += mesh.triangles.size();
+            renderStats.Vertices += mesh.vertices.size();
         }
     }
 };
@@ -467,15 +494,15 @@ inline void RenderModels(entityx::EntityManager &entities,
                     geometry::Transform(boundingSphere->sphere, M, transform->Scale()));
 
             if (intersection == geometry::IntersectionType::OUTSIDE) {
-                renderStats.numCulledModels++;
-                renderStats.numCulledMeshes += model->value->parts.size();
+                renderStats.ModelsCulled++;
+                renderStats.MeshesCulled += model->value->parts.size();
                 continue;
             }
         }
 
-        renderStats.numRenderedModels++;
         RenderModel<UseDiffuse, UseSpecular, UseNormal, UseShininess>(*transform, *model, shader, nextTextureUnit,
                                                                       renderStats, frustum);
+        renderStats.ModelsRendered++;
     }
 
     shader.Unbind();

@@ -94,7 +94,7 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
 
     // framebuffer is ready to go
 
-    renderStats = RenderStats{};
+    renderStats.Reset();
 
     mat4 P;
     geometry::Frustum frustum;
@@ -116,6 +116,7 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
         geometryShader->Uniform("P", P);
         geometryShader->Uniform("EyePos", cameraTransform->Position());
         geometryShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
+        renderStats.UniformCalls += 4;
 
         OGL(glEnable(GL_CULL_FACE));
         OGL(glCullFace(GL_BACK));
@@ -157,16 +158,16 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
         lightsShader->Uniform("P", P);
         lightsShader->Uniform("EyePos", cameraTransform->Position());
         lightsShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
-
         lightsShader->Texture("GPosition", lightsShaderTextureCount++, *positionTexture);
         lightsShader->Texture("GNormalShininess", lightsShaderTextureCount++, *normalShininessTexture);
         lightsShader->Texture("GAlbedoSpecular", lightsShaderTextureCount++, *albedoSpecularTexture);
+        renderStats.UniformCalls += 7;
 
         OGL(glEnable(GL_CULL_FACE));
         OGL(glCullFace(GL_BACK));
         OGL(glEnable(GL_DEPTH_TEST));
 
-        RenderFullscreenQuad();
+        RenderFullscreenQuad(renderStats);
 
         lightsShader->Unbind();
     }
@@ -193,6 +194,7 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
 
         skydomeShader->Uniform("EyePos", cameraTransform->Position());
         skydomeShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
+        renderStats.UniformCalls += 2;
 
         OGL(glEnable(GL_CULL_FACE));
         OGL(glCullFace(GL_FRONT));
@@ -211,6 +213,7 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
         wireframeShader->Uniform("P", P);
         wireframeShader->Uniform("EyePos", cameraTransform->Position());
         wireframeShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
+        renderStats.UniformCalls += 4;
 
         OGL(glDisable(GL_CULL_FACE));
         OGL(glEnable(GL_DEPTH_TEST));
@@ -238,21 +241,12 @@ bool syst::DeferredRenderer::DrawWithImGui(syst::DeferredRenderer &sys, InputMan
     if (sys.renderBoundingSpheres) {
         ImGui::Checkbox("- as wireframe", &sys.renderBoundingSpheresAsWireframe);
     }
-    ImGui::LabelText("FPS", std::to_string(Time::ComputeFPS()).c_str());
 
+    ImGui::LabelText("FPS", std::to_string(Time::ComputeFPS()).c_str());
+    ImGui::LabelText("ms/frame", std::to_string(Time::ComputeAverageFrametime()).c_str());
 
     ImGui::Text("Render Stats");
-
-    ImGui::LabelText("Vertices", std::to_string(sys.renderStats.numVertices).c_str());
-    ImGui::LabelText("Triangles", std::to_string(sys.renderStats.numTriangles).c_str());
-
-    ImGui::LabelText("Rendered models", std::to_string(sys.renderStats.numRenderedModels).c_str());
-    ImGui::LabelText("Culled models", std::to_string(sys.renderStats.numCulledModels).c_str());
-    ImGui::LabelText("Rendered meshes", std::to_string(sys.renderStats.numRenderedMeshes).c_str());
-    ImGui::LabelText("Culled meshes", std::to_string(sys.renderStats.numCulledMeshes).c_str());
-
-    ImGui::LabelText("Point lights", std::to_string(sys.renderStats.numPointLights).c_str());
-    ImGui::LabelText("Directional lights", std::to_string(sys.renderStats.numDirectionalLights).c_str());
+    sys.renderStats.DrawWithImGui();
 
     return true;
 }

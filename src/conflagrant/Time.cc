@@ -22,7 +22,7 @@ time_t Time::DeltaTime() {
     return (currentFrameTime - previousFrameTime);
 }
 
-time_t Time::ComputeFPS(size_t numSamples) {
+time_t Time::ComputeAverageFrametime(size_t numSamples) {
     assert(numSamples > 1 && numSamples <= NumFrameTimeSamples);
 
     size_t diff = NumFrameTimeSamples - numSamples + 1;
@@ -30,6 +30,10 @@ time_t Time::ComputeFPS(size_t numSamples) {
 
     auto current = currentFrameTime;
     auto old = FrameTimeSamples[subtractIndex];
-    return (numSamples - 1) / (current - old);
+    return (current - old) / (numSamples - 1);
+}
+
+time_t Time::ComputeFPS(size_t numSamples) {
+    return 1 / ComputeAverageFrametime(numSamples);
 }
 } // namespace cfl
