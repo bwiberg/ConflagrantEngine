@@ -154,7 +154,7 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
 
 #ifdef ENABLE_VOXEL_CONE_TRACING
     if (useVoxelConeTracing) {
-        auto const voxelTextureSize  = static_cast<GLsizei>(math::Pow(2, voxelTextureDimensionExponent));
+        auto const voxelTextureSize  = static_cast<GLsizei>(math::Pow(2, VCT.textureDimensionExponent));
         GLenum voxelizeShaderTextureCount = 0;
 
         {
@@ -164,11 +164,11 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
                 voxelTexture->width != voxelTextureSize  ||
                 voxelTexture->height != voxelTextureSize ||
                 voxelTexture->depth != voxelTextureSize  ||
-                voxelTexture->mipmapLevels != voxelMipmapLevels) {
+                voxelTexture->mipmapLevels != VCT.mipmapLevels) {
 
                 voxelTexture = std::make_shared<gl::Texture3D>(voxelTextureSize, voxelTextureSize, voxelTextureSize,
                                                                GL_RGBA8, GL_RGBA, GL_FLOAT,
-                                                               nullptr, voxelMipmapLevels);
+                                                               nullptr, VCT.mipmapLevels);
 
                 voxelTexture->Bind();
 
@@ -198,27 +198,27 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
             geometry::Frustum const voxelFrustum{
                     .sides = {
                             geometry::Plane{
-                                    .center = voxelVolumeCenter + voxelVolumeHalfDimensions * geometry::Backward,
+                                    .center = VCT.center + VCT.halfDimensions * geometry::Backward,
                                     .normal = geometry::Backward
                             },
                             geometry::Plane{
-                                    .center = voxelVolumeCenter + voxelVolumeHalfDimensions * geometry::Forward,
+                                    .center = VCT.center + VCT.halfDimensions * geometry::Forward,
                                     .normal = geometry::Forward
                             },
                             geometry::Plane{
-                                    .center = voxelVolumeCenter + voxelVolumeHalfDimensions * geometry::Left,
+                                    .center = VCT.center + VCT.halfDimensions * geometry::Left,
                                     .normal = geometry::Left
                             },
                             geometry::Plane{
-                                    .center = voxelVolumeCenter + voxelVolumeHalfDimensions * geometry::Right,
+                                    .center = VCT.center + VCT.halfDimensions * geometry::Right,
                                     .normal = geometry::Right
                             },
                             geometry::Plane{
-                                    .center = voxelVolumeCenter + voxelVolumeHalfDimensions * geometry::Down,
+                                    .center = VCT.center + VCT.halfDimensions * geometry::Down,
                                     .normal = geometry::Down
                             },
                             geometry::Plane{
-                                    .center = voxelVolumeCenter + voxelVolumeHalfDimensions * geometry::Up,
+                                    .center = VCT.center + VCT.halfDimensions * geometry::Up,
                                     .normal = geometry::Up
                             }
                     }
@@ -236,8 +236,8 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
             voxelizeShader->Uniform("V", geometry::Identity4);
             voxelizeShader->Uniform("P", geometry::Identity4);
 
-            voxelizeShader->Uniform("VoxelHalfDimensions", vec3(voxelVolumeHalfDimensions));
-            voxelizeShader->Uniform("VoxelCenter", voxelVolumeCenter);
+            voxelizeShader->Uniform("VoxelHalfDimensions", vec3(VCT.halfDimensions));
+            voxelizeShader->Uniform("VoxelCenter", VCT.center);
 
             auto const voxelizedSceneTextureUnit = voxelizeShaderTextureCount++;
             voxelizeShader->Texture("VoxelizedScene", voxelizedSceneTextureUnit, *voxelTexture);
@@ -260,12 +260,13 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
             OGL(glEnable(GL_BLEND));
         }
 
-        {
+        if (Time::CurrentTime() - VCT.timeOfLastMipmapGeneration >= VCT.timeBetweenMipmapGeneration) {
             DOLLAR("Deferred (VCT): Generate voxel mipmap")
             voxelTexture->GenerateMipmap();
+            VCT.timeOfLastMipmapGeneration = Time::CurrentTime();
         }
 
-        if (useDirectVoxelRendering) {
+        if (VCT.useDirectVoxelRendering) {
             DOLLAR("Deferred (VCT): Direct voxel rendering")
 
             OGL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
@@ -278,12 +279,12 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
             voxelDirectRenderingShader->Uniform("InverseVP", glm::inverse(P * V));
             voxelDirectRenderingShader->Uniform("EyePos", cameraTransform->Position());
 
-            voxelDirectRenderingShader->Uniform("RenderDistance", directVoxelRenderingDistance);
+            voxelDirectRenderingShader->Uniform("RenderDistance", VCT.DirectRendering.renderDistance);
             voxelDirectRenderingShader->Texture("VoxelizedScene", 0, *voxelTexture);
-            voxelDirectRenderingShader->Uniform("VoxelHalfDimensions", vec3(voxelVolumeHalfDimensions));
-            voxelDirectRenderingShader->Uniform("VoxelCenter", voxelVolumeCenter);
-            voxelDirectRenderingShader->Uniform("MipmapLevel", voxelDirectRenderingMipmapLevel);
-            voxelDirectRenderingShader->Uniform("NumSteps", voxelDirectRenderingSteps);
+            voxelDirectRenderingShader->Uniform("VoxelHalfDimensions", vec3(VCT.halfDimensions));
+            voxelDirectRenderingShader->Uniform("VoxelCenter", VCT.center);
+            voxelDirectRenderingShader->Uniform("MipmapLevel", VCT.DirectRendering.mipmapLevel);
+            voxelDirectRenderingShader->Uniform("NumSteps", VCT.DirectRendering.raymarchingSteps);
 
             renderStats.UniformCalls += 8;
 
@@ -395,17 +396,17 @@ syst::DeferredRenderer::Serialize(BaseSerializer const &serializer, Json::Value 
 
     Json::Value &jvoxels = json["voxelConeTracing"];
 
-    SERIALIZE(cfl::syst::DeferredRenderer, jvoxels["textureDimensionExponent"], sys.voxelTextureDimensionExponent);
-    SERIALIZE(cfl::syst::DeferredRenderer, jvoxels["volumeHalfDimensions"], sys.voxelVolumeHalfDimensions);
-    SERIALIZE(cfl::syst::DeferredRenderer, jvoxels["volumeCenter"], sys.voxelVolumeCenter);
+    SERIALIZE(cfl::syst::DeferredRenderer, jvoxels["textureDimensionExponent"], sys.VCT.textureDimensionExponent);
+    SERIALIZE(cfl::syst::DeferredRenderer, jvoxels["volumeHalfDimensions"], sys.VCT.halfDimensions);
+    SERIALIZE(cfl::syst::DeferredRenderer, jvoxels["volumeCenter"], sys.VCT.center);
+    SERIALIZE(cfl::syst::DeferredRenderer, jvoxels["mipmapLevels"], sys.VCT.mipmapLevels);
+    SERIALIZE(cfl::syst::DeferredRenderer, jvoxels["timeBetweenMipmapGeneration"], sys.VCT.timeBetweenMipmapGeneration);
 
-    SERIALIZE(cfl::syst::DeferredRenderer, jvoxels["mipmapLevels"], sys.voxelMipmapLevels);
-
-    SERIALIZE(cfl::syst::DeferredRenderer, jvoxels["useDirectVoxelRendering"], sys.useDirectVoxelRendering);
+    SERIALIZE(cfl::syst::DeferredRenderer, jvoxels["useDirectVoxelRendering"], sys.VCT.useDirectVoxelRendering);
     Json::Value &jvdirect = jvoxels["directRendering"];
 
-    SERIALIZE(cfl::syst::DeferredRenderer, jvdirect["mipmapLevel"], sys.voxelDirectRenderingMipmapLevel);
-    SERIALIZE(cfl::syst::DeferredRenderer, jvdirect["raymarchSteps"], sys.voxelDirectRenderingSteps);
+    SERIALIZE(cfl::syst::DeferredRenderer, jvdirect["mipmapLevel"], sys.VCT.DirectRendering.mipmapLevel);
+    SERIALIZE(cfl::syst::DeferredRenderer, jvdirect["raymarchSteps"], sys.VCT.DirectRendering.raymarchingSteps);
 
 #endif // ENABLE_VOXEL_CONE_TRACING
 
@@ -427,18 +428,20 @@ bool syst::DeferredRenderer::DrawWithImGui(syst::DeferredRenderer &sys, InputMan
 #ifdef ENABLE_VOXEL_CONE_TRACING
     ImGui::Checkbox("Voxel cone tracing", &sys.useVoxelConeTracing);
     if (sys.useVoxelConeTracing) {
-        ImGui::DragInt("Mipmap level", &sys.voxelMipmapLevels, 1, 0, 10);
+        ImGui::DragInt("Mipmap level", &sys.VCT.mipmapLevels, 1, 0, 10);
+        ImGui::DragFloat("Mipmap delta time", &sys.VCT.timeBetweenMipmapGeneration, 1, 0, 10);
 
-        ImGui::DragInt("Texture size exponent", &sys.voxelTextureDimensionExponent, 1, 0, 9);
-        ImGui::Text("Actual texture size: %i", math::Pow(2, sys.voxelTextureDimensionExponent));
-        ImGui::DragFloat("Half dimensions", &sys.voxelVolumeHalfDimensions, 1, 0, std::numeric_limits<float>::max());
-        ImGui::DragFloat3("Center", glm::value_ptr(sys.voxelVolumeCenter), 1);
+        ImGui::DragInt("Texture size exponent", &sys.VCT.textureDimensionExponent, 1, 0, 9);
+        ImGui::Text("Actual texture size: %i", math::Pow(2, sys.VCT.textureDimensionExponent));
+        ImGui::DragFloat("Half dimensions", &sys.VCT.halfDimensions, 1, 0, std::numeric_limits<float>::max());
+        ImGui::DragFloat3("Center", glm::value_ptr(sys.VCT.center), 1);
 
-        ImGui::Checkbox("Direct voxel rendering", &sys.useDirectVoxelRendering);
-        if (sys.useDirectVoxelRendering) {
-            ImGui::DragFloat("Distance", &sys.directVoxelRenderingDistance, 1, 0, std::numeric_limits<float>::max());
-            ImGui::DragInt("Raymarching steps", &sys.voxelDirectRenderingSteps, 1, 0, 1024);
-            ImGui::DragInt("Rendered mipmap level", &sys.voxelDirectRenderingMipmapLevel, 1, 0, sys.voxelMipmapLevels);
+        ImGui::Checkbox("Direct voxel rendering", &sys.VCT.useDirectVoxelRendering);
+        if (sys.VCT.useDirectVoxelRendering) {
+            ImGui::DragFloat("Distance", &sys.VCT.DirectRendering.renderDistance, 1, 0,
+                             std::numeric_limits<float>::max());
+            ImGui::DragInt("Raymarching steps", &sys.VCT.DirectRendering.raymarchingSteps, 1, 0, 1024);
+            ImGui::DragInt("Rendered mipmap level", &sys.VCT.DirectRendering.mipmapLevel, 1, 0, sys.VCT.mipmapLevels);
         }
     }
 

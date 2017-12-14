@@ -8,6 +8,7 @@
 #include <conflagrant/gl/Renderbuffer.hh>
 #include <conflagrant/serialization/serialize.hh>
 #include <conflagrant/RenderStats.hh>
+#include <conflagrant/Time.hh>
 
 #ifdef ENABLE_VOXEL_CONE_TRACING
 #include <conflagrant/components/OrthographicCamera.hh>
@@ -36,13 +37,21 @@ private:
             voxelDirectRenderingShader,
             voxelConeTracingShader;
 
-    GLsizei voxelTextureDimensionExponent{7}; // (2^7)^3
-    float voxelVolumeHalfDimensions{1};
-    vec3 voxelVolumeCenter{0, 0, 0};
+    bool useVoxelConeTracing{true};
+    struct {
+        GLsizei textureDimensionExponent{7}; // (2^7)^3
+        float halfDimensions{1};
+        vec3 center{0, 0, 0};
+        int mipmapLevels{7};
+        float timeBetweenMipmapGeneration{0.1f};
+        cfl::time_t timeOfLastMipmapGeneration{std::numeric_limits<cfl::time_t>::min()};
 
-    int voxelMipmapLevels{7}, voxelDirectRenderingMipmapLevel{0}, voxelDirectRenderingSteps{32};
-    bool useVoxelConeTracing{true}, useDirectVoxelRendering{true};
-    float directVoxelRenderingDistance{25.0f};
+        bool useDirectVoxelRendering{true};
+        struct {
+            int mipmapLevel{0}, raymarchingSteps{32};
+            float renderDistance{25.0f};
+        } DirectRendering;
+    } VCT;
 
     std::shared_ptr<gl::Texture3D> voxelTexture;
 #endif // ENABLE_VOXEL_CONE_TRACING
