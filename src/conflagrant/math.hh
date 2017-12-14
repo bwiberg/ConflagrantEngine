@@ -32,12 +32,30 @@ inline TFov Clamp(TFov const &value, TFov const &minimum, TFov const &maximum) {
     return value;
 }
 
+template<typename TBase, typename TExponent>
+inline TBase Pow(TBase base, TExponent exponent) {
+    return static_cast<TBase>(pow(static_cast<double>(base), static_cast<double>(exponent)));
+};
+
+template<>
+inline int Pow(int base, int exponent) {
+    int result = 1;
+    while (exponent)
+    {
+        if (exponent & 1)
+            result *= base;
+        exponent >>= 1;
+        base *= base;
+    }
+    return result;
+}
+
 template<typename TFov, typename TSize>
 inline TFov FocalLengthFromFovx(TFov fovxDegrees, TSize width) {
     auto dfovxRadians = DEG2RAD_D * static_cast<double>(fovxDegrees);
     auto dwidth = static_cast<double>(width);
 
-    return static_cast<TFov>(0.5 * width / tan(0.5 * dfovxRadians));
+    return static_cast<TFov>(0.5 * dwidth / tan(0.5 * dfovxRadians));
 }
 
 template<typename TFov, typename TSize>
@@ -51,7 +69,7 @@ inline TFov FocalLengthFromFovy(TFov fovyDegrees, TSize height) {
 template<typename TFov, typename TSize>
 inline TFov Fovx(TFov fovyDegrees, TFov width, TSize height) {
     auto dfovyDegrees = static_cast<double>(fovyDegrees);
-    auto df = FocalLengthFromFovy(fovyDegrees, height);
+    auto df = FocalLengthFromFovy(dfovyDegrees, height);
     auto dwidth = static_cast<double>(width);
 
     auto dfovx = RAD2DEG_D * 2 * atan2(0.5 * dwidth, df);

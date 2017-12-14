@@ -47,7 +47,7 @@ void main(void) {
                                         directionalLights[i].VP * vec4(surf.WorldPosition, 1), E);
     }
 
-    result += 0.1 * surf.Diffuse;
+    //result += 0.1 * surf.Diffuse;
 
     if (numPointLights == 0 && numDirectionalLights == 0) {
         result = surf.Diffuse;

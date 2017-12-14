@@ -26,6 +26,12 @@ void syst::DeferredRenderer::LoadShaders() {
     lightsShader = LoadShader("deferred/lights.vert", "deferred/lights.frag");
     skydomeShader = LoadShader("forward_skydome.vert", "forward_skydome.frag");
     wireframeShader = LoadShader("wireframe.vert", "wireframe.frag");
+
+#ifdef ENABLE_VOXEL_CONE_TRACING
+    voxelizeShader = LoadShader("voxels/voxelize.vert", "voxels/voxelize.geom", "voxels/voxelize.frag");
+    voxelDirectRenderingShader = LoadShader("voxels/directrendering.vert", "voxels/directrendering.frag");
+    voxelConeTracingShader = LoadShader("voxels/conetracing.vert", "voxels/conetracing.frag");
+#endif
 }
 
 bool syst::DeferredRenderer::UpdateFramebuffer(GLsizei const width, GLsizei const height) {
@@ -86,6 +92,7 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
     auto const height = static_cast<GLsizei>(size.y);
 
     if (size != lastWindowSize) {
+        DOLLAR("Deferred: Update framebuffer")
         lastWindowSize = size;
         if (!UpdateFramebuffer(width, height)) {
             return;
@@ -99,8 +106,9 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
     mat4 P;
     geometry::Frustum frustum;
     entityx::ComponentHandle<comp::Transform> cameraTransform;
+    float zNear, zFar;
 
-    GetCameraInfo(entities, cameraTransform, frustum, P);
+    GetCameraInfo(entities, cameraTransform, frustum, P, zNear, zFar);
     mat4 V = glm::inverse(cameraTransform->GetMatrix());
     frustum = cameraTransform->GetMatrix() * frustum;
 
@@ -140,88 +148,268 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
 
     {
         DOLLAR("Upload DirectionalLight data")
-        UploadDirectionalLights<true>(entities, *lightsShader, *directionalLightShadowShader,
-                                      lightsShaderTextureCount, renderStats, cullModelsAndMeshes);
+        RenderDirectionalLightShadows(entities, *directionalLightShadowShader, renderStats, cullModelsAndMeshes);
+        UploadDirectionalLights<true>(entities, *lightsShader, lightsShaderTextureCount, renderStats, cullModelsAndMeshes);
     }
 
-    {
-        DOLLAR("Deferred: All lights pass")
+#ifdef ENABLE_VOXEL_CONE_TRACING
+    if (useVoxelConeTracing) {
+        auto const voxelTextureSize  = static_cast<GLsizei>(math::Pow(2, voxelTextureDimensionExponent));
+        GLenum voxelizeShaderTextureCount = 0;
 
-        OGL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
-        OGL(glViewport(0, 0, width, height));
-        OGL(glClearColor(0.0f, 0.0f, 0.0f, 0.0f));
-        OGL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+        {
+            DOLLAR("Deferred: Prepare for VCT")
 
-        lightsShader->Bind();
+            if (!voxelTexture ||
+                voxelTexture->width != voxelTextureSize  ||
+                voxelTexture->height != voxelTextureSize ||
+                voxelTexture->depth != voxelTextureSize  ||
+                voxelTexture->mipmapLevels != voxelMipmapLevels) {
 
-        lightsShader->Uniform("V", V);
-        lightsShader->Uniform("P", P);
-        lightsShader->Uniform("EyePos", cameraTransform->Position());
-        lightsShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
-        lightsShader->Texture("GPosition", lightsShaderTextureCount++, *positionTexture);
-        lightsShader->Texture("GNormalShininess", lightsShaderTextureCount++, *normalShininessTexture);
-        lightsShader->Texture("GAlbedoSpecular", lightsShaderTextureCount++, *albedoSpecularTexture);
-        renderStats.UniformCalls += 7;
+                voxelTexture = std::make_shared<gl::Texture3D>(voxelTextureSize, voxelTextureSize, voxelTextureSize,
+                                                               GL_RGBA8, GL_RGBA, GL_FLOAT,
+                                                               nullptr, voxelMipmapLevels);
 
-        OGL(glEnable(GL_CULL_FACE));
-        OGL(glCullFace(GL_BACK));
-        OGL(glEnable(GL_DEPTH_TEST));
+                voxelTexture->Bind();
 
-        RenderFullscreenQuad(renderStats);
+                voxelTexture->TexParameter(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+                voxelTexture->TexParameter(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+                voxelTexture->TexParameter(GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
 
-        lightsShader->Unbind();
+                voxelTexture->TexParameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                voxelTexture->TexParameter(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+                voxelTexture->Unbind();
+            }
+
+            voxelTexture->ClearTexImage();
+        }
+
+        {
+            DOLLAR("Deferred (VCT): Upload lights")
+            UploadPointLights<false>(entities, *voxelizeShader, renderStats);
+            UploadDirectionalLights<true>(entities, *voxelizeShader, voxelizeShaderTextureCount,
+                                          renderStats, cullModelsAndMeshes);
+        }
+
+        {
+            DOLLAR("Deferred (VCT): Voxelize scene")
+
+            geometry::Frustum const voxelFrustum{
+                    .sides = {
+                            geometry::Plane{
+                                    .center = voxelVolumeCenter + voxelVolumeHalfDimensions * geometry::Backward,
+                                    .normal = geometry::Backward
+                            },
+                            geometry::Plane{
+                                    .center = voxelVolumeCenter + voxelVolumeHalfDimensions * geometry::Forward,
+                                    .normal = geometry::Forward
+                            },
+                            geometry::Plane{
+                                    .center = voxelVolumeCenter + voxelVolumeHalfDimensions * geometry::Left,
+                                    .normal = geometry::Left
+                            },
+                            geometry::Plane{
+                                    .center = voxelVolumeCenter + voxelVolumeHalfDimensions * geometry::Right,
+                                    .normal = geometry::Right
+                            },
+                            geometry::Plane{
+                                    .center = voxelVolumeCenter + voxelVolumeHalfDimensions * geometry::Down,
+                                    .normal = geometry::Down
+                            },
+                            geometry::Plane{
+                                    .center = voxelVolumeCenter + voxelVolumeHalfDimensions * geometry::Up,
+                                    .normal = geometry::Up
+                            }
+                    }
+            };
+
+            OGL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+            OGL(glViewport(0, 0, voxelTextureSize, voxelTextureSize));
+            OGL(glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE));
+            OGL(glDisable(GL_CULL_FACE));
+            OGL(glDisable(GL_DEPTH_TEST));
+            OGL(glDisable(GL_BLEND));
+
+            voxelizeShader->Bind();
+
+            voxelizeShader->Uniform("V", geometry::Identity4);
+            voxelizeShader->Uniform("P", geometry::Identity4);
+
+            voxelizeShader->Uniform("VoxelHalfDimensions", vec3(voxelVolumeHalfDimensions));
+            voxelizeShader->Uniform("VoxelCenter", voxelVolumeCenter);
+
+            auto const voxelizedSceneTextureUnit = voxelizeShaderTextureCount++;
+            voxelizeShader->Texture("VoxelizedScene", voxelizedSceneTextureUnit, *voxelTexture);
+            OGL(glBindImageTexture(voxelizedSceneTextureUnit, voxelTexture->ID(),
+                                   0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8));
+
+            renderStats.UniformCalls += 5;
+
+            if (cullModelsAndMeshes) {
+                RenderModels(entities, *voxelizeShader, voxelizeShaderTextureCount, renderStats, &frustum);
+            } else {
+                RenderModels(entities, *voxelizeShader, voxelizeShaderTextureCount, renderStats);
+            }
+
+            voxelizeShader->Unbind();
+
+            OGL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
+            OGL(glEnable(GL_CULL_FACE));
+            OGL(glEnable(GL_DEPTH_TEST));
+            OGL(glEnable(GL_BLEND));
+        }
+
+        {
+            DOLLAR("Deferred (VCT): Generate voxel mipmap")
+            voxelTexture->GenerateMipmap();
+        }
+
+        if (useDirectVoxelRendering) {
+            DOLLAR("Deferred (VCT): Direct voxel rendering")
+
+            OGL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+            OGL(glViewport(0, 0, width, height));
+            OGL(glClearColor(0.0f, 0.0f, 0.0f, 0.0f));
+            OGL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+
+            voxelDirectRenderingShader->Bind();
+
+            voxelDirectRenderingShader->Uniform("InverseVP", glm::inverse(P * V));
+            voxelDirectRenderingShader->Uniform("EyePos", cameraTransform->Position());
+
+            voxelDirectRenderingShader->Uniform("RenderDistance", directVoxelRenderingDistance);
+            voxelDirectRenderingShader->Texture("VoxelizedScene", 0, *voxelTexture);
+            voxelDirectRenderingShader->Uniform("VoxelHalfDimensions", vec3(voxelVolumeHalfDimensions));
+            voxelDirectRenderingShader->Uniform("VoxelCenter", voxelVolumeCenter);
+            voxelDirectRenderingShader->Uniform("MipmapLevel", voxelDirectRenderingMipmapLevel);
+            voxelDirectRenderingShader->Uniform("NumSteps", voxelDirectRenderingSteps);
+
+            renderStats.UniformCalls += 8;
+
+            RenderFullscreenQuad(renderStats);
+
+            voxelDirectRenderingShader->Unbind();
+        }
+
+        else {
+            OGL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+            OGL(glViewport(0, 0, width, height));
+            OGL(glClearColor(0.0f, 0.0f, 0.0f, 0.0f));
+            OGL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+        }
     }
 
-    {
-        DOLLAR("Deferred: Blit framebuffer depth")
+    else {
+#endif // ENABLE_VOXEL_CONE_TRACING
+        {
+            DOLLAR("Deferred: All lights pass")
 
-        framebuffer->Bind(GL_READ_FRAMEBUFFER);
+            OGL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+            OGL(glViewport(0, 0, width, height));
+            OGL(glClearColor(0.0f, 0.0f, 0.0f, 0.0f));
+            OGL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
-        OGL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
-        OGL(glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT, GL_NEAREST));
-        OGL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+            lightsShader->Bind();
 
-        framebuffer->Unbind();
+            lightsShader->Uniform("V", V);
+            lightsShader->Uniform("P", P);
+            lightsShader->Uniform("EyePos", cameraTransform->Position());
+            lightsShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
+            lightsShader->Texture("GPosition", lightsShaderTextureCount++, *positionTexture);
+            lightsShader->Texture("GNormalShininess", lightsShaderTextureCount++, *normalShininessTexture);
+            lightsShader->Texture("GAlbedoSpecular", lightsShaderTextureCount++, *albedoSpecularTexture);
+            renderStats.UniformCalls += 7;
+
+            OGL(glEnable(GL_CULL_FACE));
+            OGL(glCullFace(GL_BACK));
+            OGL(glEnable(GL_DEPTH_TEST));
+
+            RenderFullscreenQuad(renderStats);
+
+            lightsShader->Unbind();
+        }
+
+        {
+            DOLLAR("Deferred: Blit framebuffer depth")
+
+            framebuffer->Bind(GL_READ_FRAMEBUFFER);
+
+            OGL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
+            OGL(glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT, GL_NEAREST));
+            OGL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+
+            framebuffer->Unbind();
+        }
+
+        {
+            DOLLAR("Deferred: Render skydome")
+
+            // only use rotational part for skydome
+            auto const skydomeV = glm::inverse(glm::toMat4(cameraTransform->Quaternion()));
+
+            skydomeShader->Bind();
+
+            skydomeShader->Uniform("EyePos", cameraTransform->Position());
+            skydomeShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
+            renderStats.UniformCalls += 2;
+
+            OGL(glEnable(GL_CULL_FACE));
+            OGL(glCullFace(GL_FRONT));
+            OGL(glEnable(GL_DEPTH_TEST));
+
+            RenderSkydomes(entities, *skydomeShader, 0, renderStats, P, skydomeV);
+
+            skydomeShader->Unbind();
+        }
+
+        if (renderBoundingSpheres) {
+            DOLLAR("Bounding spheres")
+
+            wireframeShader->Bind();
+            wireframeShader->Uniform("V", V);
+            wireframeShader->Uniform("P", P);
+            wireframeShader->Uniform("EyePos", cameraTransform->Position());
+            wireframeShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
+            renderStats.UniformCalls += 4;
+
+            OGL(glDisable(GL_CULL_FACE));
+            OGL(glEnable(GL_DEPTH_TEST));
+
+            RenderBoundingSpheres(entities, *wireframeShader, 0, renderStats,
+                                  renderBoundingSpheresAsWireframe);
+            wireframeShader->Unbind();
+        }
+
+#ifdef ENABLE_VOXEL_CONE_TRACING
     }
+#endif // ENABLE_VOXEL_CONE_TRACING
+}
 
-    {
-        DOLLAR("Deferred: Render skydome")
+bool
+syst::DeferredRenderer::Serialize(BaseSerializer const &serializer, Json::Value &json, syst::DeferredRenderer &sys)  {
+    json["name"] = SystemName;
 
-        // only use rotational part for skydome
-        auto const skydomeV = glm::inverse(glm::toMat4(cameraTransform->Quaternion()));
+#ifdef ENABLE_VOXEL_CONE_TRACING
+    SERIALIZE(cfl::syst::DeferredRenderer, json["useVoxelConeTracing"], sys.useVoxelConeTracing);
 
-        skydomeShader->Bind();
+    Json::Value &jvoxels = json["voxelConeTracing"];
 
-        skydomeShader->Uniform("EyePos", cameraTransform->Position());
-        skydomeShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
-        renderStats.UniformCalls += 2;
+    SERIALIZE(cfl::syst::DeferredRenderer, jvoxels["textureDimensionExponent"], sys.voxelTextureDimensionExponent);
+    SERIALIZE(cfl::syst::DeferredRenderer, jvoxels["volumeHalfDimensions"], sys.voxelVolumeHalfDimensions);
+    SERIALIZE(cfl::syst::DeferredRenderer, jvoxels["volumeCenter"], sys.voxelVolumeCenter);
 
-        OGL(glEnable(GL_CULL_FACE));
-        OGL(glCullFace(GL_FRONT));
-        OGL(glEnable(GL_DEPTH_TEST));
+    SERIALIZE(cfl::syst::DeferredRenderer, jvoxels["mipmapLevels"], sys.voxelMipmapLevels);
 
-        RenderSkydomes(entities, *skydomeShader, 0, renderStats, P, skydomeV);
+    SERIALIZE(cfl::syst::DeferredRenderer, jvoxels["useDirectVoxelRendering"], sys.useDirectVoxelRendering);
+    Json::Value &jvdirect = jvoxels["directRendering"];
 
-        skydomeShader->Unbind();
-    }
+    SERIALIZE(cfl::syst::DeferredRenderer, jvdirect["mipmapLevel"], sys.voxelDirectRenderingMipmapLevel);
+    SERIALIZE(cfl::syst::DeferredRenderer, jvdirect["raymarchSteps"], sys.voxelDirectRenderingSteps);
 
-    if (renderBoundingSpheres) {
-        DOLLAR("Bounding spheres")
+#endif // ENABLE_VOXEL_CONE_TRACING
 
-        wireframeShader->Bind();
-        wireframeShader->Uniform("V", V);
-        wireframeShader->Uniform("P", P);
-        wireframeShader->Uniform("EyePos", cameraTransform->Position());
-        wireframeShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
-        renderStats.UniformCalls += 4;
-
-        OGL(glDisable(GL_CULL_FACE));
-        OGL(glEnable(GL_DEPTH_TEST));
-
-        RenderBoundingSpheres(entities, *wireframeShader, 0, renderStats,
-                              renderBoundingSpheresAsWireframe);
-        wireframeShader->Unbind();
-    }
+    return true;
 }
 
 bool syst::DeferredRenderer::DrawWithImGui(syst::DeferredRenderer &sys, InputManager const &input) {
@@ -235,6 +423,26 @@ bool syst::DeferredRenderer::DrawWithImGui(syst::DeferredRenderer &sys, InputMan
     if (ImGui::Button(currentRenderMode.c_str())) {
         sys.window->SetSwapInterval(swapInterval == 0 ? 1 : 0);
     }
+
+#ifdef ENABLE_VOXEL_CONE_TRACING
+    ImGui::Checkbox("Voxel cone tracing", &sys.useVoxelConeTracing);
+    if (sys.useVoxelConeTracing) {
+        ImGui::DragInt("Mipmap level", &sys.voxelMipmapLevels, 1, 0, 10);
+
+        ImGui::DragInt("Texture size exponent", &sys.voxelTextureDimensionExponent, 1, 0, 9);
+        ImGui::Text("Actual texture size: %i", math::Pow(2, sys.voxelTextureDimensionExponent));
+        ImGui::DragFloat("Half dimensions", &sys.voxelVolumeHalfDimensions, 1, 0, std::numeric_limits<float>::max());
+        ImGui::DragFloat3("Center", glm::value_ptr(sys.voxelVolumeCenter), 1);
+
+        ImGui::Checkbox("Direct voxel rendering", &sys.useDirectVoxelRendering);
+        if (sys.useDirectVoxelRendering) {
+            ImGui::DragFloat("Distance", &sys.directVoxelRenderingDistance, 1, 0, std::numeric_limits<float>::max());
+            ImGui::DragInt("Raymarching steps", &sys.voxelDirectRenderingSteps, 1, 0, 1024);
+            ImGui::DragInt("Rendered mipmap level", &sys.voxelDirectRenderingMipmapLevel, 1, 0, sys.voxelMipmapLevels);
+        }
+    }
+
+#endif // ENABLE_VOXEL_CONE_TRACING
 
     ImGui::Checkbox("Cull models and meshes", &sys.cullModelsAndMeshes);
     ImGui::Checkbox("Render bounding spheres", &sys.renderBoundingSpheres);

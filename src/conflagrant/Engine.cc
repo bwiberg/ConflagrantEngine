@@ -336,16 +336,13 @@ bool Engine::UnloadScene() {
 }
 
 bool Engine::SaveSystems(Json::Value &json) {
-    for (auto const &pair : SystemFactoriesByName) {
-        auto const &name = pair.first;
-        auto const &factory = *pair.second;
-
-        if (!factory.HasSystem(*systems)) {
+    for (auto const &factory : orderedSystemFactories) {
+        if (!factory->HasSystem(*systems)) {
             continue;
         }
 
         Json::Value jsonSystem;
-        if (!factory.Serialize(jsonSystem, *systems)) {
+        if (!factory->Serialize(jsonSystem, *systems)) {
             // todo error message
             return false;
         }

@@ -175,7 +175,8 @@ bool ShaderSourceManager::PrecompileShader(string const &pathToShaderSource, str
     return true;
 }
 
-std::shared_ptr<gl::Shader> LoadShader(string const &vertexPathStr, string const &fragmentPathStr) {
+std::shared_ptr<gl::Shader> LoadShader(string const &vertexPathStr,
+                                       string const &fragmentPathStr) {
     string vertex;
     string fragment;
 
@@ -186,4 +187,21 @@ std::shared_ptr<gl::Shader> LoadShader(string const &vertexPathStr, string const
 
     return std::make_shared<gl::Shader>(vertex, fragment);
 }
+
+std::shared_ptr<gl::Shader> LoadShader(string const &vertexPathStr,
+                                       string const &geometryPathStr,
+                                       string const &fragmentPathStr) {
+    string vertex;
+    string fragment;
+    string geometry;
+
+    if (!ShaderSourceManager::PrecompileShader(vertexPathStr, vertex) ||
+        !ShaderSourceManager::PrecompileShader(geometryPathStr, geometry) ||
+        !ShaderSourceManager::PrecompileShader(fragmentPathStr, fragment)) {
+        return nullptr;
+    }
+
+    return std::make_shared<gl::Shader>(vertex, fragment, geometry);
+}
+
 } // namespace cfl

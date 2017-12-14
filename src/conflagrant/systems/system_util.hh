@@ -63,7 +63,7 @@ inline entityx::Entity GetActiveCamera(entityx::EntityManager &entities,
 inline void GetCameraInfo(entityx::EntityManager &entities,
                           entityx::ComponentHandle<comp::Transform> &outTransform,
                           geometry::Frustum &frustum,
-                          mat4 &P) {
+                          mat4 &P, float &zNear, float &zFar) {
     $
     using entityx::ComponentHandle;
 
@@ -88,12 +88,18 @@ inline void GetCameraInfo(entityx::EntityManager &entities,
 template<bool UseShadows = false>
 void UploadPointLights(entityx::EntityManager &entities, gl::Shader &shader, RenderStats &renderStats);
 
+void RenderPointLightShadows(entityx::EntityManager &entities,
+                             gl::Shader &lightpassShader, GLenum const nextTextureUnit,
+                             RenderStats &renderStats, bool cullModelsAndMeshes = false);
+
 template<bool UseShadows = true>
-void UploadDirectionalLights(entityx::EntityManager &entities, gl::Shader &shader, RenderStats &renderStats);
+void UploadDirectionalLights(entityx::EntityManager &entities,
+                             gl::Shader &shader, gl::Shader &lightpassShader, GLenum &nextTextureUnit,
+                             RenderStats &renderStats, bool cullModelsAndMeshes = false);
 
-void RenderFullscreenQuad();
+void RenderFullscreenQuad(RenderStats &renderStats);
 
-void RenderUnitSphere(float radius);
+void RenderUnitSphere(float radius, RenderStats &renderStats);
 
 void RenderBoundingSpheres(entityx::EntityManager &entities,
                            gl::Shader &shader, GLenum const nextTextureUnit,
@@ -105,7 +111,7 @@ void RenderSkydomes(entityx::EntityManager &entities,
                     RenderStats &renderStats, mat4 const &P, mat4 const &V);
 
 template<bool UseDiffuse = true, bool UseSpecular = true, bool UseNormal = true, bool UseShininess = true>
-inline void RenderModel(comp::Transform &transform, comp::Model &model,
+void RenderModel(comp::Transform &transform, comp::Model &model,
                         gl::Shader &shader, GLenum const nextTextureUnit,
                         RenderStats &renderStats, geometry::Frustum const *frustum = nullptr);
 
@@ -139,30 +145,19 @@ inline void UploadPointLights(entityx::EntityManager &entities,
     renderStats.PointLights = static_cast<size_t>(ilight);
 }
 
-template<bool UseShadows = true>
-inline void UploadDirectionalLights(entityx::EntityManager &entities,
-                                    gl::Shader &shader, gl::Shader &lightpassShader, GLenum &nextTextureUnit,
-                                    RenderStats &renderStats, bool cullModelsAndMeshes = false) {
-    int ilight = 0;
-    std::stringstream ss;
+inline void RenderDirectionalLightShadows(entityx::EntityManager &entities,
+                                          gl::Shader &lightpassShader,
+                                          RenderStats &renderStats, bool cullModelsAndMeshes) {
     entityx::ComponentHandle<comp::DirectionalLight> light;
     entityx::ComponentHandle<comp::DirectionalLightShadow> shadow;
     entityx::ComponentHandle<comp::OrthographicCamera> camera;
 
     for (auto entity : entities.entities_with_components(light)) {
-        ss << "directionalLights" << "[" << ilight << "]" << ".";
-        string const prefix = ss.str();
-
         float const phi = glm::radians(light->horizontal);
         float const theta = glm::radians(90 - light->vertical);
         vec3 direction(sinf(theta) * cosf(phi), cosf(theta), sinf(theta) * sinf(phi));
 
-        shader.Uniform(prefix + "direction", direction);
-        shader.Uniform(prefix + "intensity", light->intensity);
-        shader.Uniform(prefix + "color", light->color);
-        renderStats.UniformCalls += 3;
-
-        if (UseShadows && light->castShadows) {
+        if (light->castShadows) {
             if (!entity.has_component<comp::DirectionalLightShadow>()) {
                 shadow = entity.assign<comp::DirectionalLightShadow>();
             } else {
@@ -213,11 +208,46 @@ inline void UploadDirectionalLights(entityx::EntityManager &entities,
             }
 
             shadow->framebuffer->Unbind();
+        }
+    }
+}
+
+template<bool UseShadows = true>
+inline void UploadDirectionalLights(entityx::EntityManager &entities,
+                                    gl::Shader &shader, GLenum &nextTextureUnit,
+                                    RenderStats &renderStats, bool cullModelsAndMeshes) {
+    int ilight = 0;
+    std::stringstream ss;
+    entityx::ComponentHandle<comp::DirectionalLight> light;
+    entityx::ComponentHandle<comp::DirectionalLightShadow> shadow;
+    entityx::ComponentHandle<comp::OrthographicCamera> camera;
+
+    auto const nextTextureUnitStart = nextTextureUnit;
+
+    for (auto entity : entities.entities_with_components(light)) {
+        auto localNextTextureUnit = nextTextureUnitStart;
+
+        ss << "directionalLights" << "[" << ilight << "]" << ".";
+        string const prefix = ss.str();
+
+        float const phi = glm::radians(light->horizontal);
+        float const theta = glm::radians(90 - light->vertical);
+        vec3 direction(sinf(theta) * cosf(phi), cosf(theta), sinf(theta) * sinf(phi));
+
+        shader.Uniform(prefix + "direction", direction);
+        shader.Uniform(prefix + "intensity", light->intensity);
+        shader.Uniform(prefix + "color", light->color);
+        renderStats.UniformCalls += 3;
+
+        shadow = entity.component<comp::DirectionalLightShadow>();
+        camera = entity.component<comp::OrthographicCamera>();
+        if (UseShadows && light->castShadows && (shadow && camera)) {
+            mat4 lightV = glm::lookAt(shadow->distanceFromScene * direction, vec3(0.f), geometry::Up);
+            auto const &lightP = camera->GetProjection();
 
             // feed uniforms
-            shader.Bind();
             shader.Uniform(prefix + "hasShadowMap", 1);
-            shader.Texture(prefix + "shadowMap", nextTextureUnit++, *shadow->depthTexture);
+            shader.Texture(prefix + "shadowMap", localNextTextureUnit++, *shadow->depthTexture);
             shader.Uniform(prefix + "VP", lightP * lightV);
             renderStats.UniformCalls += 3;
         } else {
@@ -227,7 +257,9 @@ inline void UploadDirectionalLights(entityx::EntityManager &entities,
 
         ilight++;
         ss.str("");
+        nextTextureUnit = localNextTextureUnit;
     }
+
     shader.Uniform("numDirectionalLights", ilight);
     renderStats.UniformCalls++;
     renderStats.DirectionalLights = static_cast<size_t>(ilight);

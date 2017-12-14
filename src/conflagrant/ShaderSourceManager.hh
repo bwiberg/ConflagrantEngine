@@ -20,7 +20,12 @@ public:
     static bool PrecompileShader(string const &pathToShaderSource, string &out);
 };
 
-std::shared_ptr<gl::Shader> LoadShader(string const &vertexPathStr, string const &fragmentPathStr);
+std::shared_ptr<gl::Shader> LoadShader(string const &vertexPathStr,
+                                       string const &fragmentPathStr);
+
+std::shared_ptr<gl::Shader> LoadShader(string const &vertexPathStr,
+                                       string const &fragmentPathStr,
+                                       string const &geometryPathStr);
 
 #define REGISTER_SHADER_FOLDER(path) cfl::ShaderSourceManager::RegisterShaderFolder(path)
 } // namespace cfl

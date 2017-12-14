@@ -2,7 +2,6 @@
 
 #include "common/Definitions.glsl"
 #include "common/VertexAttributes.glsl"
-
 #include "common/Uniforms.glsl"
 
 void main(void) {

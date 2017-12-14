@@ -15,6 +15,8 @@ enum class IntersectionType {
 };
 
 extern vec3 const Forward, Backward, Right, Left, Up, Down;
+extern mat3 const Identity3;
+extern mat4 const Identity4;
 
 struct Sphere;
 struct Plane;

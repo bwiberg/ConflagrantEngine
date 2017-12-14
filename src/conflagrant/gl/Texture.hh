@@ -21,15 +21,17 @@ struct GlTextureBase : public GlObject<GlTextureFactory> {
     inline GlTextureBase(GlTextureBase &&o) noexcept
             : GlObject<GlTextureFactory>(std::move(o)),
               target(o.target), internalFormat(o.internalFormat), format(o.format), type(o.type),
-              hasMipmap(o.hasMipmap) { }
+              hasMipmap(o.hasMipmap) {}
+
     inline GlTextureBase(GLenum target, GLenum internalFormat, GLenum format, GLenum type, bool createMipmap = false)
             : target(target), internalFormat(internalFormat), format(format), type(type),
-              hasMipmap(createMipmap) { }
-    void Bind() const {
+              hasMipmap(createMipmap) {}
+
+    inline void Bind() const {
         OGL(glBindTexture(target, id));
     }
 
-    void Unbind() const {
+    inline void Unbind() const {
         OGL(glBindTexture(target, 0));
     }
 
@@ -58,7 +60,8 @@ struct Texture1D : public GlTextureBase {
     GLsizei const size;
 
     inline Texture1D(Texture1D &&o) noexcept
-            : GlTextureBase(std::move(o)), size(o.size) { }
+            : GlTextureBase(std::move(o)), size(o.size) {}
+
     inline Texture1D(GLsizei size,
                      GLenum internalFormat, GLenum format, GLenum type,
                      GLvoid const *pixels,
@@ -84,7 +87,8 @@ struct Texture2D : public GlTextureBase {
     GLsizei const width, height;
 
     inline Texture2D(Texture2D &&o) noexcept
-            : GlTextureBase(std::move(o)), width(o.width), height(o.height) { }
+            : GlTextureBase(std::move(o)), width(o.width), height(o.height) {}
+
     inline Texture2D(GLsizei width, GLsizei height,
                      GLenum internalFormat, GLenum format, GLenum type,
                      GLvoid const *pixels,
@@ -112,7 +116,7 @@ struct Texture2D : public GlTextureBase {
         Unbind();
     }
 
-    void TexImage2D(GLvoid const *pixels) {
+    inline void TexImage2D(GLvoid const *pixels) {
         if (target == GL_TEXTURE_2D) {
             OGL(glTexImage2D(target, 0, internalFormat, width, height, 0, format, type, pixels));
         } else {
@@ -127,16 +131,19 @@ struct Texture2D : public GlTextureBase {
 };
 
 struct Texture3D : public GlTextureBase {
-    GLsizei const width, height, depth;
+    GLsizei const width, height, depth, mipmapLevels;
 
     inline Texture3D(Texture3D &&o) noexcept
-            : GlTextureBase(std::move(o)), width(o.width), height(o.height), depth(o.depth) { }
+            : GlTextureBase(std::move(o)),
+              width(o.width), height(o.height), depth(o.depth),
+              mipmapLevels(o.mipmapLevels) {}
+
     inline Texture3D(GLsizei width, GLsizei height, GLsizei depth,
                      GLenum internalFormat, GLenum format, GLenum type,
                      GLvoid const *pixels,
                      bool createMipmap = false)
             : GlTextureBase(GL_TEXTURE_3D, internalFormat, format, type),
-              width(width), height(height), depth(depth) {
+              width(width), height(height), depth(depth), mipmapLevels(0) {
         Bind();
 
         TexImage3D(pixels);
@@ -146,11 +153,48 @@ struct Texture3D : public GlTextureBase {
         TexParameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
         TexParameter(GL_TEXTURE_WRAP_R, GL_REPEAT);
 
+        if (createMipmap) {
+            GenerateMipmap();
+        }
+
         Unbind();
     }
 
-    void TexImage3D(GLvoid const *pixels) {
+    inline Texture3D(GLsizei width, GLsizei height, GLsizei depth,
+                     GLenum internalFormat, GLenum format, GLenum type,
+                     GLvoid const *pixels,
+                     GLsizei mipmapLevels)
+            : GlTextureBase(GL_TEXTURE_3D, internalFormat, format, type),
+              width(width), height(height), depth(depth), mipmapLevels(mipmapLevels) {
+        Bind();
+
+        TexStorage3D(mipmapLevels);
+
+        TexParameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        TexParameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        TexParameter(GL_TEXTURE_WRAP_S, GL_REPEAT);
+        TexParameter(GL_TEXTURE_WRAP_T, GL_REPEAT);
+        TexParameter(GL_TEXTURE_WRAP_R, GL_REPEAT);
+
+        GenerateMipmap();
+
+        Unbind();
+    }
+
+    inline void TexImage3D(GLvoid const *pixels) {
         OGL(glTexImage3D(target, 0, internalFormat, width, height, depth, 0, format, type, pixels));
+    }
+
+    inline void TexStorage3D(GLsizei const levels) {
+        OGL(glTexStorage3D(target, levels, internalFormat, width, height, depth));
+    }
+
+    inline void ClearTexImage(vec4 const& color = vec4{0, 0, 0, 0}) {
+        OGL(glClearTexImage(id, 0, format, type, glm::value_ptr(color)));
+
+//        for (GLsizei i = 0; i < mipmapLevels; ++i) {
+//            OGL(glClearTexImage(id, i, format, type, glm::value_ptr(color)));
+//        }
     }
 };
 }

@@ -37,6 +37,8 @@ else ()
     message(AUTHOR_WARNING "Could not make out build type.")
 endif ()
 
+add_definitions(-DENABLE_VOXEL_CONE_TRACING)
+
 #########################################
 ### set CMake custom module directory ###
 #########################################
@@ -138,6 +140,7 @@ set(HH_FILES
         src/conflagrant/factory_util.hh
         src/conflagrant/RenderStats.hh
         src/conflagrant/ShaderSourceManager.hh
+        src/conflagrant/SmartValue.hh
         src/conflagrant/assets/Asset.hh
         src/conflagrant/assets/AssetLoader.hh
         src/conflagrant/assets/AssetManager.hh

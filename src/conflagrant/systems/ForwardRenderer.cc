@@ -51,15 +51,16 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
 
     {
         DOLLAR("Upload DirectionalLight data")
-        UploadDirectionalLights<true>(entities, *forwardShader, *shadowmapLightpassShader,
-                                      forwardShaderTextureCount, renderStats, cullModelsAndMeshes);
+        RenderDirectionalLightShadows(entities, *shadowmapLightpassShader, renderStats, cullModelsAndMeshes);
+        UploadDirectionalLights<true>(entities, *forwardShader, forwardShaderTextureCount, renderStats, cullModelsAndMeshes);
     }
 
     mat4 P;
     geometry::Frustum frustum;
     entityx::ComponentHandle<comp::Transform> cameraTransform;
+    float zNear, zFar;
 
-    GetCameraInfo(entities, cameraTransform, frustum, P);
+    GetCameraInfo(entities, cameraTransform, frustum, P, zNear, zFar);
     mat4 V = glm::inverse(cameraTransform->GetMatrix());
     frustum = cameraTransform->GetMatrix() * frustum;
 

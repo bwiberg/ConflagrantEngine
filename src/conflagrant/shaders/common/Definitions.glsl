@@ -31,3 +31,4 @@
     #define SAMPLE_SHADOWMAP(shadowMap, projCoords, bias) texture(l.shadowMap, projCoords.xy).r
 #endif // USE_SAMPLER2DSHADOW
 
+#define RAYMARCH_MAX_STEPS 1024
