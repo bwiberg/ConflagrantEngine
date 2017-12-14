@@ -189,12 +189,10 @@ struct Texture3D : public GlTextureBase {
         OGL(glTexStorage3D(target, levels, internalFormat, width, height, depth));
     }
 
-    inline void ClearTexImage(vec4 const& color = vec4{0, 0, 0, 0}) {
-        OGL(glClearTexImage(id, 0, format, type, glm::value_ptr(color)));
-
-//        for (GLsizei i = 0; i < mipmapLevels; ++i) {
-//            OGL(glClearTexImage(id, i, format, type, glm::value_ptr(color)));
-//        }
+    inline void ClearTexImage(vec4 const& color = vec4{0, 0, 0, 0}, GLint levelStart = 0, GLint levelEnd = 0) {
+        for (GLint i = levelStart; i < mipmapLevels && i <= levelEnd; ++i) {
+            OGL(glClearTexImage(id, i, format, type, glm::value_ptr(color)));
+        }
     }
 };
 }

@@ -170,7 +170,7 @@ set(HH_FILES
         src/conflagrant/assets/Model.hh
         src/conflagrant/assets/Material.hh
         src/conflagrant/gl/GlObject.hh
-        src/conflagrant/gl/StateGroup.hh
+        src/conflagrant/gl/State.hh
         src/conflagrant/assets/loaders/AssimpGlmConvert.hh
         src/conflagrant/gl/GlObject.hh
         src/conflagrant/gl/Buffer.hh
