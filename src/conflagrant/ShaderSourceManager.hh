@@ -27,5 +27,7 @@ std::shared_ptr<gl::Shader> LoadShader(string const &vertexPathStr,
                                        string const &fragmentPathStr,
                                        string const &geometryPathStr);
 
+std::shared_ptr<gl::Shader> LoadComputeShader(string const &computePathStr);
+
 #define REGISTER_SHADER_FOLDER(path) cfl::ShaderSourceManager::RegisterShaderFolder(path)
 } // namespace cfl

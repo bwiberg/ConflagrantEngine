@@ -204,4 +204,13 @@ std::shared_ptr<gl::Shader> LoadShader(string const &vertexPathStr,
     return std::make_shared<gl::Shader>(vertex, fragment, geometry);
 }
 
+std::shared_ptr<gl::Shader> LoadComputeShader(string const &computePathStr) {
+    string compute;
+
+    if (!ShaderSourceManager::PrecompileShader(computePathStr, compute)) {
+        return nullptr;
+    }
+
+    return std::make_shared<gl::Shader>(compute);
+}
 } // namespace cfl

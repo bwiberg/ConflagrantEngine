@@ -35,7 +35,6 @@ class Shader {
     GLuint program;
     std::vector<std::string> defines;
 
-protected:
     Shader(Shader const &r) = delete;
 
     Shader &operator=(Shader const &r) = delete;
@@ -56,6 +55,24 @@ public:
 
         if (geom.length() != 0) CompileShader(program, GL_GEOMETRY_SHADER, geom.c_str());
 
+        OGL(glLinkProgram(program));
+
+        // check for errors
+        GLint status, length;
+        OGL(glGetProgramiv(program, GL_LINK_STATUS, &status));
+        if (status == GL_FALSE) {
+            OGL(glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length));
+            std::vector<GLchar> buffer(static_cast<ulong>(length));
+            OGL(glGetProgramInfoLog(program, (GLsizei) buffer.size(), nullptr, buffer.data()));
+            LOG_ERROR(cfl::gl::Shader::Shader()) << "GLSL linkage error: " << buffer.data() << std::endl;
+            throw std::runtime_error("GLSL linkage failure");
+        }
+    }
+
+    inline Shader(std::string const &compute) {
+        OGL(program = glCreateProgram());
+        OGL(glProgramParameteri(program, GL_PROGRAM_SEPARABLE, GL_FALSE));
+        CompileShader(program, GL_COMPUTE_SHADER, compute.c_str());
         OGL(glLinkProgram(program));
 
         // check for errors
