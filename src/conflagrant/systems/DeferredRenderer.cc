@@ -31,6 +31,7 @@ void syst::DeferredRenderer::LoadShaders() {
     voxelizeShader = LoadShader("voxels/voxelize.vert", "voxels/voxelize.geom", "voxels/voxelize.frag");
     voxelDirectRenderingShader = LoadShader("voxels/directrendering.vert", "voxels/directrendering.frag");
     voxelConeTracingShader = LoadShader("voxels/conetracing.vert", "voxels/conetracing.frag");
+    mipmapShader = LoadComputeShader("voxels/mipmap.comp");
 #endif
 }
 
@@ -154,7 +155,7 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
 
 #ifdef ENABLE_VOXEL_CONE_TRACING
     if (useVoxelConeTracing) {
-        auto const voxelTextureSize  = static_cast<GLsizei>(math::Pow(2, VCT.textureDimensionExponent));
+        auto const voxelTextureSize = GetActualVoxelTextureSize();
         GLenum voxelizeShaderTextureCount = 0;
 
         {
@@ -262,7 +263,23 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
 
         if (Time::CurrentTime() - VCT.timeOfLastMipmapGeneration >= VCT.timeBetweenMipmapGeneration) {
             DOLLAR("Deferred (VCT): Generate voxel mipmap")
-            voxelTexture->GenerateMipmap();
+
+            mipmapShader->Bind();
+
+            auto computeSize = static_cast<GLuint>(GetActualVoxelTextureSize() / 2);
+            for (decltype(VCT.mipmapLevels) level = 0; level < VCT.mipmapLevels; ++level) {
+                mipmapShader->Texture("ImageSource", 0, *voxelTexture);
+                OGL(glBindImageTexture(0, voxelTexture->ID(), level, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8));
+                mipmapShader->Texture("ImageMipmap", 1, *voxelTexture);
+                OGL(glBindImageTexture(1, voxelTexture->ID(), level + 1, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8));
+
+                OGL(glDispatchCompute(computeSize, computeSize, computeSize));
+
+                computeSize /= 2;
+            }
+
+            mipmapShader->Unbind();
+
             VCT.timeOfLastMipmapGeneration = Time::CurrentTime();
         }
 

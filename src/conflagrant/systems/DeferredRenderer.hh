@@ -13,6 +13,7 @@
 #ifdef ENABLE_VOXEL_CONE_TRACING
 #include <conflagrant/components/OrthographicCamera.hh>
 #include <conflagrant/components/Transform.hh>
+#include <conflagrant/math.hh>
 #endif // ENABLE_VOXEL_CONE_TRACING
 
 #include <entityx/System.h>
@@ -35,6 +36,7 @@ private:
     std::shared_ptr<gl::Shader>
             voxelizeShader,
             voxelDirectRenderingShader,
+            mipmapShader,
             voxelConeTracingShader;
 
     bool useVoxelConeTracing{true};
@@ -52,6 +54,10 @@ private:
             float renderDistance{25.0f};
         } DirectRendering;
     } VCT;
+
+    inline GLsizei GetActualVoxelTextureSize() const {
+        return static_cast<GLsizei>(math::Pow(2, VCT.textureDimensionExponent));
+    }
 
     std::shared_ptr<gl::Texture3D> voxelTexture;
 #endif // ENABLE_VOXEL_CONE_TRACING

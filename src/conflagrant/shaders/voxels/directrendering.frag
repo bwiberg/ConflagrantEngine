@@ -17,6 +17,9 @@ uniform float RenderDistance;
 
 out vec4 out_Color;
 
+#include "common/ease/quadratic-in.glsl"
+#define EASE(t) quadraticIn(t)
+
 void main(void) {
 	const int N = min(NumSteps, RAYMARCH_MAX_STEPS);
     vec4 result = vec4(0);
@@ -24,7 +27,7 @@ void main(void) {
     const float fraction = 1.0 / (N - 1);
     float any = 0.0;
 	for(int i = 0; i < N && result.a < BreakOnAlpha; ++i) {
-	    vec3 worldPosition = fIn_RayOrigin + i * fraction * RenderDistance * fIn_RayDirection;
+	    vec3 worldPosition = fIn_RayOrigin + EASE(i * fraction) * RenderDistance * fIn_RayDirection;
 
         vec3 voxelCoordinates = GetUnitCubeCoordinates(worldPosition, VoxelCenter, VoxelHalfDimensions);
         if(!IsWithinVoxelColume(voxelCoordinates)) continue;
