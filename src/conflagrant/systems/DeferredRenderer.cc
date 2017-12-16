@@ -5,6 +5,7 @@
 #include <conflagrant/systems/CameraController.hh>
 #include <conflagrant/Engine.hh>
 #include <conflagrant/Time.hh>
+#include <conflagrant/Timer.hh>
 #include <conflagrant/components/Model.hh>
 #include <conflagrant/components/Transform.hh>
 #include <conflagrant/components/PointLight.hh>
@@ -14,6 +15,8 @@
 #include <conflagrant/ShaderSourceManager.hh>
 
 #include <imgui.h>
+
+#define TIMER(name) cfl::Timer<double> __timer__ ## name (durationsByName[(#name)])
 
 namespace cfl {
 syst::DeferredRenderer::DeferredRenderer() {
@@ -79,6 +82,10 @@ bool syst::DeferredRenderer::UpdateFramebuffer(GLsizei const width, GLsizei cons
 
 void
 syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) {
+    for (auto &kvp : durationsByName) {
+        kvp.second = 0.0;
+    }
+
     auto const& factories = engine->orderedSystemFactories;
     auto itForward = std::find_if(factories.begin(), factories.end(), [](std::shared_ptr<SystemFactory> const factory) {
         return factory->GetName() == "ForwardRenderer";
@@ -114,6 +121,7 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
     frustum = cameraTransform->GetMatrix() * frustum;
 
     {
+        TIMER(GeometryPass);
         DOLLAR("Deferred: Geometry pass")
         framebuffer->Bind();
         OGL(glViewport(0, 0, width, height));
@@ -143,22 +151,25 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
     GLenum lightsShaderTextureCount = 0;
 
     {
-        DOLLAR("Deferred: Upload PointLights")
-        UploadPointLights<false>(entities, *lightsShader, renderStats);
-    }
-
-    {
-        DOLLAR("Upload DirectionalLight data")
-        RenderDirectionalLightShadows(entities, *directionalLightShadowShader, renderStats, cullModelsAndMeshes);
-        UploadDirectionalLights<true>(entities, *lightsShader, lightsShaderTextureCount, renderStats, cullModelsAndMeshes);
+        TIMER(DeferredUploadLights);
+        {
+            DOLLAR("Deferred: Upload PointLights")
+            UploadPointLights<false>(entities, *lightsShader, renderStats);
+        }
+        {
+            DOLLAR("Upload DirectionalLight data")
+            RenderDirectionalLightShadows(entities, *directionalLightShadowShader, renderStats, cullModelsAndMeshes);
+            UploadDirectionalLights<true>(entities, *lightsShader, lightsShaderTextureCount, renderStats, cullModelsAndMeshes);
+        }
     }
 
 #ifdef ENABLE_VOXEL_CONE_TRACING
     if (useVoxelConeTracing) {
         auto const voxelTextureSize = GetActualVoxelTextureSize();
-        GLenum voxelizeShaderTextureCount = 0;
+        GLenum voxelizeShaderTextureCount = 0, voxelConeTracingShaderTextureCount = 0;
 
         {
+            TIMER(VctAllocateClearTextures);
             DOLLAR("Deferred: Prepare for VCT")
 
             if (!voxelTexture ||
@@ -187,13 +198,19 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
         }
 
         {
+            TIMER(VctUploadLights);
             DOLLAR("Deferred (VCT): Upload lights")
             UploadPointLights<false>(entities, *voxelizeShader, renderStats);
             UploadDirectionalLights<true>(entities, *voxelizeShader, voxelizeShaderTextureCount,
                                           renderStats, cullModelsAndMeshes);
+
+            UploadPointLights<false>(entities, *voxelConeTracingShader, renderStats);
+            UploadDirectionalLights<true>(entities, *voxelConeTracingShader, voxelConeTracingShaderTextureCount,
+                                          renderStats, cullModelsAndMeshes);
         }
 
         {
+            TIMER(VctVoxelizeScene);
             DOLLAR("Deferred (VCT): Voxelize scene")
 
             geometry::Frustum const voxelFrustum{
@@ -262,28 +279,33 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
         }
 
         if (Time::CurrentTime() - VCT.timeOfLastMipmapGeneration >= VCT.timeBetweenMipmapGeneration) {
+            TIMER(VctGenerateMipmap);
             DOLLAR("Deferred (VCT): Generate voxel mipmap")
-
-            mipmapShader->Bind();
-
-            auto computeSize = static_cast<GLuint>(GetActualVoxelTextureSize() / 2);
-            for (decltype(VCT.mipmapLevels) level = 0; level < VCT.mipmapLevels; ++level) {
-                mipmapShader->Texture("ImageSource", 0, *voxelTexture);
-                OGL(glBindImageTexture(0, voxelTexture->ID(), level, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8));
-                mipmapShader->Texture("ImageMipmap", 1, *voxelTexture);
-                OGL(glBindImageTexture(1, voxelTexture->ID(), level + 1, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8));
-
-                OGL(glDispatchCompute(computeSize, computeSize, computeSize));
-
-                computeSize /= 2;
-            }
-
-            mipmapShader->Unbind();
-
             VCT.timeOfLastMipmapGeneration = Time::CurrentTime();
+
+            if (VCT.useComputeShaderMipmapper) {
+                mipmapShader->Bind();
+
+                auto computeSize = static_cast<GLuint>(GetActualVoxelTextureSize() / 2);
+                for (decltype(VCT.mipmapLevels) level = 0; level < VCT.mipmapLevels; ++level) {
+                    mipmapShader->Texture("ImageSource", 0, *voxelTexture);
+                    OGL(glBindImageTexture(0, voxelTexture->ID(), level, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8));
+                    mipmapShader->Texture("ImageMipmap", 1, *voxelTexture);
+                    OGL(glBindImageTexture(1, voxelTexture->ID(), level + 1, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8));
+
+                    OGL(glDispatchCompute(computeSize, computeSize, computeSize));
+
+                    computeSize /= 2;
+                }
+
+                mipmapShader->Unbind();
+            } else {
+                voxelTexture->GenerateMipmap();
+            }
         }
 
         if (VCT.useDirectVoxelRendering) {
+            TIMER(VctDirectRendering);
             DOLLAR("Deferred (VCT): Direct voxel rendering")
 
             OGL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
@@ -311,16 +333,82 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
         }
 
         else {
-            OGL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
-            OGL(glViewport(0, 0, width, height));
-            OGL(glClearColor(0.0f, 0.0f, 0.0f, 0.0f));
-            OGL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+            {
+                TIMER(VctFinalRendering);
+
+                OGL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+                OGL(glViewport(0, 0, width, height));
+                OGL(glClearColor(0.0f, 0.0f, 0.0f, 0.0f));
+                OGL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+
+                voxelConeTracingShader->Bind();
+
+                voxelConeTracingShader->Uniform("V", V);
+                voxelConeTracingShader->Uniform("P", P);
+                voxelConeTracingShader->Uniform("EyePos", cameraTransform->Position());
+                voxelConeTracingShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
+                voxelConeTracingShader->Texture("GPosition", voxelConeTracingShaderTextureCount++, *positionTexture);
+                voxelConeTracingShader->Texture("GNormalShininess", voxelConeTracingShaderTextureCount++, *normalShininessTexture);
+                voxelConeTracingShader->Texture("GAlbedoSpecular", voxelConeTracingShaderTextureCount++, *albedoSpecularTexture);
+
+                voxelConeTracingShader->Texture("VoxelizedScene", voxelConeTracingShaderTextureCount++, *voxelTexture);
+                voxelConeTracingShader->Uniform("VoxelHalfDimensions", vec3(VCT.halfDimensions));
+                voxelConeTracingShader->Uniform("VoxelCenter", VCT.center);
+                // todo verify
+                voxelConeTracingShader->Uniform("VoxelSize", VCT.halfDimensions / GetActualVoxelTextureSize());
+
+                renderStats.UniformCalls += 11;
+
+                OGL(glEnable(GL_CULL_FACE));
+                OGL(glCullFace(GL_BACK));
+                OGL(glEnable(GL_DEPTH_TEST));
+
+                RenderFullscreenQuad(renderStats);
+
+                voxelConeTracingShader->Unbind();
+            }
+
+            {
+                TIMER(VctBlitFboDepth);
+                DOLLAR("Deferred (VCT): Blit framebuffer depth")
+
+                framebuffer->Bind(GL_READ_FRAMEBUFFER);
+
+                OGL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
+                OGL(glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT, GL_NEAREST));
+                OGL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+
+                framebuffer->Unbind();
+            }
+
+            {
+                TIMER(VctRenderSkydome);
+                DOLLAR("Deferred (VCT): Render skydome")
+
+                // only use rotational part for skydome
+                auto const skydomeV = glm::inverse(glm::toMat4(cameraTransform->Quaternion()));
+
+                skydomeShader->Bind();
+
+                skydomeShader->Uniform("EyePos", cameraTransform->Position());
+                skydomeShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
+                renderStats.UniformCalls += 2;
+
+                OGL(glEnable(GL_CULL_FACE));
+                OGL(glCullFace(GL_FRONT));
+                OGL(glEnable(GL_DEPTH_TEST));
+
+                RenderSkydomes(entities, *skydomeShader, 0, renderStats, P, skydomeV);
+
+                skydomeShader->Unbind();
+            }
         }
     }
 
     else {
 #endif // ENABLE_VOXEL_CONE_TRACING
         {
+            TIMER(DeferredAllLightsPass);
             DOLLAR("Deferred: All lights pass")
 
             OGL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
@@ -349,6 +437,7 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
         }
 
         {
+            TIMER(DeferredBlitFboDepth);
             DOLLAR("Deferred: Blit framebuffer depth")
 
             framebuffer->Bind(GL_READ_FRAMEBUFFER);
@@ -361,6 +450,7 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
         }
 
         {
+            TIMER(DeferredRenderSkydome);
             DOLLAR("Deferred: Render skydome")
 
             // only use rotational part for skydome
@@ -382,6 +472,7 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
         }
 
         if (renderBoundingSpheres) {
+            TIMER(DeferredRenderBoundingSpheres);
             DOLLAR("Bounding spheres")
 
             wireframeShader->Bind();
@@ -445,11 +536,12 @@ bool syst::DeferredRenderer::DrawWithImGui(syst::DeferredRenderer &sys, InputMan
 #ifdef ENABLE_VOXEL_CONE_TRACING
     ImGui::Checkbox("Voxel cone tracing", &sys.useVoxelConeTracing);
     if (sys.useVoxelConeTracing) {
-        ImGui::DragInt("Mipmap level", &sys.VCT.mipmapLevels, 1, 0, 10);
+        ImGui::DragInt("Mipmap level", &sys.VCT.mipmapLevels, 1, 0, 9);
         ImGui::DragFloat("Mipmap delta time", &sys.VCT.timeBetweenMipmapGeneration, 1, 0, 10);
+        ImGui::Checkbox("Compute shader mipmapper", &sys.VCT.useComputeShaderMipmapper);
 
-        ImGui::DragInt("Texture size exponent", &sys.VCT.textureDimensionExponent, 1, 0, 9);
-        ImGui::Text("Actual texture size: %i", math::Pow(2, sys.VCT.textureDimensionExponent));
+        ImGui::DragInt("Texture size exponent", &sys.VCT.textureDimensionExponent, 1, 5, 9);
+        ImGui::Text("Actual texture size: %i", sys.GetActualVoxelTextureSize());
         ImGui::DragFloat("Half dimensions", &sys.VCT.halfDimensions, 1, 0, std::numeric_limits<float>::max());
         ImGui::DragFloat3("Center", glm::value_ptr(sys.VCT.center), 1);
 
@@ -475,6 +567,11 @@ bool syst::DeferredRenderer::DrawWithImGui(syst::DeferredRenderer &sys, InputMan
 
     ImGui::Text("Render Stats");
     sys.renderStats.DrawWithImGui();
+
+    ImGui::Text("Timings");
+    for (auto const& kvp : sys.durationsByName) {
+        ImGui::LabelText(kvp.first.c_str(), "%f ms", 1000 * kvp.second);
+    }
 
     return true;
 }

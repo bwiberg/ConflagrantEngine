@@ -74,6 +74,6 @@ void main(void){
         result = diffuse.rgb;
     }
 
-    ivec3 imageCoords = GetIntegerCoordinatesFromNormalizedTextureCoordinates(VoxelizedScene, voxelCoordinates);
+    ivec3 imageCoords = GetIntegerCoordinatesFromNormalizedTextureCoordinates(imageSize(VoxelizedScene), voxelCoordinates);
     imageStore(VoxelizedScene, imageCoords, vec4(result, alpha));
 }

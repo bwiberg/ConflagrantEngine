@@ -129,6 +129,7 @@ set(HH_FILES
         src/conflagrant/math.hh
         src/conflagrant/Engine.hh
         src/conflagrant/Time.hh
+        src/conflagrant/Timer.hh
         src/conflagrant/ComponentFactory.hh
         src/conflagrant/SystemFactory.hh
         src/conflagrant/types.hh

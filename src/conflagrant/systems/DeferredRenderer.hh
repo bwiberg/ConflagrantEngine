@@ -32,6 +32,9 @@ private:
             skydomeShader,
             wireframeShader;
 
+    std::map<string, double> durationsByName;
+    std::list<string> durationsOrder;
+
 #ifdef ENABLE_VOXEL_CONE_TRACING
     std::shared_ptr<gl::Shader>
             voxelizeShader,
@@ -47,6 +50,7 @@ private:
         int mipmapLevels{7};
         float timeBetweenMipmapGeneration{0.1f};
         cfl::time_t timeOfLastMipmapGeneration{std::numeric_limits<cfl::time_t>::min()};
+        bool useComputeShaderMipmapper{true};
 
         bool useDirectVoxelRendering{true};
         struct {

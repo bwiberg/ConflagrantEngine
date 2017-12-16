@@ -12,6 +12,6 @@ bool IsWithinVoxelColume(const vec3 unitCubeCoordinates) {
     return all(lessThan(abs(unitCubeCoordinates), Ones));
 }
 
-ivec3 GetIntegerCoordinatesFromNormalizedTextureCoordinates(layout(RGBA8) image3D image, vec3 normalizedCoordinates) {
-    return ivec3(imageSize(image) * normalizedCoordinates);
+ivec3 GetIntegerCoordinatesFromNormalizedTextureCoordinates(const ivec3 ImageSize, vec3 normalizedCoordinates) {
+    return ivec3(ImageSize * normalizedCoordinates);
 }

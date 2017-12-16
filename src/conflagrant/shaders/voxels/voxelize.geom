@@ -25,6 +25,29 @@ void main(void) {
     const vec3 p = abs(cross(gIn_WorldPosition[1] - gIn_WorldPosition[0],
                              gIn_WorldPosition[2] - gIn_WorldPosition[0]));
 
+    mat3 AxisMatrix = mat3(0);
+
+    // Z-axis dominant
+    if(p.z > p.x && p.z > p.y) {
+        // gl_Position = vec4(fIn_VoxelUnitCubeCoord.x, fIn_VoxelUnitCubeCoord.y, 0, 1);
+        AxisMatrix[0][0] = 1;
+        AxisMatrix[1][1] = 1;
+    }
+
+    // X-axis dominant
+    else if (p.x > p.y && p.x > p.z) {
+        // gl_Position = vec4(fIn_VoxelUnitCubeCoord.y, fIn_VoxelUnitCubeCoord.z, 0, 1);
+        AxisMatrix[1][0] = 1;
+        AxisMatrix[2][1] = 1;
+    }
+
+    // Y-axis dominant
+    else {
+        // gl_Position = vec4(fIn_VoxelUnitCubeCoord.x, fIn_VoxelUnitCubeCoord.z, 0, 1);
+        AxisMatrix[0][0] = 1;
+        AxisMatrix[2][1] = 1;
+    }
+
     for (int i = 0; i < 3; i++) {
         fIn_WorldPosition = gIn_WorldPosition[i];
         fIn_VoxelUnitCubeCoord = GetUnitCubeCoordinates(fIn_WorldPosition, VoxelCenter, VoxelHalfDimensions);
@@ -35,14 +58,7 @@ void main(void) {
             fIn_DirectionalLightSpacePositions[j] = gIn_DirectionalLightSpacePositions[i][j];
         }
 
-        // Z-axis dominant
-        if(p.z > p.x && p.z > p.y) gl_Position = vec4(fIn_VoxelUnitCubeCoord.x, fIn_VoxelUnitCubeCoord.y, 0, 1);
-
-        // X-axis dominant
-        else if (p.x > p.y && p.x > p.z) gl_Position = vec4(fIn_VoxelUnitCubeCoord.y, fIn_VoxelUnitCubeCoord.z, 0, 1);
-
-        // Y-axis dominant
-        else gl_Position = vec4(fIn_VoxelUnitCubeCoord.x, fIn_VoxelUnitCubeCoord.z, 0, 1);
+        gl_Position = vec4(AxisMatrix * fIn_VoxelUnitCubeCoord, 1);
 
         EmitVertex();
     }
