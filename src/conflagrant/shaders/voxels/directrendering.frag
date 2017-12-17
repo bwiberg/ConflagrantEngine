@@ -1,5 +1,7 @@
 #version 450 core
 
+#include "common/Blending.glsl"
+#include "common/ComponentWise.glsl"
 #include "common/Definitions.glsl"
 #include "voxels/common/util.glsl"
 
@@ -22,22 +24,23 @@ out vec4 out_Color;
 
 void main(void) {
 	const int N = min(NumSteps, RAYMARCH_MAX_STEPS);
-    vec4 result = vec4(0);
 
     const float fraction = 1.0 / (N - 1);
-    float any = 0.0;
-	for(int i = 0; i < N && result.a < BreakOnAlpha; ++i) {
+    vec3 color = vec3(0);
+    float alpha = 0;
+
+	for(int i = 0; i < N && alpha < BreakOnAlpha; ++i) {
 	    vec3 worldPosition = fIn_RayOrigin + EASE(i * fraction) * RenderDistance * fIn_RayDirection;
 
         vec3 voxelCoordinates = GetUnitCubeCoordinates(worldPosition, VoxelCenter, VoxelHalfDimensions);
         if(!IsWithinVoxelColume(voxelCoordinates)) continue;
 
         voxelCoordinates = GetNormalizedCoordinatesFromUnitCubeCoordinates(voxelCoordinates);
-		vec4 voxelColor = textureLod(VoxelizedScene, voxelCoordinates, MipmapLevel);
+		vec4 texel = textureLod(VoxelizedScene, voxelCoordinates, MipmapLevel);
+		texel.a = MipmapLevel > 0 ? texel.a : (Max(texel.rgb) > 0 ? 1 : 0);
 
-		result += (1.0 - result.a) * voxelColor;
+        AlphaBlend_FrontToBack(color, alpha, texel.rgb, texel.a);
 	}
 
-	// result = vec4(any, any, any, 1);
-	out_Color = result;
+	out_Color = vec4(color, alpha);
 }

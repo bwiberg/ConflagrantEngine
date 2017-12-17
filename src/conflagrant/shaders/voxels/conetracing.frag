@@ -1,5 +1,7 @@
 #version 450 core
 
+#include "common/Blending.glsl"
+#include "common/ComponentWise.glsl"
 #include "common/Constants.glsl"
 #include "common/Definitions.glsl"
 #include "common/DirectionalLight.glsl"
@@ -30,10 +32,11 @@ uniform float VoxelSize;
 out vec4 out_Color;
 
 vec3 TraceDiffuse(const vec3 Origin, const vec3 Direction) {
-    vec4 result = vec4(0.0f);
+    vec3 color = vec3(0);
+    float alpha = 0;
 
     float t = VCT_INDIRECT_START_BIAS;
-    while(result.a < 1){
+    while(alpha < 1){
         vec3 worldPosition = Origin + t * Direction;
 
         const float MipmapLevel = log2((1 + VCT_INDIRECT_SPREAD * t / VoxelSize));
@@ -45,14 +48,15 @@ vec3 TraceDiffuse(const vec3 Origin, const vec3 Direction) {
         }
         voxelCoordinates = GetNormalizedCoordinatesFromUnitCubeCoordinates(voxelCoordinates);
         vec4 voxel = textureLod(VoxelizedScene, voxelCoordinates, min(VCT_MIPMAP_MAX, MipmapLevel));
-        voxel.a = max(voxel.r, max(voxel.g, voxel.b));
-        result += 0.075 * SamplePower * voxel * pow(1 - voxel.a, 2);
-        result.a += 0.1;
+        voxel.a = MipmapLevel > 0 ? voxel.a : (Max(voxel.rgb) > 0 ? 1 : 0);
+
+        AlphaBlend_FrontToBack(color, alpha, voxel.rgb, voxel.a);
+        alpha += 0.001;
 
         t += SamplePower * VoxelSize;
     }
 
-    return result.rgb * result.a;
+    return color * alpha;
 }
 
 vec3 ApplyIndirectDiffuseLight(SurfaceInfo surf) {

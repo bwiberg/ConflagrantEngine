@@ -11,14 +11,25 @@ void main() {
     const ivec3 indexSource = IndexOffset + 2 * ivec3(gl_GlobalInvocationID.xyz);
     const ivec3 indexMipmap = IndexOffset + ivec3(gl_GlobalInvocationID.xyz);
 
-    vec4 result = vec4(0);
+    vec3 color = vec3(0);
+    float alpha = 0;
+
+    int count = 0;
     for (int dx = 0; dx < 2; ++dx) {
         for (int dy = 0; dy < 2; ++dy) {
             for (int dz = 0; dz < 2; ++dz) {
-                result += 0.125 * imageLoad(ImageSource, indexSource + ivec3(dx, dy, dz));
+                vec4 texel = imageLoad(ImageSource, indexSource + ivec3(dx, dy, dz));
+
+                int contributes = (texel.a > 0) ? 1 : 0;
+
+                color += contributes * texel.rgb;
+                alpha += texel.a;
+                count += contributes;
             }
         }
     }
 
-    imageStore(ImageMipmap, indexMipmap, result);
+    alpha = float(count) / 8;
+
+    imageStore(ImageMipmap, indexMipmap, vec4(color / count, alpha));
 }

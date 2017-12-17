@@ -265,7 +265,7 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
             renderStats.UniformCalls += 5;
 
             if (cullModelsAndMeshes) {
-                RenderModels(entities, *voxelizeShader, voxelizeShaderTextureCount, renderStats, &frustum);
+                RenderModels(entities, *voxelizeShader, voxelizeShaderTextureCount, renderStats, &voxelFrustum);
             } else {
                 RenderModels(entities, *voxelizeShader, voxelizeShaderTextureCount, renderStats);
             }
