@@ -45,7 +45,9 @@ vec3 TraceDiffuse(const vec3 Origin, const vec3 Direction) {
         }
         voxelCoordinates = GetNormalizedCoordinatesFromUnitCubeCoordinates(voxelCoordinates);
         vec4 voxel = textureLod(VoxelizedScene, voxelCoordinates, min(VCT_MIPMAP_MAX, MipmapLevel));
+        voxel.a = max(voxel.r, max(voxel.g, voxel.b));
         result += 0.075 * SamplePower * voxel * pow(1 - voxel.a, 2);
+        result.a += 0.1;
 
         t += SamplePower * VoxelSize;
     }
@@ -101,7 +103,7 @@ void main(void) {
                                         directionalLights[i].VP * vec4(surf.WorldPosition, 1), E);
     }
 
-    result = VCT_INDIRECT_STRENGTH * ApplyIndirectDiffuseLight(surf);
+    result += VCT_INDIRECT_STRENGTH * ApplyIndirectDiffuseLight(surf);
 
     if (numPointLights == 0 && numDirectionalLights == 0) {
         result = surf.Diffuse;

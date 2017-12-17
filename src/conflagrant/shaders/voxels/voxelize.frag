@@ -17,7 +17,8 @@ uniform int numPointLights = 0;
 uniform DirectionalLight directionalLights[MAX_DIRECTIONALLIGHTS];
 uniform int numDirectionalLights = 0;
 
-layout(RGBA8) uniform image3D VoxelizedScene;
+//layout(RGBA8) uniform image3D VoxelizedScene;
+uniform layout (r32ui) coherent volatile uimage3D VoxelizedScene;
 
 uniform Material material;
 
@@ -75,5 +76,6 @@ void main(void){
     }
 
     ivec3 imageCoords = GetIntegerCoordinatesFromNormalizedTextureCoordinates(imageSize(VoxelizedScene), voxelCoordinates);
-    imageStore(VoxelizedScene, imageCoords, vec4(result, alpha));
+    ImageAtomicAverageRGBA8(VoxelizedScene, imageCoords, result);
+    // imageStore(VoxelizedScene, imageCoords, vec4(result, alpha));
 }

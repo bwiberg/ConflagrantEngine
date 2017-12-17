@@ -260,7 +260,7 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
             auto const voxelizedSceneTextureUnit = voxelizeShaderTextureCount++;
             voxelizeShader->Texture("VoxelizedScene", voxelizedSceneTextureUnit, *voxelTexture);
             OGL(glBindImageTexture(voxelizedSceneTextureUnit, voxelTexture->ID(),
-                                   0, GL_TRUE, 0, GL_WRITE_ONLY, GL_RGBA8));
+                                   0, GL_TRUE, 0, GL_READ_WRITE, GL_R32UI));
 
             renderStats.UniformCalls += 5;
 

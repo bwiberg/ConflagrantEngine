@@ -82,5 +82,9 @@ public:
     inline size_t GetNumSystems() const {
         return systemVector.size();
     }
+
+    inline void Stop() {
+        shouldStop = true;
+    }
 };
 } // namespace cfl
