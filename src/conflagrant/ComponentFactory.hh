@@ -9,7 +9,9 @@
 
 namespace cfl {
 struct ComponentFactory {
-    virtual bool Create(entityx::Entity &entity, Json::Value &json) const = 0;
+    virtual bool Create(entityx::Entity &entity) const = 0;
+
+    virtual bool CreateFromJson(entityx::Entity &entity, Json::Value &json) const = 0;
 
     virtual bool HasComponent(entityx::Entity &entity) const = 0;
 
@@ -35,7 +37,7 @@ class ConcreteComponentFactory : public ComponentFactory {
     template<bool hasSerialize>
     typename std::enable_if<!hasSerialize, bool>::type
     _Create(Json::Value &json, entityx::Entity &entity) const {
-        LOG_ERROR(ComponentFactory::Create) << "Called for component type without Serialize() function.";
+        LOG_ERROR(ComponentFactory::CreateFromJson) << "Called for component type without Serialize() function.";
         return false;
     }
 
@@ -69,7 +71,12 @@ class ConcreteComponentFactory : public ComponentFactory {
     static constexpr bool HasDrawWithImGui = has_DrawWithImGui<TComponent>::value;
 
 public:
-    bool Create(entityx::Entity &entity, Json::Value &json) const override {
+    bool Create(entityx::Entity &entity) const override {
+        entity.assign<TComponent>();
+        return false;
+    }
+
+    bool CreateFromJson(entityx::Entity &entity, Json::Value &json) const override {
         entity.assign<TComponent>();
         bool success = _Create<HasSerialize>(json, entity);
 #ifdef NDEBUG

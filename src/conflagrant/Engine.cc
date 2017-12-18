@@ -229,7 +229,7 @@ bool Engine::CreateEntity(Json::Value &jsonEntity) {
                                                  << "' is not serializable (i.e. do not specify it in your scene file)";
         }
 
-        if (!factory.Create(entity, jsonEntity[componentName])) {
+        if (!factory.CreateFromJson(entity, jsonEntity[componentName])) {
             LOG_ERROR(cfl::Engine::CreateEntity) << "Failed to create component with name '" << componentName << "'.";
             RETURN_ERROR();
         }

@@ -35,15 +35,36 @@ void syst::EcsDebugger::DrawEntityEditor(entityx::Entity &entity) {
 
     ImGui::Text(ss.str().c_str());
 
+    std::vector<string> componentNames;
+
     for (auto &kvp : ComponentFactoriesByName) {
         auto const &name = kvp.first;
         auto &factory = *kvp.second;
 
         if (!factory.IsImGuiDrawable()) continue;
         if (!factory.HasComponent(entity)) continue;
+
+        componentNames.emplace_back(factory.GetName());
+
         if (!ImGui::CollapsingHeader(name.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) continue;
 
         factory.DrawWithImGui(entity, *input);
+    }
+
+    if (ImGui::CollapsingHeader("Add component")) {
+        for (auto &kvp : ComponentFactoriesByName) {
+            auto const &name = kvp.first;
+            auto &factory = *kvp.second;
+
+            if (std::find(componentNames.begin(), componentNames.end(), name) != componentNames.end()) {
+                // entity already has component
+                continue;
+            }
+
+            if (ImGui::Button(name.c_str())) {
+                factory.Create(entity);
+            }
+        }
     }
 
     ImGui::End();
@@ -135,6 +156,14 @@ void syst::EcsDebugger::update(entityx::EntityManager &entities, entityx::EventM
             if (ImGui::IsItemClicked()) {
                 currentEntity = entity;
             }
+        }
+
+        if (ImGui::Button("Create entity")) {
+            currentEntity = entities.create();
+
+            auto guid = currentEntity.assign<comp::Guid>();
+            auto name = currentEntity.assign<comp::Name>();
+            name->value = "(new entity)";
         }
     }
     ImGui::End();

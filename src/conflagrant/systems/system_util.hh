@@ -346,7 +346,7 @@ inline void RenderBoundingSpheres(entityx::EntityManager &entities,
     }
 
     for (auto entity : entities.entities_with_components(transform, model)) {
-        if (model->value->parts.size() < 2) {
+        if (!model->value || model->value->parts.size() < 2) {
             // the model's single bounding sphere is exactly the same as the entire model's bounding sphere
             // ==> skip it
             continue;
@@ -417,6 +417,10 @@ inline void RenderModel(comp::Transform &transform, comp::Model &model,
                         RenderStats &renderStats, geometry::Frustum const *frustum) {
     static constexpr bool UseMaterial = UseDiffuse || UseSpecular || UseNormal || UseShininess;
     static constexpr bool RenderMesh = true;
+
+    if (!model.value) {
+        return;
+    }
 
     auto const &M = transform.GetMatrix();
     shader.Uniform("M", M);
@@ -527,7 +531,7 @@ inline void RenderModels(entityx::EntityManager &entities,
 
             if (intersection == geometry::IntersectionType::OUTSIDE) {
                 renderStats.ModelsCulled++;
-                renderStats.MeshesCulled += model->value->parts.size();
+                renderStats.MeshesCulled += (model->value ? model->value->parts.size() : 0);
                 continue;
             }
         }
