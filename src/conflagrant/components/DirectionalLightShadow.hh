@@ -52,6 +52,15 @@ struct DirectionalLightShadow {
         return true;
     }
 
+    inline static bool Serialize(BaseSerializer const &serializer, Json::Value &json,
+                                 DirectionalLightShadow &comp) {
+        SERIALIZE(cfl::comp::DirectionalLightShadow, json["width"], comp.width);
+        SERIALIZE(cfl::comp::DirectionalLightShadow, json["height"], comp.height);
+        SERIALIZE(cfl::comp::DirectionalLightShadow, json["distanceFromScene"], comp.distanceFromScene);
+
+        return true;
+    }
+
     inline static bool DrawWithImGui(DirectionalLightShadow &comp, InputManager const &input) {
         ivec2 size(comp.width, comp.height);
         comp.hasChanged |= ImGui::InputInt2("Texture width", glm::value_ptr(size));

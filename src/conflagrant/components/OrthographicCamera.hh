@@ -16,7 +16,7 @@ public:
 
 private:
     float scale{0.001f}, zNear{0.01f}, zFar{100.0f};
-    vec2 size;
+    vec2 size{1.f, 1.f};
 
     bool hasChanged{true};
 

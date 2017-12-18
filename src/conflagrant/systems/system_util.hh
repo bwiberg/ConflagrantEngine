@@ -175,7 +175,7 @@ inline void RenderDirectionalLightShadows(entityx::EntityManager &entities,
                 shadow->hasChanged = false;
             }
 
-            camera->Size(uvec2(shadow->width, shadow->height));
+            // camera->Size(uvec2(shadow->width, shadow->height));
 
             mat4 lightV = glm::lookAt(shadow->distanceFromScene * direction, vec3(0.f), geometry::Up);
             auto const &lightP = camera->GetProjection();
