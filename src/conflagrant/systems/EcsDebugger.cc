@@ -46,7 +46,7 @@ void syst::EcsDebugger::DrawEntityEditor(entityx::Entity &entity) {
 
         componentNames.emplace_back(factory.GetName());
 
-        if (!ImGui::CollapsingHeader(name.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) continue;
+        if (!ImGui::CollapsingHeader(name.c_str())) continue;
 
         factory.DrawWithImGui(entity, *input);
     }

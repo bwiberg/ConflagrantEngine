@@ -18,9 +18,13 @@
 #include <conflagrant/components/PointLight.hh>
 #include <conflagrant/components/DirectionalLight.hh>
 #include <conflagrant/components/DirectionalLightShadow.hh>
+#include <conflagrant/components/DirectionalLightAnimation.hh>
 #include <conflagrant/components/Skydome.hh>
 #include <conflagrant/components/BoundingSphere.hh>
+#include <conflagrant/components/VelocityAnimation.hh>
+#include <conflagrant/components/PeriodicalAnimation.hh>
 
+#include <conflagrant/systems/Animator.hh>
 #include <conflagrant/systems/CameraController.hh>
 #include <conflagrant/systems/DeferredRenderer.hh>
 #include <conflagrant/systems/EcsDebugger.hh>
@@ -53,9 +57,13 @@ bool InitDefaults() {
     REGISTER_COMPONENT(cfl::comp::PointLight);
     REGISTER_COMPONENT(cfl::comp::DirectionalLight);
     REGISTER_COMPONENT(cfl::comp::DirectionalLightShadow);
+    REGISTER_COMPONENT(cfl::comp::DirectionalLightAnimation);
     REGISTER_COMPONENT(cfl::comp::Skydome);
     REGISTER_COMPONENT(cfl::comp::BoundingSphere);
+    REGISTER_COMPONENT(cfl::comp::VelocityAnimation);
+    REGISTER_COMPONENT(cfl::comp::PeriodicalAnimation);
 
+    REGISTER_SYSTEM(cfl::syst::Animator);
     REGISTER_SYSTEM(cfl::syst::CameraController);
     REGISTER_SYSTEM(cfl::syst::DeferredRenderer);
     REGISTER_SYSTEM(cfl::syst::EcsDebugger);

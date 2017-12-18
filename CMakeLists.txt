@@ -149,6 +149,7 @@ set(HH_FILES
         src/conflagrant/assets/loaders/ModelLoader.hh
         src/conflagrant/assets/loaders/TextureLoader.hh
         src/conflagrant/components/ActiveCamera.hh
+        src/conflagrant/components/VelocityAnimation.hh
         src/conflagrant/components/Mesh.hh
         src/conflagrant/components/Name.hh
         src/conflagrant/components/Guid.hh
@@ -158,10 +159,13 @@ set(HH_FILES
         src/conflagrant/components/OrthographicCamera.hh
         src/conflagrant/components/DirectionalLight.hh
         src/conflagrant/components/DirectionalLightShadow.hh
+        src/conflagrant/components/DirectionalLightAnimation.hh
         src/conflagrant/components/PointLight.hh
+        src/conflagrant/components/PeriodicalAnimation.hh
         src/conflagrant/components/Skydome.hh
         src/conflagrant/components/BoundingSphere.hh
         src/conflagrant/System.hh
+        src/conflagrant/systems/Animator.hh
         src/conflagrant/systems/CameraController.hh
         src/conflagrant/systems/EcsDebugger.hh
         src/conflagrant/systems/DeferredRenderer.hh
@@ -207,6 +211,7 @@ set(CC_FILES
         src/conflagrant/glfw/GlfwWindow.cc
         src/conflagrant/InputManager.cc
         src/conflagrant/Factory.cc
+        src/conflagrant/systems/Animator.cc
         src/conflagrant/systems/CameraController.cc
         src/conflagrant/systems/EcsDebugger.cc
         src/conflagrant/systems/DeferredRenderer.cc

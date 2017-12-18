@@ -6,8 +6,6 @@
 namespace cfl {
 class Engine;
 
-typedef double time_t;
-
 class Time final {
     static constexpr size_t NumFrameTimeSamples = 30;
 
