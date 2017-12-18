@@ -31,7 +31,7 @@ uniform float VoxelSize;
 
 out vec4 out_Color;
 
-vec3 TraceDiffuse(const vec3 Origin, const vec3 Direction) {
+vec3 TraceVoxelCone(const vec3 Origin, const vec3 Direction, const float MipmapFactor, const float ColorBoost) {
     vec3 color = vec3(0);
     float alpha = 0;
 
@@ -39,7 +39,7 @@ vec3 TraceDiffuse(const vec3 Origin, const vec3 Direction) {
     while(alpha < 1){
         vec3 worldPosition = Origin + t * Direction;
 
-        const float MipmapLevel = log2((1 + VCT_INDIRECT_SPREAD * t / VoxelSize));
+        const float MipmapLevel = MipmapFactor * log2((1 + VCT_INDIRECT_SPREAD * t / VoxelSize));
         const float SamplePower = (MipmapLevel + 1) * (MipmapLevel + 1);
 
         vec3 voxelCoordinates = GetUnitCubeCoordinates(worldPosition, VoxelCenter, VoxelHalfDimensions);
@@ -48,7 +48,8 @@ vec3 TraceDiffuse(const vec3 Origin, const vec3 Direction) {
         }
         voxelCoordinates = GetNormalizedCoordinatesFromUnitCubeCoordinates(voxelCoordinates);
         vec4 voxel = textureLod(VoxelizedScene, voxelCoordinates, min(VCT_MIPMAP_MAX, MipmapLevel));
-        voxel.a = MipmapLevel > 0 ? voxel.a : (Max(voxel.rgb) > 0 ? 1 : 0);
+        voxel.rgb *= 1 + ColorBoost;
+        voxel.a = floor(MipmapLevel) > 0 ? voxel.a : (voxel.a > 0 ? 1 : 0);
 
         AlphaBlend_FrontToBack(color, alpha, voxel.rgb, voxel.a);
         alpha += 0.001;
@@ -57,6 +58,13 @@ vec3 TraceDiffuse(const vec3 Origin, const vec3 Direction) {
     }
 
     return color * alpha;
+}
+
+vec3 ApplyIndirectSpecularLight(SurfaceInfo surf, vec3 EyeDir, float Diffusion) {
+    const vec3 Origin = surf.WorldPosition + surf.Normal * (1 + 4 * ISQRT2) * VoxelSize;
+    const vec3 Direction = normalize(reflect(-EyeDir, surf.Normal));
+
+    return surf.Diffuse * TraceVoxelCone(Origin, Direction, Diffusion, Diffusion);
 }
 
 vec3 ApplyIndirectDiffuseLight(SurfaceInfo surf) {
@@ -72,11 +80,11 @@ vec3 ApplyIndirectDiffuseLight(SurfaceInfo surf) {
     const vec3 BPos = normalize(mix(surf.Normal,  Bitangent, VCT_INDIRECT_ORTHOGONALITY));
     const vec3 BNeg = normalize(mix(surf.Normal, -Bitangent, VCT_INDIRECT_ORTHOGONALITY));
 
-    result += VCT_INDIRECT_NORMAL_WEIGHT * TraceDiffuse(Origin + VCT_INDIRECT_OFFSET * surf.Normal, surf.Normal);
-    result += VCT_INDIRECT_SIDE_WEIGHT   * TraceDiffuse(Origin + VCT_INDIRECT_OFFSET * Tangent,     TPos);
-    result += VCT_INDIRECT_SIDE_WEIGHT   * TraceDiffuse(Origin - VCT_INDIRECT_OFFSET * Tangent,     TNeg);
-    result += VCT_INDIRECT_SIDE_WEIGHT   * TraceDiffuse(Origin + VCT_INDIRECT_OFFSET * Bitangent,   BPos);
-    result += VCT_INDIRECT_SIDE_WEIGHT   * TraceDiffuse(Origin - VCT_INDIRECT_OFFSET * Bitangent,   BNeg);
+    result += VCT_DIFFUSE_NORMAL_WEIGHT * TraceVoxelCone(Origin + VCT_INDIRECT_OFFSET * surf.Normal, surf.Normal, 1, 0);
+    result += VCT_DIFFUSE_SIDE_WEIGHT   * TraceVoxelCone(Origin + VCT_INDIRECT_OFFSET * Tangent,     TPos, 1, 0);
+    result += VCT_DIFFUSE_SIDE_WEIGHT   * TraceVoxelCone(Origin - VCT_INDIRECT_OFFSET * Tangent,     TNeg, 1, 0);
+    result += VCT_DIFFUSE_SIDE_WEIGHT   * TraceVoxelCone(Origin + VCT_INDIRECT_OFFSET * Bitangent,   BPos, 1, 0);
+    result += VCT_DIFFUSE_SIDE_WEIGHT   * TraceVoxelCone(Origin - VCT_INDIRECT_OFFSET * Bitangent,   BNeg, 1, 0);
 
     return surf.Diffuse * result;
 }
@@ -107,7 +115,8 @@ void main(void) {
                                         directionalLights[i].VP * vec4(surf.WorldPosition, 1), E);
     }
 
-    result += VCT_INDIRECT_STRENGTH * ApplyIndirectDiffuseLight(surf);
+    result += VCT_DIFFUSE_STRENGTH * ApplyIndirectDiffuseLight(surf);
+    result += VCT_SPECULAR_STRENGTH * ApplyIndirectSpecularLight(surf, E, VCT_SPECULAR_DIFFUSION);
 
     if (numPointLights == 0 && numDirectionalLights == 0) {
         result = surf.Diffuse;
