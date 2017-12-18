@@ -60,7 +60,7 @@ struct Window {
 
     virtual bool BeginFrame() = 0;
 
-    virtual bool FinishFrame() = 0;
+    virtual bool FinishFrame(bool renderGui = true) = 0;
 
     virtual uvec2 GetSize() const = 0;
 

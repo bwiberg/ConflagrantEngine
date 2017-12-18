@@ -41,7 +41,22 @@ class Engine {
 
     bool SaveEntity(entityx::Entity &entity, Json::Value &json);
 
+    void ToggleRecording(bool shouldRecord);
+
+    void RecordFrame();
+
+    struct {
+        bool isRecording{false};
+        int *buffer{nullptr};
+        uvec2 size;
+        FILE* ffmpeg{nullptr};
+
+        uint const FPS = 60;
+    } Recording;
+
     bool shouldStop;
+
+    bool isGuiEnabled{false};
 
     std::vector<std::shared_ptr<System>> systemVector;
 

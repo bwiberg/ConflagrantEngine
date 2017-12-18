@@ -124,6 +124,7 @@ add_definitions(-DBUILTIN_ASSETS_DIR="${CFL_BUILTIN_ASSETS_DIR}")
 ################################################
 
 set(HH_FILES
+        src/conflagrant/homedirectory.hh
         src/conflagrant/conflagrant.hh
         src/conflagrant/logging.hh
         src/conflagrant/math.hh

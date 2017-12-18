@@ -1,9 +1,11 @@
 #include "Engine.hh"
 #include "Time.hh"
+#include "homedirectory.hh"
 
 #include <conflagrant/ComponentFactory.hh>
 
 #include <fstream>
+#include <iomanip>
 
 namespace cfl {
 Engine::Engine(std::shared_ptr<Window> window)
@@ -245,12 +247,25 @@ int Engine::Run(bool singleTimestep) {
     Time::previousFrameTime = Time::currentFrameTime = 0;
     do {
         dollar::clear();
-        Time::RecordCurrentFrameTime(window->GetTime());
+
+        if (Recording.isRecording) {
+            Time::ForceSetDeltaTime(1.0 / Recording.FPS);
+        } else {
+            Time::RecordCurrentFrameTime(window->GetTime());
+        }
 
         if (input) {
             input->ProcessInput();
             if (input->GetKey(Key::ESCAPE)) {
                 break;
+            }
+
+            if (input->AllKeysHeldAtLeastOneKeyDown({Key::LEFT_CONTROL, Key::U})) {
+                isGuiEnabled = !isGuiEnabled;
+            }
+
+            if (input->AllKeysHeldAtLeastOneKeyDown({Key::LEFT_CONTROL, Key::R})) {
+                ToggleRecording(!Recording.isRecording);
             }
         }
 
@@ -269,7 +284,12 @@ int Engine::Run(bool singleTimestep) {
         }
         ImGui::End();
 
-        if (window) window->FinishFrame();
+        if (window) window->FinishFrame(isGuiEnabled);
+
+        if (Recording.isRecording) {
+            RecordFrame();
+        }
+
         dollar::clear();
 
         if (currentScenePath && input->AllKeysHeldAtLeastOneKeyDown({Key::LEFT_CONTROL, Key::S})) {
@@ -384,5 +404,57 @@ bool Engine::SaveEntity(entityx::Entity &entity, Json::Value &json) {
     }
 
     return true;
+}
+
+void Engine::ToggleRecording(bool shouldRecord) {
+    if (shouldRecord) {
+        Recording.size = window->GetSize();
+        Recording.buffer = new int[Recording.size.x * Recording.size.y];
+
+        Path path(GetHomeDirectory());
+        if (!path.exists()) {
+            LOG_ERROR(cfl::Engine::ToggleRecording) << "No home path";
+            return;
+        }
+
+        path = path / "conflagrant_recording.mp4";
+
+        std::string const filename = path.str();
+        std::string const resolution = std::to_string(Recording.size.x) + "x" + std::to_string(Recording.size.y);
+
+        // start ffmpeg telling it to expect raw rgba 60hz frames
+        // -i - tells it to read frames from stdin
+        std::stringstream ss;
+
+        ss << "ffmpeg -r " << Recording.FPS
+           << " -f rawvideo -pix_fmt rgba -s " << resolution
+           << " -i - -threads 0 -preset fast -y -pix_fmt yuv420p -crf 21 -vf vflip "
+           << filename;
+
+        // open pipe to ffmpeg's stdin in binary write mode
+        Recording.ffmpeg = popen(ss.str().c_str(), "w");
+
+        Recording.isRecording = shouldRecord;
+
+    } else {
+        pclose(Recording.ffmpeg);
+        delete[] Recording.buffer;
+        Recording.buffer = nullptr;
+        Recording.ffmpeg = nullptr;
+        Recording.isRecording = false;
+    }
+}
+
+void Engine::RecordFrame() {
+    if (window->GetSize() != Recording.size) {
+        ToggleRecording(false);
+        return;
+    }
+
+    OGL(glReadPixels(0, 0, Recording.size.x, Recording.size.x, GL_RGBA, GL_UNSIGNED_BYTE,
+                     Recording.buffer));
+    fwrite(Recording.buffer,
+           sizeof(int) * Recording.size.x * Recording.size.y, 1,
+           Recording.ffmpeg);
 }
 } // namespace cfl

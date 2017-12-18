@@ -21,6 +21,8 @@ class Time final {
 
     static void RecordCurrentFrameTime(time_t time);
 
+    static void ForceSetDeltaTime(time_t deltaTime);
+
 public:
     static time_t CurrentTime();
 

@@ -14,6 +14,10 @@ void Time::RecordCurrentFrameTime(time_t time) {
     Time::FrameTimeSamples[Time::CurrentFrameTimeIndex] = time;
 }
 
+void Time::ForceSetDeltaTime(time_t deltaTime) {
+    RecordCurrentFrameTime(Time::currentFrameTime + deltaTime);
+}
+
 time_t Time::CurrentTime() {
     return (currentFrameTime);
 }

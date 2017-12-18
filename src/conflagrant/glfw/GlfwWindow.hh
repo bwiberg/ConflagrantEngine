@@ -78,7 +78,7 @@ public:
 
     bool BeginFrame() override;
 
-    bool FinishFrame() override;
+    bool FinishFrame(bool renderGui = true) override;
 
     uvec2 GetSize() const override;
 

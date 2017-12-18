@@ -366,9 +366,14 @@ bool GlfwWindow::BeginFrame() {
     return false;
 }
 
-bool GlfwWindow::FinishFrame() {
+bool GlfwWindow::FinishFrame(bool renderGui) {
     $
-    ImGui::Render();
+    if (renderGui) {
+        ImGui::Render();
+    } else {
+        ImGui::EndFrame();
+    }
+
     GLFW_RETURN_FALSE(glfwSwapBuffers(window));
     return true;
 }
