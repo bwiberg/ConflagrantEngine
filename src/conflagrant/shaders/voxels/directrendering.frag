@@ -37,7 +37,10 @@ void main(void) {
 
         voxelCoordinates = GetNormalizedCoordinatesFromUnitCubeCoordinates(voxelCoordinates);
 		vec4 texel = textureLod(VoxelizedScene, voxelCoordinates, MipmapLevel);
-		texel.a = MipmapLevel > 0 ? texel.a : (Max(texel.rgb) > 0 ? 1 : 0);
+
+		if (MipmapLevel == 0) {
+            texel.a = texel.a > 0 ? 1 : 0;
+		}
 
         AlphaBlend_FrontToBack(color, alpha, texel.rgb, texel.a);
 	}

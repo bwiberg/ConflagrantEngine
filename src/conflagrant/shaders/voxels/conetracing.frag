@@ -49,10 +49,12 @@ vec3 TraceVoxelCone(const vec3 Origin, const vec3 Direction, const float MipmapF
         voxelCoordinates = GetNormalizedCoordinatesFromUnitCubeCoordinates(voxelCoordinates);
         vec4 voxel = textureLod(VoxelizedScene, voxelCoordinates, min(VCT_MIPMAP_MAX, MipmapLevel));
         voxel.rgb *= 1 + ColorBoost;
-        voxel.a = floor(MipmapLevel) > 0 ? voxel.a : (voxel.a > 0 ? 1 : 0);
+
+        if (MipmapLevel < 1) {
+            voxel.a = voxel.a > 0 ? 0 : 1;
+        }
 
         AlphaBlend_FrontToBack(color, alpha, voxel.rgb, voxel.a);
-        alpha += 0.001;
 
         t += SamplePower * VoxelSize;
     }
@@ -102,6 +104,11 @@ void main(void) {
     surf.WorldPosition = texture(GPosition, fIn_TexCoord).xyz;
     TextureVec3AndFloat(GNormalShininess, fIn_TexCoord, surf.Normal, surf.Shininess);
     TextureVec3AndFloat(GAlbedoSpecular, fIn_TexCoord, surf.Diffuse, surf.Specular);
+
+    if (length(surf.Normal) < 0.1) {
+        // invalid normal => no fragment here
+        discard;
+    }
 
     vec3 E = normalize(EyePos - surf.WorldPosition);
 

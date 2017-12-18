@@ -45,8 +45,7 @@ void main(void){
     }
 
     vec4 diffuse = GetPropertyColor(material.diffuse, fIn_TexCoord);
-    float alpha = diffuse.a;
-    if (alpha < 1.0 / 255) {
+    if (diffuse.a < 1.0 / 255) {
         discard;
     }
 
@@ -77,5 +76,4 @@ void main(void){
 
     ivec3 imageCoords = GetIntegerCoordinatesFromNormalizedTextureCoordinates(imageSize(VoxelizedScene), voxelCoordinates);
     ImageAtomicAverageRGBA8(VoxelizedScene, imageCoords, result);
-    // imageStore(VoxelizedScene, imageCoords, vec4(result, alpha));
 }

@@ -288,6 +288,8 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
 
                 auto computeSize = static_cast<GLuint>(GetActualVoxelTextureSize() / 2);
                 for (decltype(VCT.mipmapLevels) level = 0; level < VCT.mipmapLevels; ++level) {
+                    mipmapShader->Uniform("IsFirstLevel", 1 - math::Clamp(level, 0, 1));
+
                     mipmapShader->Texture("ImageSource", 0, *voxelTexture);
                     OGL(glBindImageTexture(0, voxelTexture->ID(), level, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8));
                     mipmapShader->Texture("ImageMipmap", 1, *voxelTexture);
