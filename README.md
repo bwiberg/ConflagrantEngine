@@ -22,7 +22,7 @@ make
 
 ### MacOS
 
-**_Not tested yet_**
+**_Does not work at the moment, but the following should be a good start_**
 
 ```shell
 brew install glm jsoncpp assimp
@@ -34,6 +34,8 @@ make
 ```
 
 ### Windows...
+
+**_Does not work at the moment, but the following should be a good start_**
 
 Install these libraries (preferred way is to build from source). Add their base directories to the [Path](https://stackoverflow.com/a/28545224) env. variable.
 * [GLEW](http://glew.sourceforge.net/index.html)
