@@ -20,6 +20,7 @@
 #include <conflagrant/math.hh>
 
 #include <entityx/Entity.h>
+#include <conflagrant/components/VctProperties.hh>
 
 namespace cfl {
 inline entityx::Entity GetActiveCamera(entityx::EntityManager &entities,
@@ -112,8 +113,9 @@ void RenderSkydomes(entityx::EntityManager &entities,
 
 template<bool UseDiffuse = true, bool UseSpecular = true, bool UseNormal = true, bool UseShininess = true>
 void RenderModel(comp::Transform &transform, comp::Model &model,
-                        gl::Shader &shader, GLenum const nextTextureUnit,
-                        RenderStats &renderStats, geometry::Frustum const *frustum = nullptr);
+                 comp::VctProperties const *vctProperties,
+                 gl::Shader &shader, GLenum const nextTextureUnit,
+                 RenderStats &renderStats, geometry::Frustum const *frustum = nullptr);
 
 template<bool UseDiffuse = true, bool UseSpecular = true, bool UseNormal = true, bool UseShininess = true>
 void RenderModels(entityx::EntityManager &entities, gl::Shader &shader,
@@ -413,6 +415,7 @@ inline void RenderSkydomes(entityx::EntityManager &entities,
 
 template<bool UseDiffuse = true, bool UseSpecular = true, bool UseNormal = true, bool UseShininess = true>
 inline void RenderModel(comp::Transform &transform, comp::Model &model,
+                        comp::VctProperties const *vctProperties,
                         gl::Shader &shader, GLenum const nextTextureUnit,
                         RenderStats &renderStats, geometry::Frustum const *frustum) {
     static constexpr bool UseMaterial = UseDiffuse || UseSpecular || UseNormal || UseShininess;
@@ -482,6 +485,21 @@ inline void RenderModel(comp::Transform &transform, comp::Model &model,
                 shader.Uniform(prefix + "shininess", material.shininess);
                 renderStats.UniformCalls++;
             }
+
+            if (vctProperties) {
+                shader.Uniform(prefix + "radiance", vctProperties->radiance);
+                shader.Uniform(prefix + "specular.color", vec3(vctProperties->specularReflectance));
+                shader.Uniform(prefix + "specular.hasMap", 0);
+                if (material.specularTexture != nullptr) {
+                    textureCount--;
+                }
+
+                renderStats.UniformCalls += 2;
+            } else {
+                shader.Uniform(prefix + "radiance", 0.0f);
+                renderStats.UniformCalls++;
+            }
+
         }
 
         if (RenderMesh) {
@@ -536,7 +554,15 @@ inline void RenderModels(entityx::EntityManager &entities,
             }
         }
 
-        RenderModel<UseDiffuse, UseSpecular, UseNormal, UseShininess>(*transform, *model, shader, nextTextureUnit,
+        comp::VctProperties *vctProperties = nullptr;
+        auto c = entity.component<comp::VctProperties>();
+        if (c) {
+            vctProperties = &(*c);
+        }
+
+        RenderModel<UseDiffuse, UseSpecular, UseNormal, UseShininess>(*transform, *model,
+                                                                      vctProperties,
+                                                                      shader, nextTextureUnit,
                                                                       renderStats, frustum);
         renderStats.ModelsRendered++;
     }

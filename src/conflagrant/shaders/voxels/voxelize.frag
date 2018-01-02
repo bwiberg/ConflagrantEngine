@@ -55,6 +55,7 @@ void main(void){
     surf.Diffuse = diffuse.rgb;
     surf.Specular = 0; // max(max(specular.r, specular.g), specular.b);
     surf.Shininess = max(1, material.shininess);
+    surf.Radiance = material.radiance;
 
     vec3 E = normalize(EyePos - fIn_WorldPosition);
 
@@ -68,7 +69,7 @@ void main(void){
             fIn_DirectionalLightSpacePositions[i], E);
     }
 
-    //result += 0.1 * diffuse.rgb;
+    result += surf.Diffuse * surf.Radiance;
 
     if (numPointLights == 0 && numDirectionalLights == 0) {
         result = diffuse.rgb;

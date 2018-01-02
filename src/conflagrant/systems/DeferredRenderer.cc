@@ -42,13 +42,13 @@ bool syst::DeferredRenderer::UpdateFramebuffer(GLsizei const width, GLsizei cons
     framebuffer = std::make_shared<gl::Framebuffer>(width, height);
     framebuffer->Bind();
 
-    positionTexture = std::make_shared<gl::Texture2D>(width, height,
-                                                      GL_RGB16F, GL_RGB, GL_FLOAT, nullptr);
-    positionTexture->Bind();
-    positionTexture->TexParameter(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    positionTexture->TexParameter(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    framebuffer->Attach(GL_COLOR_ATTACHMENT0, positionTexture);
-    positionTexture->Unbind();
+    positionRadianceTexture = std::make_shared<gl::Texture2D>(width, height,
+                                                              GL_RGBA16F, GL_RGBA, GL_FLOAT, nullptr);
+    positionRadianceTexture->Bind();
+    positionRadianceTexture->TexParameter(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    positionRadianceTexture->TexParameter(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    framebuffer->Attach(GL_COLOR_ATTACHMENT0, positionRadianceTexture);
+    positionRadianceTexture->Unbind();
 
     normalShininessTexture = std::make_shared<gl::Texture2D>(width, height,
                                                              GL_RGBA16F, GL_RGBA, GL_FLOAT, nullptr);
@@ -94,6 +94,22 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
         return factory->GetName() == "DeferredRenderer";
     });
     if (itForward < itDeferred) return;
+
+    /////////////
+    // hotkeys //
+    /////////////
+
+#define TOGGLE(boolean) (boolean) = !(boolean)
+#define TOGGLE_ON_KEY(key, boolean) if (input->GetKeyDown(key)) { TOGGLE(boolean); }
+
+    TOGGLE_ON_KEY(Key::V, useVoxelConeTracing);
+    TOGGLE_ON_KEY(Key::DIGIT_0, VCT.useDirectVoxelRendering);
+    TOGGLE_ON_KEY(Key::DIGIT_1, VCT.useDirectLighting);
+    TOGGLE_ON_KEY(Key::DIGIT_2, VCT.useIndirectDiffuseLighting);
+    TOGGLE_ON_KEY(Key::DIGIT_3, VCT.useIndirectSpecularLighting);
+
+#undef TOGGLE_ON_KEY
+#undef TOGGLE
 
     uvec2 size = window->GetSize();
     auto const width = static_cast<GLsizei>(size.x);
@@ -349,17 +365,25 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
                 voxelConeTracingShader->Uniform("P", P);
                 voxelConeTracingShader->Uniform("EyePos", cameraTransform->Position());
                 voxelConeTracingShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
-                voxelConeTracingShader->Texture("GPosition", voxelConeTracingShaderTextureCount++, *positionTexture);
+                voxelConeTracingShader->Texture("GPositionRadiance", voxelConeTracingShaderTextureCount++, *positionRadianceTexture);
                 voxelConeTracingShader->Texture("GNormalShininess", voxelConeTracingShaderTextureCount++, *normalShininessTexture);
                 voxelConeTracingShader->Texture("GAlbedoSpecular", voxelConeTracingShaderTextureCount++, *albedoSpecularTexture);
 
                 voxelConeTracingShader->Texture("VoxelizedScene", voxelConeTracingShaderTextureCount++, *voxelTexture);
                 voxelConeTracingShader->Uniform("VoxelHalfDimensions", vec3(VCT.halfDimensions));
                 voxelConeTracingShader->Uniform("VoxelCenter", VCT.center);
+
                 // todo verify
                 voxelConeTracingShader->Uniform("VoxelSize", VCT.halfDimensions / GetActualVoxelTextureSize());
 
-                renderStats.UniformCalls += 11;
+                voxelConeTracingShader->Uniform("DirectMultiplier",
+                                                VCT.useDirectLighting ? 1.f : 0.f);
+                voxelConeTracingShader->Uniform("IndirectDiffuseMultiplier",
+                                                VCT.useIndirectDiffuseLighting ? 1.f : 0.f);
+                voxelConeTracingShader->Uniform("IndirectSpecularMultiplier",
+                                                VCT.useIndirectSpecularLighting ? 1.f : 0.f);
+
+                renderStats.UniformCalls += 14;
 
                 OGL(glEnable(GL_CULL_FACE));
                 OGL(glCullFace(GL_BACK));
@@ -424,7 +448,7 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
             lightsShader->Uniform("P", P);
             lightsShader->Uniform("EyePos", cameraTransform->Position());
             lightsShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
-            lightsShader->Texture("GPosition", lightsShaderTextureCount++, *positionTexture);
+            lightsShader->Texture("GPositionRadiance", lightsShaderTextureCount++, *positionRadianceTexture);
             lightsShader->Texture("GNormalShininess", lightsShaderTextureCount++, *normalShininessTexture);
             lightsShader->Texture("GAlbedoSpecular", lightsShaderTextureCount++, *albedoSpecularTexture);
             renderStats.UniformCalls += 7;

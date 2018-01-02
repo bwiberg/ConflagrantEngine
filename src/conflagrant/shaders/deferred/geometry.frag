@@ -12,7 +12,7 @@ uniform Material material;
 uniform float time;
 uniform vec3 EyePos;
 
-layout (location = 0) out vec3 GPosition;
+layout (location = 0) out vec4 GPositionRadiance;
 layout (location = 1) out vec4 GNormalShininess;
 layout (location = 2) out vec4 GAlbedoSpecular;
 
@@ -34,7 +34,8 @@ void main(void) {
 
     // write to GBuffer
 
-    GPosition.xyz = fIn_WorldPosition;
+    GPositionRadiance.xyz = fIn_WorldPosition;
+    GPositionRadiance.w = material.radiance / VCT_RADIANCE_MAX;
 
     GNormalShininess.xyz = N;
     GNormalShininess.w = shininess;

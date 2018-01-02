@@ -275,14 +275,15 @@ int Engine::Run(bool singleTimestep) {
             factory->Update(*systems, *entities, *events);
             ss << factory->GetName() << ", ";
         }
-        Log::DrawImGuiWindow();
 
-        ImGui::Begin("Performance");
-        if (ImGui::Button("Save chrome://tracing file")) {
-            std::ofstream file("/home/bwiberg/confl.json");
-            dollar::chrome(file);
-        }
-        ImGui::End();
+//        Log::DrawImGuiWindow();
+
+//        ImGui::Begin("Performance");
+//        if (ImGui::Button("Save chrome://tracing file")) {
+//            std::ofstream file("/home/bwiberg/confl.json");
+//            dollar::chrome(file);
+//        }
+//        ImGui::End();
 
         if (window) window->FinishFrame(isGuiEnabled);
 

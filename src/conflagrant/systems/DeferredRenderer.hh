@@ -52,6 +52,8 @@ private:
         cfl::time_t timeOfLastMipmapGeneration{std::numeric_limits<cfl::time_t>::min()};
         bool useComputeShaderMipmapper{true};
 
+        bool useDirectLighting{true}, useIndirectDiffuseLighting{true}, useIndirectSpecularLighting{true};
+
         bool useDirectVoxelRendering{true};
         struct {
             int mipmapLevel{0}, raymarchingSteps{32};
@@ -67,7 +69,7 @@ private:
 #endif // ENABLE_VOXEL_CONE_TRACING
 
     std::shared_ptr<gl::Framebuffer> framebuffer;
-    std::shared_ptr<gl::Texture2D> positionTexture, normalShininessTexture, albedoSpecularTexture;
+    std::shared_ptr<gl::Texture2D> positionRadianceTexture, normalShininessTexture, albedoSpecularTexture;
     std::shared_ptr<gl::Renderbuffer> depthRenderbuffer;
 
     RenderStats renderStats;

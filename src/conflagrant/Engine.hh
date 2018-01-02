@@ -46,7 +46,7 @@ class Engine {
     void RecordFrame();
 
     struct {
-        bool isRecording{false};
+        bool isRecording{false}, captureGui{false};
         int *buffer{nullptr};
         uvec2 size;
         FILE* ffmpeg{nullptr};

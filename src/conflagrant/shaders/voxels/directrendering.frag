@@ -3,6 +3,7 @@
 #include "common/Blending.glsl"
 #include "common/ComponentWise.glsl"
 #include "common/Definitions.glsl"
+#include "common/Random.glsl"
 #include "voxels/common/util.glsl"
 
 in vec3 fIn_RayOrigin;
@@ -29,8 +30,10 @@ void main(void) {
     vec3 color = vec3(0);
     float alpha = 0;
 
+    float offset = RAYMARCH_MAX_OFFSET * random(vec4(fIn_RayOrigin, fIn_RayDirection.x));
+
 	for(int i = 0; i < N && alpha < BreakOnAlpha; ++i) {
-	    vec3 worldPosition = fIn_RayOrigin + EASE(i * fraction) * RenderDistance * fIn_RayDirection;
+	    vec3 worldPosition = fIn_RayOrigin + (offset + EASE(i * fraction) * RenderDistance) * fIn_RayDirection;
 
         vec3 voxelCoordinates = GetUnitCubeCoordinates(worldPosition, VoxelCenter, VoxelHalfDimensions);
         if(!IsWithinVoxelColume(voxelCoordinates)) continue;

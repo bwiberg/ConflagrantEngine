@@ -24,7 +24,7 @@ struct Name {
         $
         size_t constexpr BufferSize = 1024;
         char buf[BufferSize] = {'\0'};
-        name.value.copy(buf, BufferSize);
+        name.value.copy(buf, std::min(BufferSize, name.value.size()));
         if (ImGui::InputText("Text", buf, IM_ARRAYSIZE(buf))) {
             name.value = string(buf);
         }

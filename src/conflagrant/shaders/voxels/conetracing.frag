@@ -17,7 +17,7 @@ uniform int numPointLights = 0;
 uniform DirectionalLight directionalLights[MAX_DIRECTIONALLIGHTS];
 uniform int numDirectionalLights = 0;
 
-uniform sampler2D GPosition;
+uniform sampler2D GPositionRadiance;
 uniform sampler2D GNormalShininess;
 uniform sampler2D GAlbedoSpecular;
 
@@ -28,6 +28,10 @@ uniform sampler3D VoxelizedScene;
 uniform vec3 VoxelHalfDimensions;
 uniform vec3 VoxelCenter;
 uniform float VoxelSize;
+
+uniform float DirectMultiplier = 1.0;
+uniform float IndirectDiffuseMultiplier = 1.0;
+uniform float IndirectSpecularMultiplier = 1.0;
 
 out vec4 out_Color;
 
@@ -50,13 +54,13 @@ vec3 TraceVoxelCone(const vec3 Origin, const vec3 Direction, const float MipmapF
         vec4 voxel = textureLod(VoxelizedScene, voxelCoordinates, min(VCT_MIPMAP_MAX, MipmapLevel));
         voxel.rgb *= 1 + ColorBoost;
 
-        if (MipmapLevel < 1) {
-            voxel.a = voxel.a > 0 ? 0 : 1;
+        if (MipmapLevel == 0) {
+            voxel.a = voxel.a > 0 ? 1 : 0;
         }
 
         AlphaBlend_FrontToBack(color, alpha, voxel.rgb, voxel.a);
 
-        t += SamplePower * VoxelSize;
+        t += CONETRACING_STEP_FACTOR * SamplePower * VoxelSize * VoxelHalfDimensions.x;
     }
 
     return color * alpha;
@@ -101,7 +105,8 @@ void main(void) {
     vec3 result = vec3(0, 0, 0);
 
     SurfaceInfo surf;
-    surf.WorldPosition = texture(GPosition, fIn_TexCoord).xyz;
+    TextureVec3AndFloat(GPositionRadiance, fIn_TexCoord, surf.WorldPosition, surf.Radiance);
+    surf.Radiance *= VCT_RADIANCE_MAX;
     TextureVec3AndFloat(GNormalShininess, fIn_TexCoord, surf.Normal, surf.Shininess);
     TextureVec3AndFloat(GAlbedoSpecular, fIn_TexCoord, surf.Diffuse, surf.Specular);
 
@@ -112,6 +117,7 @@ void main(void) {
 
     vec3 E = normalize(EyePos - surf.WorldPosition);
 
+    // calculate direct lighting
     int i;
     for (i = 0; i < numPointLights; i++) {
         result += ApplyPointLight(surf, pointLights[i], E);
@@ -121,9 +127,16 @@ void main(void) {
         result += ApplyDirectionalLight(surf, directionalLights[i],
                                         directionalLights[i].VP * vec4(surf.WorldPosition, 1), E);
     }
+    result *= DirectMultiplier;
 
-    result += VCT_DIFFUSE_STRENGTH * ApplyIndirectDiffuseLight(surf);
-    result += VCT_SPECULAR_STRENGTH * ApplyIndirectSpecularLight(surf, E, VCT_SPECULAR_DIFFUSION);
+    // emit light from radiant surfaces
+    result += surf.Diffuse * surf.Radiance;
+
+    // calculate indirect lighting
+    result += IndirectDiffuseMultiplier
+            * VCT_DIFFUSE_STRENGTH * ApplyIndirectDiffuseLight(surf);
+    result += IndirectSpecularMultiplier
+            * surf.Specular * VCT_SPECULAR_STRENGTH * ApplyIndirectSpecularLight(surf, E, surf.Specular);
 
     if (numPointLights == 0 && numDirectionalLights == 0) {
         result = surf.Diffuse;

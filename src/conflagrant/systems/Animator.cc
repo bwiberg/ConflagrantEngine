@@ -11,6 +11,19 @@
 namespace cfl {
 namespace syst {
 void Animator::update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) {
+    /////////////
+    // hotkeys //
+    /////////////
+
+#define TOGGLE(boolean) (boolean) = !(boolean)
+#define TOGGLE_ON_KEY(key, boolean) if (input->GetKeyDown(key)) { TOGGLE(boolean); }
+
+    TOGGLE_ON_KEY(Key::C, startAllNextFrame);
+    TOGGLE_ON_KEY(Key::B, stopAllNextFrame);
+
+#undef TOGGLE_ON_KEY
+#undef TOGGLE
+
     using entityx::ComponentHandle;
 
     ComponentHandle<comp::Transform> transform;
@@ -23,6 +36,9 @@ void Animator::update(entityx::EntityManager &entities, entityx::EventManager &e
     auto const delta = static_cast<float>(Time::DeltaTime());
 
     for (auto entity : entities.entities_with_components(transform, velocity)) {
+        velocity->isRunning |= startAllNextFrame;
+        velocity->isRunning &= !stopAllNextFrame;
+
         if (!velocity->isRunning) {
             continue;
         }
@@ -38,6 +54,9 @@ void Animator::update(entityx::EntityManager &entities, entityx::EventManager &e
     }
 
     for (auto entity : entities.entities_with_components(transform, period)) {
+        period->isRunning |= startAllNextFrame;
+        period->isRunning &= !stopAllNextFrame;
+
         if (!period->isRunning) {
             if (period->wasRunning) {
                 transform->Position(period->startPosition);
@@ -80,6 +99,9 @@ void Animator::update(entityx::EntityManager &entities, entityx::EventManager &e
     }
 
     for (auto entity : entities.entities_with_components(light, lightAnimation)) {
+        lightAnimation->isRunning |= startAllNextFrame;
+        lightAnimation->isRunning &= !stopAllNextFrame;
+
         if (!lightAnimation->isRunning) {
             continue;
         }
@@ -87,10 +109,17 @@ void Animator::update(entityx::EntityManager &entities, entityx::EventManager &e
         light->horizontal += delta * lightAnimation->horizontalSpeed;
         light->vertical   += delta * lightAnimation->verticalSpeed;
     }
+
+    startAllNextFrame = false;
+    stopAllNextFrame = false;
 }
 
 bool Animator::DrawWithImGui(Animator &sys, InputManager const &input) {
-    return false;
+    if (ImGui::Button("Start all")) {
+        sys.startAllNextFrame = true;
+    }
+
+    return true;
 }
 } // namespace syst
 } // namespace cfl

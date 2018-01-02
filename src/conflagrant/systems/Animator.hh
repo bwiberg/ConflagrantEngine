@@ -16,7 +16,7 @@ public:
     static constexpr auto SystemName = "Animator";
 
 private:
-
+    bool startAllNextFrame{false}, stopAllNextFrame{false};
 
 public:
     void update(entityx::EntityManager &entities, entityx::EventManager &events, entityx::TimeDelta dt) override;

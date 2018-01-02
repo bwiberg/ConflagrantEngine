@@ -10,6 +10,7 @@ struct Material {
     sampler2D normalMap;
     int hasNormalMap;
     float shininess;
+    float radiance;
 };
 
 vec4 GetPropertyColor(MaterialProperty prop, vec2 texCoord) {

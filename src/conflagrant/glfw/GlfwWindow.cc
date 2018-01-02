@@ -373,7 +373,6 @@ bool GlfwWindow::FinishFrame(bool renderGui) {
     } else {
         ImGui::EndFrame();
     }
-
     GLFW_RETURN_FALSE(glfwSwapBuffers(window));
     return true;
 }

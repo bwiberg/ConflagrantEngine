@@ -60,3 +60,16 @@ Next step is to build using CMake using one of the alternatives below:
 cd conflagrant/build/examples
 ./exampleN
 ```
+
+## Controls
+
+### DeferredRenderer
+
+* V: Toggle VCT pipeline
+    * 0: Toggle direct rendering
+    * 1: Toggle direct lighting
+    * 2: Toggle indirect diffuse lighting
+    * 3: Toggle indirect specular lighting
+* Left Shift + F: Toggle first-person camera controls
+* A: Start all animations
+* B: Stop all animations

@@ -165,6 +165,7 @@ set(HH_FILES
         src/conflagrant/components/PeriodicalAnimation.hh
         src/conflagrant/components/Skydome.hh
         src/conflagrant/components/BoundingSphere.hh
+        src/conflagrant/components/VctProperties.hh
         src/conflagrant/System.hh
         src/conflagrant/systems/Animator.hh
         src/conflagrant/systems/CameraController.hh

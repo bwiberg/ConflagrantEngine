@@ -4,4 +4,5 @@ struct SurfaceInfo {
     vec3 Diffuse;
     float Specular;
     float Shininess;
+    float Radiance;
 };

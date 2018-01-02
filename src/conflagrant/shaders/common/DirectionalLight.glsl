@@ -57,7 +57,7 @@ float ComputeVisibilityPoisson(SAMPLER2DSHADOW shadowMap, vec3 projCoords, float
     }
 
     for (int i = 0; i < POISSON_SAMPLES; ++i) {
-        int index = int(16.0 * random(seed, i)) % 16;
+        int index = int(16.0 * random(vec4(seed, i))) % 16;
         float closestDepth = SAMPLE_SHADOWMAP(shadowMap, (projCoords + vec3(poissonDisk[index], 0) / POISSON_VALUE), bias);
         shadow += projCoords.z - SHADOWMAP_BIAS < closestDepth ? 1.0 : 0.0;
     }

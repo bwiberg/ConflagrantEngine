@@ -23,6 +23,7 @@
 #include <conflagrant/components/BoundingSphere.hh>
 #include <conflagrant/components/VelocityAnimation.hh>
 #include <conflagrant/components/PeriodicalAnimation.hh>
+#include <conflagrant/components/VctProperties.hh>
 
 #include <conflagrant/systems/Animator.hh>
 #include <conflagrant/systems/CameraController.hh>
@@ -62,6 +63,10 @@ bool InitDefaults() {
     REGISTER_COMPONENT(cfl::comp::BoundingSphere);
     REGISTER_COMPONENT(cfl::comp::VelocityAnimation);
     REGISTER_COMPONENT(cfl::comp::PeriodicalAnimation);
+
+#ifdef ENABLE_VOXEL_CONE_TRACING
+    REGISTER_COMPONENT(cfl::comp::VctProperties);
+#endif // ENABLE_VOXEL_CONE_TRACING
 
     REGISTER_SYSTEM(cfl::syst::Animator);
     REGISTER_SYSTEM(cfl::syst::CameraController);
