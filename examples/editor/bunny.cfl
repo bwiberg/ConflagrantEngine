@@ -3,34 +3,6 @@
 	[
 		{
 			"Guid" : "d58ed905-a1fc-465a-93c2-145f2f89e7a7",
-			"Model" : "sponza_crytek/sponza.obj",
-			"Name" : "Sponza",
-			"Transform" : 
-			{
-				"orientation" : 
-				[
-					0.0,
-					0.0,
-					0.0,
-					1.0
-				],
-				"pivot" : 
-				[
-					0.0,
-					0.0,
-					0.0
-				],
-				"position" : 
-				[
-					0.0,
-					0.0,
-					0.0
-				],
-				"scale" : 0.0024999999441206455
-			}
-		},
-		{
-			"Guid" : "d58ed905-a1fc-465a-93c2-145f2f89e7a7",
 			"Model" : "bunny.obj",
 			"Name" : "Bunny",
 			"Transform" : 
@@ -50,16 +22,16 @@
 				],
 				"position" : 
 				[
-					-3.0350000858306885,
-					0.36000001430511475,
+					0.0,
+					0.5,
 					0.0
 				],
 				"scale" : 1.0
 			},
 			"VctProperties" : 
 			{
-				"radiance" : 0.0,
-				"specularReflectance" : 0.18000000715255737
+				"radiance" : 0.80000001192092896,
+				"specularReflectance" : 0.1900000125169754
 			}
 		},
 		{
@@ -81,10 +53,10 @@
 			{
 				"orientation" : 
 				[
-					0.043463177978992462,
-					-0.72033452987670898,
-					-0.045321732759475708,
-					-0.69077867269515991
+					0.16510054469108582,
+					0.8342287540435791,
+					0.35325342416763306,
+					-0.38989245891571045
 				],
 				"pivot" : 
 				[
@@ -94,9 +66,9 @@
 				],
 				"position" : 
 				[
-					-2.926842212677002,
-					0.46609631180763245,
-					-0.00509226368740201
+					-0.37425404787063599,
+					0.8212617039680481,
+					-0.29709523916244507
 				],
 				"scale" : 1.0
 			}
@@ -104,7 +76,7 @@
 		{
 			"DirectionalLight" : 
 			{
-				"castShadows" : true,
+				"castShadows" : false,
 				"color" : 
 				[
 					1.0,
@@ -112,7 +84,7 @@
 					1.0
 				],
 				"horizontal" : 252.00001525878906,
-				"intensity" : 2.0,
+				"intensity" : 0.10500000417232513,
 				"vertical" : 87.000007629394531
 			},
 			"DirectionalLightShadow" : 
@@ -136,6 +108,39 @@
 			"Skydome" : 
 			{
 				"texturePath" : "skydomes/sky12.jpg"
+			}
+		},
+		{
+			"Guid" : "e3d237db-a6dd-4aba-be6f-d71065aa74ba",
+			"Model" : "plane.obj",
+			"Name" : "Ground",
+			"Transform" : 
+			{
+				"orientation" : 
+				[
+					0.0,
+					0.0,
+					0.0,
+					1.0
+				],
+				"pivot" : 
+				[
+					0.0,
+					0.0,
+					0.0
+				],
+				"position" : 
+				[
+					0.0,
+					0.0,
+					0.0
+				],
+				"scale" : 1.9500000476837158
+			},
+			"VctProperties" : 
+			{
+				"radiance" : 0.0,
+				"specularReflectance" : 0.13000001013278961
 			}
 		}
 	],
@@ -161,16 +166,16 @@
 					"raymarchSteps" : 1024
 				},
 				"mipmapLevels" : 7,
-				"textureDimensionExponent" : 7,
+				"textureDimensionExponent" : 6,
 				"timeBetweenMipmapGeneration" : 0.0,
 				"useDirectVoxelRendering" : false,
 				"volumeCenter" : 
 				[
-					-0.20000000298023224,
+					0.0,
 					0.0,
 					0.0
 				],
-				"volumeHalfDimensions" : 3.7100002765655518
+				"volumeHalfDimensions" : 1.3100000619888306
 			}
 		}
 	]

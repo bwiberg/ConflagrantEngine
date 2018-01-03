@@ -3,7 +3,7 @@
 	[
 		{
 			"Guid" : "d58ed905-a1fc-465a-93c2-145f2f89e7a7",
-			"Model" : "sponza_crytek/sponza.obj",
+			"Model" : "san_miguel/san-miguel-low-poly.obj",
 			"Name" : "Sponza",
 			"Transform" : 
 			{
@@ -22,11 +22,11 @@
 				],
 				"position" : 
 				[
+					-13.27500057220459,
 					0.0,
-					0.0,
-					0.0
+					-5.4900002479553223
 				],
-				"scale" : 0.0024999999441206455
+				"scale" : 1.0
 			}
 		},
 		{
@@ -37,29 +37,45 @@
 			{
 				"orientation" : 
 				[
-					0.0,
-					0.0,
-					0.0,
-					1.0
+					-5.0765652304107789e-07,
+					0.059601049870252609,
+					-3.1803072175762281e-08,
+					-0.99822098016738892
 				],
 				"pivot" : 
 				[
-					-0.045000001788139343,
-					0.090000003576278687,
+					0.0,
+					0.070000000298023224,
 					0.0
 				],
 				"position" : 
 				[
-					-3.0350000858306885,
-					0.36000001430511475,
-					0.0
+					-1.0800000429153442,
+					1.6200001239776611,
+					-1.8100000619888306
 				],
-				"scale" : 1.0
+				"scale" : 9.4350004196166992
 			},
 			"VctProperties" : 
 			{
 				"radiance" : 0.0,
-				"specularReflectance" : 0.18000000715255737
+				"specularReflectance" : 0.74000000953674316
+			},
+			"VelocityAnimation" : 
+			{
+				"angularVelocity" : 
+				[
+					0.0,
+					0.81000006198883057,
+					0.0
+				],
+				"autoStart" : false,
+				"linearVelocity" : 
+				[
+					0.0,
+					0.0,
+					0.0
+				]
 			}
 		},
 		{
@@ -81,10 +97,10 @@
 			{
 				"orientation" : 
 				[
-					0.043463177978992462,
-					-0.72033452987670898,
-					-0.045321732759475708,
-					-0.69077867269515991
+					0.066904418170452118,
+					0.4056549072265625,
+					0.029788129031658173,
+					-0.9110875129699707
 				],
 				"pivot" : 
 				[
@@ -94,11 +110,27 @@
 				],
 				"position" : 
 				[
-					-2.926842212677002,
-					0.46609631180763245,
-					-0.00509226368740201
+					-4.7863402366638184,
+					1.716377854347229,
+					1.1536785364151001
 				],
 				"scale" : 1.0
+			},
+			"VelocityAnimation" : 
+			{
+				"angularVelocity" : 
+				[
+					0.0,
+					0.0,
+					0.0
+				],
+				"autoStart" : false,
+				"linearVelocity" : 
+				[
+					0.5,
+					0.05000000074505806,
+					0.20000000298023224
+				]
 			}
 		},
 		{
@@ -111,13 +143,19 @@
 					1.0,
 					1.0
 				],
-				"horizontal" : 252.00001525878906,
-				"intensity" : 2.0,
-				"vertical" : 87.000007629394531
+				"horizontal" : 400.83901977539062,
+				"intensity" : 1.0,
+				"vertical" : 77.688003540039062
+			},
+			"DirectionalLightAnimation" : 
+			{
+				"autoStart" : true,
+				"horizontalSpeed" : 2.2200000286102295,
+				"verticalSpeed" : -0.69999998807907104
 			},
 			"DirectionalLightShadow" : 
 			{
-				"distanceFromScene" : 10.0,
+				"distanceFromScene" : 30.0,
 				"height" : 4096,
 				"width" : 4096
 			},
@@ -125,9 +163,9 @@
 			"Name" : "DirectionalLight 0 (sun)",
 			"OrthographicCamera" : 
 			{
-				"far" : 15.0,
+				"far" : 48.0,
 				"near" : 1.0,
-				"scale" : 11.02500057220459
+				"scale" : 32.205001831054688
 			}
 		},
 		{
@@ -161,16 +199,16 @@
 					"raymarchSteps" : 1024
 				},
 				"mipmapLevels" : 7,
-				"textureDimensionExponent" : 7,
-				"timeBetweenMipmapGeneration" : 0.0,
+				"textureDimensionExponent" : 8,
+				"timeBetweenMipmapGeneration" : 0.05000000074505806,
 				"useDirectVoxelRendering" : false,
 				"volumeCenter" : 
 				[
-					-0.20000000298023224,
-					0.0,
-					0.0
+					1.5700000524520874,
+					8.7400007247924805,
+					-1.3200000524520874
 				],
-				"volumeHalfDimensions" : 3.7100002765655518
+				"volumeHalfDimensions" : 12.0
 			}
 		}
 	]
