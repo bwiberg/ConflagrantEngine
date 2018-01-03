@@ -5,6 +5,7 @@
 #include "common/Constants.glsl"
 #include "common/Definitions.glsl"
 #include "common/DirectionalLight.glsl"
+#include "common/ease/quadratic-in-out.glsl"
 #include "common/Lighting.glsl"
 #include "common/PointLight.glsl"
 #include "common/GeometryFunctions.glsl"
@@ -35,12 +36,15 @@ uniform float IndirectSpecularMultiplier = 1.0;
 
 out vec4 out_Color;
 
-vec3 TraceVoxelCone(const vec3 Origin, const vec3 Direction, const float MipmapFactor, const float ColorBoost) {
+vec3 TraceVoxelCone(const vec3 Origin, const vec3 Direction, const float MipmapFactor, const float ColorBoost,
+                    out float alpha, const uint MaxIterations) {
     vec3 color = vec3(0);
-    float alpha = 0;
+    alpha = 0;
 
     float t = VCT_INDIRECT_START_BIAS;
-    while(alpha < 1){
+    uint iteration = 0;
+
+    while(alpha < 1 && iteration++ < MaxIterations){
         vec3 worldPosition = Origin + t * Direction;
 
         const float MipmapLevel = MipmapFactor * log2((1 + VCT_INDIRECT_SPREAD * t / VoxelSize));
@@ -64,6 +68,16 @@ vec3 TraceVoxelCone(const vec3 Origin, const vec3 Direction, const float MipmapF
     }
 
     return color * alpha;
+}
+
+vec3 TraceVoxelCone(const vec3 Origin, const vec3 Direction, const float MipmapFactor, const float ColorBoost,
+                    out float alpha) {
+    return TraceVoxelCone(Origin, Direction, MipmapFactor, ColorBoost, alpha, 1000);
+}
+
+vec3 TraceVoxelCone(const vec3 Origin, const vec3 Direction, const float MipmapFactor, const float ColorBoost) {
+    float dummy;
+    return TraceVoxelCone(Origin, Direction, MipmapFactor, ColorBoost, dummy, 1000);
 }
 
 vec3 ApplyIndirectSpecularLight(SurfaceInfo surf, vec3 EyeDir, float Diffusion) {
@@ -95,6 +109,38 @@ vec3 ApplyIndirectDiffuseLight(SurfaceInfo surf) {
     return surf.Diffuse * result;
 }
 
+float ComputeOcclusion(SurfaceInfo surf) {
+    vec3 Tangent, Bitangent;
+    MakeOrthonormalBasisTBN(surf.Normal, Tangent, Bitangent);
+
+    const vec3 Origin = surf.WorldPosition + surf.Normal * (1 + 4 * ISQRT2) * VoxelSize;
+
+    const vec3 TPos = normalize(mix(surf.Normal,  Tangent,   VCT_INDIRECT_ORTHOGONALITY));
+    const vec3 TNeg = normalize(mix(surf.Normal, -Tangent,   VCT_INDIRECT_ORTHOGONALITY));
+    const vec3 BPos = normalize(mix(surf.Normal,  Bitangent, VCT_INDIRECT_ORTHOGONALITY));
+    const vec3 BNeg = normalize(mix(surf.Normal, -Bitangent, VCT_INDIRECT_ORTHOGONALITY));
+
+    float result = 0.0;
+    float coneAlpha;
+
+    TraceVoxelCone(Origin + VCT_OCCLUSION_OFFSET * surf.Normal, 2 * surf.Normal, 1, 0, coneAlpha, VCT_OCCLUSION_ITERS);
+    result += VCT_OCCLUSION_NORMAL_WEIGHT * coneAlpha;
+
+    TraceVoxelCone(Origin + VCT_OCCLUSION_OFFSET * Tangent,     2 * TPos, 1, 0, coneAlpha, VCT_OCCLUSION_ITERS);
+    result += VCT_OCCLUSION_SIDE_WEIGHT * coneAlpha;
+
+    TraceVoxelCone(Origin - VCT_OCCLUSION_OFFSET * Tangent,     2 * TNeg, 1, 0, coneAlpha, VCT_OCCLUSION_ITERS);
+    result += VCT_OCCLUSION_SIDE_WEIGHT * coneAlpha;
+
+    TraceVoxelCone(Origin + VCT_OCCLUSION_OFFSET * Bitangent,   2 * BPos, 1, 0, coneAlpha, VCT_OCCLUSION_ITERS);
+    result += VCT_OCCLUSION_SIDE_WEIGHT * coneAlpha;
+
+    TraceVoxelCone(Origin - VCT_OCCLUSION_OFFSET * Bitangent,   2 * BNeg, 1, 0, coneAlpha, VCT_OCCLUSION_ITERS);
+    result += VCT_OCCLUSION_SIDE_WEIGHT * coneAlpha;
+
+    return result;
+}
+
 void TextureVec3AndFloat(sampler2D sampler, vec2 texCoords, out vec3 outvec3, out float outfloat) {
     vec4 value = texture(sampler, texCoords);
     outvec3 = value.xyz;
@@ -117,14 +163,17 @@ void main(void) {
 
     vec3 E = normalize(EyePos - surf.WorldPosition);
 
+    const float occlusion = quadraticInOut(clamp(ComputeOcclusion(surf), 0, 1));
+    const float visibility = clamp(1 - VCT_OCCLUSION_STRENGTH * occlusion, 0, 1);
+
     // calculate direct lighting
     int i;
     for (i = 0; i < numPointLights; i++) {
-        result += ApplyPointLight(surf, pointLights[i], E);
+        result += visibility * ApplyPointLight(surf, pointLights[i], E);
     }
 
     for (i = 0; i < numDirectionalLights; i++) {
-        result += ApplyDirectionalLight(surf, directionalLights[i],
+        result += visibility * ApplyDirectionalLight(surf, directionalLights[i],
                                         directionalLights[i].VP * vec4(surf.WorldPosition, 1), E);
     }
     result *= DirectMultiplier;
@@ -132,18 +181,13 @@ void main(void) {
     // emit light from radiant surfaces
     result += surf.Diffuse * surf.Radiance;
 
+
     // calculate indirect lighting
-    result += IndirectDiffuseMultiplier
+    result += visibility * IndirectDiffuseMultiplier
             * VCT_DIFFUSE_STRENGTH * ApplyIndirectDiffuseLight(surf);
-    result += IndirectSpecularMultiplier
+    result += visibility * IndirectSpecularMultiplier
             * surf.Specular * VCT_SPECULAR_STRENGTH * ApplyIndirectSpecularLight(surf, E,
                                                         VCT_DIFFUSION_MULTIPLIER * surf.Specular);
-
-    if (numPointLights == 0 && numDirectionalLights == 0) {
-        result = surf.Diffuse;
-    }
-
-    //result = vec3(surf.Specular);
 
     out_Color = vec4(pow(result, vec3(GAMMA)), 1);
 }
