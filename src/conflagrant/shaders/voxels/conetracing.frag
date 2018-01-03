@@ -136,11 +136,14 @@ void main(void) {
     result += IndirectDiffuseMultiplier
             * VCT_DIFFUSE_STRENGTH * ApplyIndirectDiffuseLight(surf);
     result += IndirectSpecularMultiplier
-            * surf.Specular * VCT_SPECULAR_STRENGTH * ApplyIndirectSpecularLight(surf, E, surf.Specular);
+            * surf.Specular * VCT_SPECULAR_STRENGTH * ApplyIndirectSpecularLight(surf, E,
+                                                        VCT_DIFFUSION_MULTIPLIER * surf.Specular);
 
     if (numPointLights == 0 && numDirectionalLights == 0) {
         result = surf.Diffuse;
     }
+
+    //result = vec3(surf.Specular);
 
     out_Color = vec4(pow(result, vec3(GAMMA)), 1);
 }

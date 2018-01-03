@@ -29,7 +29,7 @@ void main(void) {
 
     vec3 N = fIn_WorldTBN[2];
     if (material.hasNormalMap != 0) {
-        N = 2.0 * texture(material.normalMap, fIn_TexCoord).rgb - vec3(1.0);
+        N = 2.0 * texture(material.normalMap, 1 - fIn_TexCoord).rgb - vec3(1.0);
         N = normalize(fIn_WorldTBN * N);
     }
 
