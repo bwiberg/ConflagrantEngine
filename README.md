@@ -1,5 +1,20 @@
-# :fire: conflagrant :fire:
+# :fire: Conflagrant Engine :fire:
 The Conflagrant graphics engine (OpenGL 4.0+).
+
+## Features
+
+* Entity-Component-System based implementation
+* Custom JSON-based scene format
+* GUI using Dear ImGui
+* Texture mapping for materials
+    * Diffuse maps
+    * Specular maps
+    * Normal maps
+* Shadow mapping for multiple directional lights
+* Frustum culling with bounding spheres
+* Voxel Cone Tracing
+    * Indirect diffuse/specular lighting
+    * Voxel-based Ambient Occlusion
 
 ## Installation
 
