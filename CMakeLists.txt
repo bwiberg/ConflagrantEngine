@@ -100,6 +100,23 @@ add_subdirectory(external/imgui)
 cfl_use_include_dir(external/imgui)
 cfl_use_library(imgui)
 
+add_library(FastNoise
+        external/FastNoise/FastNoise.h
+        external/FastNoise/FastNoise.cpp)
+cfl_use_library(FastNoise)
+
+add_library(FastNoiseSIMD
+        external/FastNoiseSIMD/FastNoiseSIMD/FastNoiseSIMD.h
+        external/FastNoiseSIMD/FastNoiseSIMD/FastNoiseSIMD.cpp
+        # external/FastNoiseSIMD/FastNoiseSIMD/FastNoiseSIMD_avx2.cpp
+        external/FastNoiseSIMD/FastNoiseSIMD/FastNoiseSIMD_avx512.cpp
+        external/FastNoiseSIMD/FastNoiseSIMD/FastNoiseSIMD_internal.h
+        external/FastNoiseSIMD/FastNoiseSIMD/FastNoiseSIMD_internal.cpp
+        external/FastNoiseSIMD/FastNoiseSIMD/FastNoiseSIMD_neon.cpp
+        external/FastNoiseSIMD/FastNoiseSIMD/FastNoiseSIMD_sse2.cpp)
+cfl_use_library(FastNoiseSIMD)
+cfl_use_include_dir(external/FastNoiseSIMD)
+
 cfl_use_include_dir(external)
 
 include_directories(${EXTERNAL_INCLUDE_DIRS})
