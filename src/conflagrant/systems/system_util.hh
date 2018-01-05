@@ -111,13 +111,11 @@ void RenderSkydomes(entityx::EntityManager &entities,
                     gl::Shader &shader, GLenum const nextTextureUnit,
                     RenderStats &renderStats, mat4 const &P, mat4 const &V);
 
-template<bool UseDiffuse = true, bool UseSpecular = true, bool UseNormal = true, bool UseShininess = true>
 void RenderModel(comp::Transform &transform, comp::Model &model,
                  comp::VctProperties const *vctProperties,
                  gl::Shader &shader, GLenum const nextTextureUnit,
                  RenderStats &renderStats, geometry::Frustum const *frustum = nullptr);
 
-template<bool UseDiffuse = true, bool UseSpecular = true, bool UseNormal = true, bool UseShininess = true>
 void RenderModels(entityx::EntityManager &entities, gl::Shader &shader,
                   GLenum const nextTextureUnit, RenderStats &renderStats, geometry::Frustum const *frustum = nullptr);
 
@@ -202,10 +200,9 @@ inline void RenderDirectionalLightShadows(entityx::EntityManager &entities,
             {
                 DOLLAR("Shadowmap: Render entities with Model")
                 if (cullModelsAndMeshes) {
-                    RenderModels<true, false, false, false>(entities, lightpassShader, 0, renderStats,
-                                                            &transformedFrustum);
+                    RenderModels(entities, lightpassShader, 0, renderStats, &transformedFrustum);
                 } else {
-                    RenderModels<true, false, false, false>(entities, lightpassShader, 0, renderStats);
+                    RenderModels(entities, lightpassShader, 0, renderStats);
                 }
             }
 
@@ -413,12 +410,10 @@ inline void RenderSkydomes(entityx::EntityManager &entities,
     }
 }
 
-template<bool UseDiffuse = true, bool UseSpecular = true, bool UseNormal = true, bool UseShininess = true>
 inline void RenderModel(comp::Transform &transform, comp::Model &model,
                         comp::VctProperties const *vctProperties,
                         gl::Shader &shader, GLenum const nextTextureUnit,
                         RenderStats &renderStats, geometry::Frustum const *frustum) {
-    static constexpr bool UseMaterial = UseDiffuse || UseSpecular || UseNormal || UseShininess;
     static constexpr bool RenderMesh = true;
 
     if (!model.value) {
@@ -430,61 +425,12 @@ inline void RenderModel(comp::Transform &transform, comp::Model &model,
     renderStats.UniformCalls++;
 
     for (auto const &part : model.value->parts) {
-        if (UseMaterial) {
+        {
             string const prefix = "material.";
             auto const &material = *part.second;
             auto textureCount = nextTextureUnit;
 
-            if (UseDiffuse) {
-                string const diffusePrefix = prefix + "diffuse.";
-                int hasDiffuseMap = (material.diffuseTexture != nullptr) ? 1 : 0;
-
-                shader.Uniform(diffusePrefix + "color", material.diffuseColor);
-                shader.Uniform(diffusePrefix + "hasMap", hasDiffuseMap);
-                renderStats.UniformCalls += 3;
-
-                if (hasDiffuseMap == 1) {
-                    shader.Texture(diffusePrefix + "map",
-                                   textureCount++,
-                                   material.diffuseTexture->texture);
-                    renderStats.UniformCalls++;
-                }
-
-            }
-
-            if (UseSpecular) {
-                string const specularPrefix = prefix + "specular.";
-                int hasSpecularMap = (material.specularTexture != nullptr) ? 1 : 0;
-
-                shader.Uniform(specularPrefix + "color", material.specularColor);
-                shader.Uniform(specularPrefix + "hasMap", hasSpecularMap);
-                renderStats.UniformCalls += 2;
-
-                if (hasSpecularMap == 1) {
-                    shader.Texture(specularPrefix + "map",
-                                   textureCount++,
-                                   material.specularTexture->texture);
-                    renderStats.UniformCalls++;
-                }
-            }
-
-            if (UseNormal) {
-                int hasNormalMap = (material.normalTexture != nullptr) ? 1 : 0;
-                shader.Uniform(prefix + "hasNormalMap", hasNormalMap);
-                renderStats.UniformCalls++;
-
-                if (hasNormalMap == 1) {
-                    shader.Texture(prefix + "normalMap",
-                                   textureCount++,
-                                   material.normalTexture->texture);
-                    renderStats.UniformCalls++;
-                }
-            }
-
-            if (UseShininess) {
-                shader.Uniform(prefix + "shininess", material.shininess);
-                renderStats.UniformCalls++;
-            }
+            material.Upload(shader, prefix, textureCount);
 
             if (vctProperties) {
                 shader.Uniform(prefix + "radiance", vctProperties->radiance);
@@ -526,7 +472,6 @@ inline void RenderModel(comp::Transform &transform, comp::Model &model,
     }
 };
 
-template<bool UseDiffuse = true, bool UseSpecular = true, bool UseNormal = true, bool UseShininess = true>
 inline void RenderModels(entityx::EntityManager &entities,
                          gl::Shader &shader, GLenum const nextTextureUnit,
                          RenderStats &renderStats, geometry::Frustum const *frustum) {
@@ -560,10 +505,10 @@ inline void RenderModels(entityx::EntityManager &entities,
             vctProperties = &(*c);
         }
 
-        RenderModel<UseDiffuse, UseSpecular, UseNormal, UseShininess>(*transform, *model,
-                                                                      vctProperties,
-                                                                      shader, nextTextureUnit,
-                                                                      renderStats, frustum);
+        RenderModel(*transform, *model,
+                    vctProperties,
+                    shader, nextTextureUnit,
+                    renderStats, frustum);
         renderStats.ModelsRendered++;
     }
 
