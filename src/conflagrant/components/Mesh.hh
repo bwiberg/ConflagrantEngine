@@ -6,6 +6,7 @@
 
 #include <conflagrant/GL.hh>
 #include <conflagrant/gl/Mesh.hh>
+#include <conflagrant/assets/Mesh.hh>
 
 #include <imgui.h>
 
@@ -19,14 +20,13 @@ struct Mesh {
 
     std::shared_ptr<assets::Mesh> value;
 
-    inline static bool Serialize(BaseSerializer const &serializer, Json::Value &json,
-                                 Mesh &mesh) {
-        $
-        return true;
-    }
-
     inline static bool DrawWithImGui(Mesh &mesh, InputManager const &input) {
-        $
+        if (mesh.value) {
+            ImGui::LabelText("Vertices", "%i", mesh.value->vertices.size());
+            ImGui::LabelText("Triangles", "%i", mesh.value->triangles.size());
+        } else {
+            ImGui::TextColored(ImVec4(1.f, .5f, .5f, 1.f), "nullptr");
+        }
         return true;
     }
 };

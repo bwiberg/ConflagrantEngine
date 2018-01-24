@@ -13,6 +13,8 @@
 #include <conflagrant/components/DirectionalLightShadow.hh>
 #include <conflagrant/components/Model.hh>
 #include <conflagrant/components/Skydome.hh>
+#include <conflagrant/components/VctProperties.hh>
+#include <conflagrant/components/Mesh.hh>
 #include <conflagrant/gl/Shader.hh>
 #include <conflagrant/RenderStats.hh>
 #include <conflagrant/Time.hh>
@@ -20,7 +22,7 @@
 #include <conflagrant/math.hh>
 
 #include <entityx/Entity.h>
-#include <conflagrant/components/VctProperties.hh>
+#include <conflagrant/components/Material.hh>
 
 namespace cfl {
 inline entityx::Entity GetActiveCamera(entityx::EntityManager &entities,
@@ -119,6 +121,17 @@ void RenderModel(comp::Transform &transform, comp::Model &model,
 void RenderModels(entityx::EntityManager &entities, gl::Shader &shader,
                   GLenum const nextTextureUnit, RenderStats &renderStats, geometry::Frustum const *frustum = nullptr);
 
+void RenderMesh(assets::Mesh &mesh,
+                RenderStats &renderStats, geometry::Frustum const *frustum,
+                mat3 const &M, float const scale);
+
+void RenderMeshes(entityx::EntityManager &entities, gl::Shader &shader,
+                  GLenum const nextTextureUnit, RenderStats &renderStats, geometry::Frustum const *frustum = nullptr);
+
+void RenderAllSolids(entityx::EntityManager &entities, gl::Shader &shader,
+                     GLenum const nextTextureUnit, RenderStats &renderStats,
+                     geometry::Frustum const *frustum = nullptr);
+
 template<bool UseShadows = false>
 inline void UploadPointLights(entityx::EntityManager &entities,
                               gl::Shader &shader,
@@ -200,9 +213,9 @@ inline void RenderDirectionalLightShadows(entityx::EntityManager &entities,
             {
                 DOLLAR("Shadowmap: Render entities with Model")
                 if (cullModelsAndMeshes) {
-                    RenderModels(entities, lightpassShader, 0, renderStats, &transformedFrustum);
+                    RenderAllSolids(entities, lightpassShader, 0, renderStats, &transformedFrustum);
                 } else {
-                    RenderModels(entities, lightpassShader, 0, renderStats);
+                    RenderAllSolids(entities, lightpassShader, 0, renderStats);
                 }
             }
 
@@ -329,8 +342,9 @@ inline void RenderBoundingSpheres(entityx::EntityManager &entities,
 
     for (auto entity : entities.entities_with_components(transform, boundingSphere)) {
         if (frustum &&
-            frustum->ComputeIntersection(
-                    geometry::Transform(boundingSphere->sphere, transform->GetMatrix(), transform->Scale())) ==
+            geometry::Intersect(*frustum,
+                                geometry::Transform(boundingSphere->sphere, transform->GetMatrix(), transform->Scale()))
+            ==
             geometry::IntersectionType::OUTSIDE) {
             continue;
         }
@@ -359,8 +373,10 @@ inline void RenderBoundingSpheres(entityx::EntityManager &entities,
             }
 
             if (frustum &&
-                frustum->ComputeIntersection(
-                        geometry::Transform(boundingSphere->sphere, transform->GetMatrix(), transform->Scale())) ==
+                geometry::Intersect(*frustum,
+                                    geometry::Transform(boundingSphere->sphere, transform->GetMatrix(),
+                                                        transform->Scale()))
+                ==
                 geometry::IntersectionType::OUTSIDE) {
                 continue;
             }
@@ -414,8 +430,6 @@ inline void RenderModel(comp::Transform &transform, comp::Model &model,
                         comp::VctProperties const *vctProperties,
                         gl::Shader &shader, GLenum const nextTextureUnit,
                         RenderStats &renderStats, geometry::Frustum const *frustum) {
-    static constexpr bool RenderMesh = true;
-
     if (!model.value) {
         return;
     }
@@ -448,27 +462,8 @@ inline void RenderModel(comp::Transform &transform, comp::Model &model,
 
         }
 
-        if (RenderMesh) {
-            auto &mesh = *part.first;
-            if (mesh.needsUpdate) {
-                mesh.Update();
-                mesh.needsUpdate = false;
-            }
-
-            if (frustum &&
-                frustum->ComputeIntersection(geometry::Transform(mesh.boundingSphere, M, transform.Scale())) ==
-                geometry::IntersectionType::OUTSIDE) {
-                renderStats.MeshesCulled++;
-                continue;
-            }
-
-            mesh.glMesh->DrawElements();
-            renderStats.DrawCalls++;
-
-            renderStats.MeshesRendered++;
-            renderStats.Triangles += mesh.triangles.size();
-            renderStats.Vertices += mesh.vertices.size();
-        }
+        auto &mesh = *part.first;
+        RenderMesh(mesh, renderStats, frustum, M, transform.Scale());
     }
 };
 
@@ -489,8 +484,8 @@ inline void RenderModels(entityx::EntityManager &entities,
             }
 
             auto const &M = transform->GetMatrix();
-            auto intersection = frustum->ComputeIntersection(
-                    geometry::Transform(boundingSphere->sphere, M, transform->Scale()));
+            auto intersection = geometry::Intersect(*frustum,
+                                                    geometry::Transform(boundingSphere->sphere, M, transform->Scale()));
 
             if (intersection == geometry::IntersectionType::OUTSIDE) {
                 renderStats.ModelsCulled++;
@@ -513,5 +508,67 @@ inline void RenderModels(entityx::EntityManager &entities,
     }
 
     shader.Unbind();
+}
+
+inline void RenderMesh(assets::Mesh &mesh,
+                       RenderStats &renderStats, geometry::Frustum const *frustum,
+                       mat3 const &M, float const scale) {
+    if (mesh.needsUpdate) {
+        mesh.Update();
+        mesh.needsUpdate = false;
+    }
+
+    if (frustum &&
+        geometry::Intersect(*frustum, geometry::Transform(mesh.boundingSphere, M, scale)) ==
+        geometry::IntersectionType::OUTSIDE) {
+        renderStats.MeshesCulled++;
+        return;
+    }
+
+    mesh.glMesh->DrawElements();
+    renderStats.DrawCalls++;
+
+    renderStats.MeshesRendered++;
+    renderStats.Triangles += mesh.triangles.size();
+    renderStats.Vertices += mesh.vertices.size();
+}
+
+inline void RenderMeshes(entityx::EntityManager &entities, gl::Shader &shader, GLenum const nextTextureUnit,
+                         RenderStats &renderStats, const geometry::Frustum *frustum) {
+    entityx::ComponentHandle<comp::Transform> transform;
+    entityx::ComponentHandle<comp::Mesh> mesh;
+    entityx::ComponentHandle<comp::Material> material;
+
+    shader.Bind();
+
+    assets::Material mtl;
+    mtl.diffuseColor = {.5f, .5f, .5f};
+    mtl.specularColor = {.5f, .5f, .5f};
+    mtl.shininess = {1.f};
+
+    auto textureCount = nextTextureUnit;
+
+    for (auto entity : entities.entities_with_components(transform, mesh)) {
+        shader.Uniform("M", transform->GetMatrix());
+
+        if (entity.has_component<comp::Material>()) {
+            entity.component<comp::Material>()->value.Upload(shader, "material.", textureCount, renderStats);
+        } else {
+            mtl.Upload(shader, "material.", textureCount, renderStats);
+        }
+
+        if (mesh->value) {
+            RenderMesh(*mesh->value, renderStats, frustum, transform->GetMatrix(), transform->Scale());
+        }
+        renderStats.ModelsRendered++;
+    }
+
+    shader.Unbind();
+}
+
+inline void RenderAllSolids(entityx::EntityManager &entities, gl::Shader &shader, GLenum const nextTextureUnit,
+                            RenderStats &renderStats, const geometry::Frustum *frustum) {
+    RenderModels(entities, shader, nextTextureUnit, renderStats, frustum);
+    RenderMeshes(entities, shader, nextTextureUnit, renderStats, frustum);
 }
 } // namespace cfl

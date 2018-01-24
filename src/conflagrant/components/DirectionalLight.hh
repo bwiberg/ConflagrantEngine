@@ -20,7 +20,6 @@ struct DirectionalLight {
 
     inline static bool Serialize(BaseSerializer const& serializer, Json::Value &json,
                                  DirectionalLight &comp) {
-        $
         SERIALIZE(cfl::comp::DirectionalLight, json["color"], comp.color);
         SERIALIZE(cfl::comp::DirectionalLight, json["intensity"], comp.intensity);
         SERIALIZE(cfl::comp::DirectionalLight, json["horizontal"], comp.horizontal);
@@ -30,7 +29,6 @@ struct DirectionalLight {
     }
 
     inline static bool DrawWithImGui(DirectionalLight &comp, InputManager const &input) {
-        $
         float const DragSpeed = (input.GetKey(Key::LEFT_CONTROL) || input.GetKey(Key::LEFT_SHIFT))
                                 ? 0.01f : 0.5f;
 

@@ -23,13 +23,18 @@ constexpr float RAD2DEG_F = static_cast<float>(180 * IPI_MANY_DECIMALS);
 constexpr double DEG2RAD_D = static_cast<double>(PI_MANY_DECIMALS / 180);
 constexpr float DEG2RAD_F = static_cast<float>(PI_MANY_DECIMALS / 180);
 
-template<typename TFov>
-inline TFov Clamp(TFov const &value, TFov const &minimum, TFov const &maximum) {
+template<typename T>
+inline T Clamp(T const &value, T const &minimum, T const &maximum) {
     if (value < minimum)
         return minimum;
     if (value > maximum)
         return maximum;
     return value;
+}
+
+template<typename TValue, typename TMin, typename TMax>
+inline TValue Clamp(TValue const &value, TMin const &minimum, TMax const &maximum) {
+    return Clamp(value, static_cast<TValue>(minimum), static_cast<TValue>(maximum));
 }
 
 template<typename TBase, typename TExponent>
@@ -86,6 +91,27 @@ inline TFov Fovy(TFov fovxDegrees, TSize width, TSize height) {
     auto dfovy = RAD2DEG_D * 2 * atan2(0.5 * dheight, df);
 
     return static_cast<TFov>(dfovy);
+}
+
+template<typename T>
+inline T Repeat(T const& value, T const& min, T const& max) {
+    T copy = value;
+    T const range = 1 + max - min;
+
+    while (copy < min) {
+        copy += range;
+    }
+
+    while (copy > max) {
+        copy -= range;
+    }
+
+    return copy;
+}
+
+template<typename TValue, typename TMin, typename TMax>
+inline TValue Repeat(TValue const& value, TMin const& min, TMax const& max) {
+    return Repeat(value, static_cast<TValue>(min), static_cast<TValue>(max));
 }
 } // namespace math
 } // namespace cfl

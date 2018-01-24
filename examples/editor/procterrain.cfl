@@ -1,0 +1,257 @@
+{
+	"entities" : 
+	[
+		{
+			"Guid" : "f6a2ebc0-51cb-4d0a-9be1-3db0b38a255e",
+			"Material" : 
+			{
+				"ambient" : 
+				[
+					0.0,
+					0.0,
+					0.0
+				],
+				"diffuse" : 
+				[
+					0.5,
+					0.5,
+					0.5
+				],
+				"specular" : 
+				[
+					0.0,
+					0.0,
+					0.0
+				]
+			},
+			"Name" : "Procedural Generated",
+			"ProceduralGeometry" : 
+			{
+				"parameters" : 
+				{
+					"BaseDimensions" : 
+					[
+						5.0,
+						3.0
+					],
+					"FloorHeight" : 
+					[
+						1.5
+					],
+					"Floors" : 
+					[
+						3
+					],
+					"RoofHeight" : 
+					[
+						0.71000003814697266
+					],
+					"RoofOverhang" : 
+					[
+						0.21000000834465027
+					],
+					"RoofRidgeLength" : 
+					[
+						3.1400001049041748
+					],
+					"Seed" : 
+					[
+						0
+					],
+					"WindowHeight" : 
+					[
+						1.0
+					],
+					"WindowPadding" : 
+					[
+						0.20000000298023224
+					],
+					"WindowPaneOffset" : 
+					[
+						-0.10000000149011612
+					],
+					"WindowProbabilities" : 
+					[
+						0.0,
+						1.0,
+						0.0,
+						1.0
+					],
+					"WindowWidth" : 
+					[
+						1.0
+					]
+				},
+				"type" : "SimpleHouse"
+			},
+			"Transform" : 
+			{
+				"orientation" : 
+				[
+					-0.0,
+					0.0,
+					-1.0,
+					-4.3711388286737929e-08
+				],
+				"pivot" : 
+				[
+					0.0,
+					0.0,
+					0.0
+				],
+				"position" : 
+				[
+					0.32000002264976501,
+					1.1600000858306885,
+					0.02500000037252903
+				],
+				"scale" : 1.0
+			}
+		},
+		{
+			"Guid" : "f6a2ebc0-51cb-4d0a-9be1-3db0b38a255e",
+			"Name" : "Free-fly Camera",
+			"OrthographicCamera" : 
+			{
+				"far" : 1000.0,
+				"near" : 0.10000000149011612,
+				"scale" : 1.0
+			},
+			"PerspectiveCamera" : 
+			{
+				"fov" : 70.0,
+				"zFar" : 1000.0,
+				"zNear" : 0.10000000149011612
+			},
+			"Transform" : 
+			{
+				"orientation" : 
+				[
+					0.096004851162433624,
+					0.25502240657806396,
+					0.025454532355070114,
+					-0.96182054281234741
+				],
+				"pivot" : 
+				[
+					0.0,
+					0.0,
+					0.0
+				],
+				"position" : 
+				[
+					-4.1995949745178223,
+					6.6373529434204102,
+					8.0459976196289062
+				],
+				"scale" : 1.0
+			}
+		},
+		{
+			"DirectionalLight" : 
+			{
+				"castShadows" : true,
+				"color" : 
+				[
+					1.0,
+					1.0,
+					1.0
+				],
+				"horizontal" : -313.5,
+				"intensity" : 1.0,
+				"vertical" : 43.000003814697266
+			},
+			"DirectionalLightShadow" : 
+			{
+				"distanceFromScene" : 10.0,
+				"height" : 4096,
+				"width" : 4096
+			},
+			"Guid" : "88df4d21-4779-4ba7-a0a6-e1fd02e8a456",
+			"Name" : "DirectionalLight 0 (sun)",
+			"OrthographicCamera" : 
+			{
+				"far" : 14.320000648498535,
+				"near" : 1.0900000333786011,
+				"scale" : 11.02500057220459
+			}
+		},
+		{
+			"Guid" : "88df4d21-4779-4ba7-a0a6-e1fd02e8a456",
+			"Name" : "Sky",
+			"Skydome" : 
+			{
+				"texturePath" : "skydomes/sky12.jpg"
+			}
+		},
+		{
+			"Guid" : "2e992e2e-5e8b-4614-be5e-bb4115ddc778",
+			"Model" : "plane.obj",
+			"Name" : "Ground",
+			"Transform" : 
+			{
+				"orientation" : 
+				[
+					0.0,
+					0.0,
+					0.0,
+					1.0
+				],
+				"pivot" : 
+				[
+					0.0,
+					0.0,
+					0.0
+				],
+				"position" : 
+				[
+					0.0,
+					-0.16000001132488251,
+					0.0
+				],
+				"scale" : 1.0
+			}
+		}
+	],
+	"systems" : 
+	[
+		{
+			"name" : "EcsDebugger"
+		},
+		{
+			"name" : "ProceduralGenerator"
+		},
+		{
+			"name" : "CameraController"
+		},
+		{
+			"name" : "Animator"
+		},
+		{
+			"name" : "ForwardRenderer"
+		},
+		{
+			"name" : "DeferredRenderer",
+			"useVoxelConeTracing" : true,
+			"voxelConeTracing" : 
+			{
+				"directRendering" : 
+				{
+					"mipmapLevel" : 0,
+					"raymarchSteps" : 1024
+				},
+				"mipmapLevels" : 7,
+				"textureDimensionExponent" : 8,
+				"timeBetweenMipmapGeneration" : 0.0,
+				"useDirectVoxelRendering" : false,
+				"volumeCenter" : 
+				[
+					-0.20000000298023224,
+					0.0,
+					0.0
+				],
+				"volumeHalfDimensions" : 2.0
+			}
+		}
+	]
+}

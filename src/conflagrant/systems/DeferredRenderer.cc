@@ -156,9 +156,9 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
         OGL(glEnable(GL_DEPTH_TEST));
 
         if (cullModelsAndMeshes) {
-            RenderModels(entities, *geometryShader, 0, renderStats, &frustum);
+            RenderAllSolids(entities, *geometryShader, 0, renderStats, &frustum);
         } else {
-            RenderModels(entities, *geometryShader, 0, renderStats);
+            RenderAllSolids(entities, *geometryShader, 0, renderStats);
         }
 
         geometryShader->Unbind();
@@ -281,9 +281,9 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
             renderStats.UniformCalls += 5;
 
             if (cullModelsAndMeshes) {
-                RenderModels(entities, *voxelizeShader, voxelizeShaderTextureCount, renderStats, &voxelFrustum);
+                RenderAllSolids(entities, *voxelizeShader, voxelizeShaderTextureCount, renderStats, &voxelFrustum);
             } else {
-                RenderModels(entities, *voxelizeShader, voxelizeShaderTextureCount, renderStats);
+                RenderAllSolids(entities, *voxelizeShader, voxelizeShaderTextureCount, renderStats);
             }
 
             voxelizeShader->Unbind();

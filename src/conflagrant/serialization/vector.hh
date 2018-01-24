@@ -15,7 +15,7 @@ inline bool Serialize(BaseSerializer const& serializer, Json::Value &json, std::
         json.resize(static_cast<Json::ArrayIndex>(N));
 
     } else {
-        if (!json.isArray() || !vector.empty()) return false;
+        if (!json.isArray()) return false;
 
         N = json.size();
         vector.resize(N);

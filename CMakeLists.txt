@@ -157,6 +157,7 @@ set(HH_FILES
         src/conflagrant/CL.hh
         src/conflagrant/Window.hh
         src/conflagrant/factory_util.hh
+        src/conflagrant/random.hh
         src/conflagrant/RenderStats.hh
         src/conflagrant/ShaderSourceManager.hh
         src/conflagrant/SmartValue.hh
@@ -171,6 +172,7 @@ set(HH_FILES
         src/conflagrant/components/Mesh.hh
         src/conflagrant/components/Name.hh
         src/conflagrant/components/Guid.hh
+        src/conflagrant/components/Material.hh
         src/conflagrant/components/Model.hh
         src/conflagrant/components/Transform.hh
         src/conflagrant/components/PerspectiveCamera.hh
@@ -183,12 +185,15 @@ set(HH_FILES
         src/conflagrant/components/Skydome.hh
         src/conflagrant/components/BoundingSphere.hh
         src/conflagrant/components/VctProperties.hh
+        src/conflagrant/components/ProceduralTerrain.hh
+        src/conflagrant/components/ProceduralGeometry.hh
         src/conflagrant/System.hh
         src/conflagrant/systems/Animator.hh
         src/conflagrant/systems/CameraController.hh
         src/conflagrant/systems/EcsDebugger.hh
         src/conflagrant/systems/DeferredRenderer.hh
         src/conflagrant/systems/ForwardRenderer.hh
+        src/conflagrant/systems/ProceduralGenerator.hh
         src/conflagrant/systems/system_util.hh
         src/conflagrant/assets/Mesh.hh
         src/conflagrant/assets/Model.hh
@@ -214,12 +219,38 @@ set(HH_FILES
         src/conflagrant/InputManager.hh
         src/conflagrant/glfw/GlfwWindow.hh
         src/conflagrant/glfw/imgui_impl_glfw_gl3.h
+
+        src/conflagrant/procgen/MeshDraft.hh
+        src/conflagrant/procgen/TriMeshDraft.hh
+        src/conflagrant/procgen/QuadMeshDraft.hh
+#        src/conflagrant/procgen/primitives.hh
+        src/conflagrant/procgen/asset.hh
+        src/conflagrant/Factory.hh
+        src/conflagrant/procgen/MeshGenerator.hh
+        src/conflagrant/procgen/parameters/Parameters.hh
+        src/conflagrant/procgen/parameters/ImGuiParameters.hh
+        src/conflagrant/procgen/parameters/JsonParameters.hh
+        src/conflagrant/procgen/meshgenerators/SimpleHouse.hh
+        src/conflagrant/procgen/meshgenerators/Terrain.hh
+#        src/conflagrant/procgen/coordinate_transforms.hh
+#        src/conflagrant/procgen/Operation.hh
+#        src/conflagrant/procgen/VertexIterator.hh
+#        src/conflagrant/procgen/PolygonIterator.hh
+#        src/conflagrant/procgen/buildings/HouseGenerator.hh
+
+        src/conflagrant/procgen/graph/Polygon.hh
+        src/conflagrant/procgen/graph/Edge.hh
+        src/conflagrant/procgen/graph/operation.hh
+        src/conflagrant/procgen/graph/operations/Split.hh
+        src/conflagrant/procgen/graph/operations/Extrude.hh
+        src/conflagrant/procgen/graph/operations/Inset.hh
         )
 set(CC_FILES
         src/conflagrant/Engine.cc
         src/conflagrant/Time.cc
         src/conflagrant/logging.cc
         src/conflagrant/geometry.cc
+        src/conflagrant/random.cc
         src/conflagrant/ShaderSourceManager.cc
         src/conflagrant/assets/AssetManager.cc
         src/conflagrant/assets/loaders/ModelLoader.cc
@@ -235,7 +266,11 @@ set(CC_FILES
         src/conflagrant/systems/EcsDebugger.cc
         src/conflagrant/systems/DeferredRenderer.cc
         src/conflagrant/systems/ForwardRenderer.cc
+        src/conflagrant/systems/ProceduralGenerator.cc
         src/conflagrant/glfw/imgui_impl_glfw_gl3.cpp
+
+        src/conflagrant/procgen/primitives.cc
+#        src/conflagrant/procgen/buildings/HouseGenerator.cc
         )
 
 #######################################################################

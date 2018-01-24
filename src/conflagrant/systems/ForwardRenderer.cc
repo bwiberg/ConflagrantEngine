@@ -84,9 +84,9 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
         OGL(glEnable(GL_DEPTH_TEST));
 
         if (cullModelsAndMeshes) {
-            RenderModels(entities, *forwardShader, forwardShaderTextureCount, renderStats, &frustum);
+            RenderAllSolids(entities, *forwardShader, forwardShaderTextureCount, renderStats, &frustum);
         } else {
-            RenderModels(entities, *forwardShader, forwardShaderTextureCount, renderStats);
+            RenderAllSolids(entities, *forwardShader, forwardShaderTextureCount, renderStats);
         }
 
         forwardShader->Unbind();

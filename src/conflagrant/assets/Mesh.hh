@@ -14,6 +14,11 @@ namespace assets {
  * @brief CPU representation of a vertex.
  */
 struct Vertex {
+    inline Vertex() {}
+
+    inline Vertex(const vec3 &position, const vec3 &normal, const vec3 &tangent, const vec3 &bitangent, const vec2 &texCoord)
+            : position(position), normal(normal), tangent(tangent), bitangent(bitangent), texCoord(texCoord) {}
+
     vec3 position{0};
     vec3 normal{0};
     vec3 tangent{0};
@@ -76,8 +81,8 @@ inline bool Mesh::Update() {
     // update bounding volumes
     vec3 min(std::numeric_limits<float>::max()), max(std::numeric_limits<float>::min());
 
-    for (auto const& vertex : vertices) {
-        auto const& position = vertex.position;
+    for (auto const &vertex : vertices) {
+        auto const &position = vertex.position;
         min = glm::min(min, position);
         max = glm::max(max, position);
     }

@@ -24,14 +24,21 @@
 #include <conflagrant/components/VelocityAnimation.hh>
 #include <conflagrant/components/PeriodicalAnimation.hh>
 #include <conflagrant/components/VctProperties.hh>
+#include <conflagrant/components/ProceduralTerrain.hh>
+#include <conflagrant/components/ProceduralGeometry.hh>
+#include <conflagrant/components/Material.hh>
 
 #include <conflagrant/systems/Animator.hh>
 #include <conflagrant/systems/CameraController.hh>
 #include <conflagrant/systems/DeferredRenderer.hh>
 #include <conflagrant/systems/EcsDebugger.hh>
 #include <conflagrant/systems/ForwardRenderer.hh>
+#include <conflagrant/systems/ProceduralGenerator.hh>
 
 #include <conflagrant/ShaderSourceManager.hh>
+
+#include <conflagrant/procgen/meshgenerators/SimpleHouse.hh>
+#include <conflagrant/procgen/meshgenerators/Terrain.hh>
 
 namespace cfl {
 bool InitDefaults() {
@@ -49,6 +56,7 @@ bool InitDefaults() {
 
     REGISTER_COMPONENT(cfl::comp::Guid);
     REGISTER_COMPONENT(cfl::comp::Mesh);
+    REGISTER_COMPONENT(cfl::comp::Material);
     REGISTER_COMPONENT(cfl::comp::Model);
     REGISTER_COMPONENT(cfl::comp::Name);
     REGISTER_COMPONENT(cfl::comp::Transform);
@@ -63,6 +71,8 @@ bool InitDefaults() {
     REGISTER_COMPONENT(cfl::comp::BoundingSphere);
     REGISTER_COMPONENT(cfl::comp::VelocityAnimation);
     REGISTER_COMPONENT(cfl::comp::PeriodicalAnimation);
+    REGISTER_COMPONENT(cfl::comp::ProceduralTerrain);
+    REGISTER_COMPONENT(cfl::comp::ProceduralGeometry);
 
 #ifdef ENABLE_VOXEL_CONE_TRACING
     REGISTER_COMPONENT(cfl::comp::VctProperties);
@@ -73,8 +83,12 @@ bool InitDefaults() {
     REGISTER_SYSTEM(cfl::syst::DeferredRenderer);
     REGISTER_SYSTEM(cfl::syst::EcsDebugger);
     REGISTER_SYSTEM(cfl::syst::ForwardRenderer);
+    REGISTER_SYSTEM(cfl::syst::ProceduralGenerator);
 
     REGISTER_SHADER_FOLDER(BUILTIN_SHADER_DIR);
+
+    REGISTER_MESH_GENERATOR(cfl::procgen::SimpleHouse);
+    REGISTER_MESH_GENERATOR(cfl::procgen::Terrain);
 
     return true;
 }

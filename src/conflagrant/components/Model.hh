@@ -19,7 +19,6 @@ struct Model {
 
     inline static bool Serialize(BaseSerializer const& serializer, Json::Value &json,
                                  Model &model) {
-        $
         SERIALIZE(cfl::comp::Model, json, model.path);
         if (serializer.IsDeserializer()) {
             return model.ReloadModel();
@@ -29,7 +28,6 @@ struct Model {
     }
 
     inline static bool DrawWithImGui(Model &model, InputManager const &input) {
-        $
         size_t constexpr BufferSize = 1024;
         char buf[BufferSize];
         model.path.copy(buf, BufferSize);
@@ -45,7 +43,6 @@ struct Model {
     }
 
     inline bool ReloadModel() {
-        $
         value = assets::AssetManager::LoadAsset<assets::Model const>(path);
         return value != nullptr;
     }
