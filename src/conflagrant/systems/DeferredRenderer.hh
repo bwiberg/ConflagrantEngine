@@ -9,6 +9,8 @@
 #include <conflagrant/serialization/serialize.hh>
 #include <conflagrant/RenderStats.hh>
 #include <conflagrant/Time.hh>
+#include <conflagrant/DoubleBuffer.hh>
+#include <conflagrant/DoubleBufferedTexture2D.hh>
 
 #ifdef ENABLE_VOXEL_CONE_TRACING
 #include <conflagrant/components/OrthographicCamera.hh>
@@ -27,10 +29,12 @@ public:
 private:
     std::shared_ptr<gl::Shader>
             geometryShader,
+            snowGeometryShader,
             directionalLightShadowShader,
             lightsShader,
             skydomeShader,
-            wireframeShader;
+            wireframeShader,
+            snowSurfaceShader;
 
     std::map<string, double> durationsByName;
     std::list<string> durationsOrder;
@@ -69,7 +73,7 @@ private:
 #endif // ENABLE_VOXEL_CONE_TRACING
 
     std::shared_ptr<gl::Framebuffer> framebuffer;
-    std::shared_ptr<gl::Texture2D> positionRadianceTexture, normalShininessTexture, albedoSpecularTexture;
+    std::shared_ptr<DoubleBufferedTexture2D> positionRadianceTexture, normalShininessTexture, albedoSpecularTexture;
     std::shared_ptr<gl::Renderbuffer> depthRenderbuffer;
 
     RenderStats renderStats;
@@ -80,6 +84,8 @@ private:
     bool UpdateFramebuffer(GLsizei const width, GLsizei const height);
 
     void LoadShaders();
+
+    void Pingpong();
 
 public:
     DeferredRenderer();

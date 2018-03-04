@@ -197,6 +197,8 @@ set(HH_FILES
         src/conflagrant/InputManager.hh
         src/conflagrant/glfw/GlfwWindow.hh
         src/conflagrant/glfw/imgui_impl_glfw_gl3.h
+        src/conflagrant/DoubleBuffer.hh
+        src/conflagrant/DoubleBufferedTexture2D.hh
         )
 set(CC_FILES
         src/conflagrant/Engine.cc
