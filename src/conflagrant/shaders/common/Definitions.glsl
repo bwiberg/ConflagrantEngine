@@ -76,4 +76,4 @@
 ////////////////////
 
 #define SNOW_MIN_RADIUS 0.5
-#define SNOW_DEPTH_BLEND_FACTOR 10.0
+#define SNOW_DEPTH_BLEND_FACTOR 100.0

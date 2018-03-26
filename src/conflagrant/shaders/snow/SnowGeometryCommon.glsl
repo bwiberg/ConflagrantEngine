@@ -4,7 +4,7 @@ uniform float SnowUpperUpness = 0.8;
 uniform float SnowinessMin = 0.4;
 
 uniform float SnowMinHeight = 0.01;
-uniform float SnowMaxHeight = 0.02;
+uniform float SnowMaxHeight = 0.03;
 
 uniform vec3 SnowDiffuse = vec3(1);
 uniform float SnowSpecular = 0;
@@ -23,7 +23,7 @@ uniform float SnowNoisePersistence = 0.5;
 #undef FRACTAL_NOISE_FUNCTION2
 
 float CalcSnowNoise(vec3 worldPosition, float timeSinceStart) {
-    float offset = min(0.05 * (time - timeSnowStart - 20), 2);
+    float offset = min(0.5 * (time - timeSnowStart - 5), 2);
     return max(0.0, offset + fractal_noise(worldPosition.xz,
                                   SnowNoiseOctaves,
                                   SnowNoiseScale,

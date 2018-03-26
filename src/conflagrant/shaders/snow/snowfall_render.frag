@@ -66,7 +66,11 @@ void main(void) {
     float depth = gl_FragCoord.z;
     float sceneDepth = texture(SceneDepth, screenTexCoord).x;
 
-    float depthFade = clamp(SNOW_DEPTH_BLEND_FACTOR * abs(sceneDepth - depth), 0, 1);
+    float distToEye = distance(EyePos, fIn_WorldPosition);
+    float depthFade = clamp(
+        pow(distToEye, 2) * SNOW_DEPTH_BLEND_FACTOR * abs(sceneDepth - depth),
+        0, 1
+    );
 
     alpha *= depthFade;
     alpha *= snow_noise();
@@ -98,5 +102,7 @@ void main(void) {
                                         directionalLights[i].VP * vec4(surf.WorldPosition, 1), E);
     }
 
-    OutColor = vec4(0.6 * color, 0.5 * pow(alpha, 0.75));
+
+    // OutColor = vec4(0.6 * color, 0.5 * pow(alpha, 0.75));
+    OutColor = vec4(vec3(depthFade), 1);
 }
