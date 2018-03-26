@@ -15,6 +15,7 @@ uniform vec3 EyePos;
 layout (location = 0) out vec4 GPositionRadiance;
 layout (location = 1) out vec4 GNormalShininess;
 layout (location = 2) out vec4 GAlbedoSpecular;
+layout (location = 3) out float GDepth;
 
 void main(void) {
     vec4 diffuse = GetPropertyColor(material.diffuse, fIn_TexCoord);
@@ -42,4 +43,6 @@ void main(void) {
 
     GAlbedoSpecular.rgb = diffuse.rgb;
     GAlbedoSpecular.a = max(max(specular.r, specular.g), specular.b);
+
+    GDepth = gl_FragCoord.z;
 }

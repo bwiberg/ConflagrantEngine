@@ -16,6 +16,8 @@ ivec3 GetIntegerCoordinatesFromNormalizedTextureCoordinates(const ivec3 ImageSiz
     return ivec3(ImageSize * normalizedCoordinates);
 }
 
+#ifndef VOXEL_NO_COMPUTE
+
 // source: https://rauwendaal.net/2013/02/07/glslrunningaverage/
 void ImageAtomicAverageRGBA8(layout(r32ui) coherent volatile uimage3D voxels, ivec3 coord, vec3 nextVec3) {
     uint nextUint = packUnorm4x8 (vec4 (nextVec3, 1.0f / 255.0f));
@@ -42,3 +44,5 @@ void ImageAtomicAverageRGBA8(layout(r32ui) coherent volatile uimage3D voxels, iv
         nextUint = packUnorm4x8(vec4(average, (count + 1) / 255.0f));
     }
 }
+
+#endif

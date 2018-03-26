@@ -1,5 +1,7 @@
 #version 410
 
+#include "common/Definitions.glsl"
+
 in float fIn_ModelY;
 in vec2 fIn_TexCoord;
 
@@ -16,5 +18,9 @@ void main(void) {
 
     float ksky = step(0, fIn_ModelY);
     vec3 result = ksky * sky + (1 - ksky) * ground;
+
+    result *= SKYDOME_MULTIPLIER;
+    result = pow(result, vec3(SKYDOME_GAMMA));
+
     out_Color =  vec4(result, 1.0);
 }

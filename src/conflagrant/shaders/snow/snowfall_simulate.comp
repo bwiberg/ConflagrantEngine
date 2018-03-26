@@ -1,0 +1,34 @@
+#version 430
+
+#include "common/Definitions.glsl"
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(rgba32f, binding=0) uniform restrict image2D PositionsAngles;
+layout(rgba32f, binding=1) uniform restrict image2D VelocitiesLifetimes;
+uniform sampler3D VoxelizedScene;
+
+uniform vec3 VoxelHalfDimensions;
+uniform vec3 VoxelCenter;
+
+#include "voxels/common/util.glsl"
+
+uniform float time;
+uniform float timeDelta;
+
+uniform vec3 gravity = vec3(0, -1, 0);
+uniform float angleSpeed = 3;
+
+#define USE_IMAGE
+#include "snow/SnowParticle.glsl"
+#include "snow/SimulateSnowParticle.glsl"
+
+void main(void) {
+    int particleID = int(gl_GlobalInvocationID.x);
+
+    Particle p = LoadParticle(particleID);
+
+    SimulateSnowParticle(particleID, p, time, timeDelta, gravity);
+
+    StoreParticle(particleID, p);
+}

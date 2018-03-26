@@ -15,19 +15,23 @@ void CameraController::MoveCamera(comp::Transform &transform) {
     vec3 const CamRight = glm::normalize(mat3(matrix) * geometry::Right);
     vec3 const CamUp = glm::normalize(mat3(matrix) * geometry::Up);
 
-    float const InputUp = (input->GetKey(Key::W) || input->GetKey(Key::UP)) ? 1.0f : 0.0f;
-    float const InputDown = (input->GetKey(Key::S) || input->GetKey(Key::DOWN)) ? 1.0f : 0.0f;
+    float const InputForward = (input->GetKey(Key::W) || input->GetKey(Key::UP)) ? 1.0f : 0.0f;
+    float const InputBackward = (input->GetKey(Key::S) || input->GetKey(Key::DOWN)) ? 1.0f : 0.0f;
     float const InputRight = (input->GetKey(Key::D) || input->GetKey(Key::RIGHT)) ? 1.0f : 0.0f;
     float const InputLeft = (input->GetKey(Key::A) || input->GetKey(Key::LEFT)) ? 1.0f : 0.0f;
+    float const InputUp = (input->GetKey(Key::SPACE)) ? 1.0f : 0.0f;
+    float const InputDown = (input->GetKey(Key::C)) ? 1.0f : 0.0f;
 
-    float const AmountForward = InputUp - InputDown;
+    float const AmountForward = InputForward - InputBackward;
     float const AmountRight = InputRight - InputLeft;
+    float const AmountUp = InputUp - InputDown;
 
     vec3 const MoveForward = AmountForward * CamForward;
     vec3 const MoveSideways = AmountRight * CamRight;
+    vec3 const MoveUp = AmountUp * geometry::Up;
 
     float const Speed = input->GetKey(Key::LEFT_SHIFT) ? 4.0f : 1.0f;
-    position += static_cast<float>(Time::DeltaTime()) * Speed * movementSpeed * (MoveForward + MoveSideways);
+    position += static_cast<float>(Time::DeltaTime()) * Speed * movementSpeed * (MoveForward + MoveSideways + MoveUp);
     transform.Position(position);
 
     dvec2 const delta = input->GetDeltaMousePositionPixel();

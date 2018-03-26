@@ -87,5 +87,16 @@ inline TFov Fovy(TFov fovxDegrees, TSize width, TSize height) {
 
     return static_cast<TFov>(dfovy);
 }
+
+template<typename T>
+inline T NextPowerOfTwo(T value) {
+    auto const dvalue = static_cast<double>(value);
+    return static_cast<T>(std::pow(2.0, std::ceil(std::log(dvalue) / log(2.0))));
+}
+
+template<typename T>
+inline T NextEvenNumber(T value) {
+    return (value % 2 == 0) ? value : (value + 1);
+}
 } // namespace math
 } // namespace cfl

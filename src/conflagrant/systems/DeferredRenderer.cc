@@ -12,6 +12,7 @@
 #include <conflagrant/components/DirectionalLight.hh>
 #include <conflagrant/components/DirectionalLightShadow.hh>
 #include <conflagrant/components/Skydome.hh>
+#include <conflagrant/components/SnowEmitter.hh>
 #include <conflagrant/ShaderSourceManager.hh>
 
 #include <imgui.h>
@@ -20,7 +21,17 @@
 
 namespace cfl {
 syst::DeferredRenderer::DeferredRenderer() {
+    timeSnowStart = -1;
+
     LoadShaders();
+
+    pointMesh = std::make_shared<gl::Mesh>();
+
+    pointMesh->Attribute(0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), 0);
+
+    vec3 const zero(0, 0, 0);
+    pointMesh->BufferVertexData(sizeof(vec3), glm::value_ptr(zero), GL_STATIC_DRAW);
+    pointMesh->SetDrawMode(GL_POINTS);
 }
 
 void syst::DeferredRenderer::LoadShaders() {
@@ -30,7 +41,7 @@ void syst::DeferredRenderer::LoadShaders() {
     lightsShader = LoadShader("deferred/lights.vert", "deferred/lights.frag");
     skydomeShader = LoadShader("forward_skydome.vert", "forward_skydome.frag");
     wireframeShader = LoadShader("wireframe.vert", "wireframe.frag");
-    snowSurfaceShader = LoadShader("snow/snow.vert", "snow/snow.frag");
+    snowfallParticleShader = LoadShader("snow/snowfall_render.vert", "snow/snowfall_render.geom", "snow/snowfall_render.frag");
 
 #ifdef ENABLE_VOXEL_CONE_TRACING
     voxelizeShader = LoadShader("voxels/voxelize.vert", "voxels/voxelize.geom", "voxels/voxelize.frag");
@@ -44,9 +55,9 @@ bool syst::DeferredRenderer::UpdateFramebuffer(GLsizei const width, GLsizei cons
     framebuffer = std::make_shared<gl::Framebuffer>(width, height);
     framebuffer->Bind();
 
-    positionRadianceTexture = std::make_shared<DoubleBufferedTexture2D>(width, height,
+    positionRadianceTexture = std::make_shared<gl::DoubleBufferedTexture2D>(width, height,
                                                               GL_RGBA16F, GL_RGBA, GL_FLOAT);
-    positionRadianceTexture->ApplyToBoth([](std::shared_ptr<gl::Texture2D> &tex) {
+    positionRadianceTexture->ApplyToBoth([](auto &tex) {
 
         tex->Bind();
         tex->TexParameter(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -55,9 +66,9 @@ bool syst::DeferredRenderer::UpdateFramebuffer(GLsizei const width, GLsizei cons
     });
     framebuffer->Attach(GL_COLOR_ATTACHMENT0, positionRadianceTexture->Front());
 
-    normalShininessTexture = std::make_shared<DoubleBufferedTexture2D>(width, height,
+    normalShininessTexture = std::make_shared<gl::DoubleBufferedTexture2D>(width, height,
                                                                        GL_RGBA16F, GL_RGBA, GL_FLOAT);
-    normalShininessTexture->ApplyToBoth([](std::shared_ptr<gl::Texture2D> &tex) {
+    normalShininessTexture->ApplyToBoth([](auto &tex) {
 
         tex->Bind();
         tex->TexParameter(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -66,9 +77,9 @@ bool syst::DeferredRenderer::UpdateFramebuffer(GLsizei const width, GLsizei cons
     });
     framebuffer->Attach(GL_COLOR_ATTACHMENT1, normalShininessTexture->Front());
 
-    albedoSpecularTexture = std::make_shared<DoubleBufferedTexture2D>(width, height,
+    albedoSpecularTexture = std::make_shared<gl::DoubleBufferedTexture2D>(width, height,
                                                                       GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
-    albedoSpecularTexture->ApplyToBoth([](std::shared_ptr<gl::Texture2D> &tex) {
+    albedoSpecularTexture->ApplyToBoth([](auto &tex) {
 
         tex->Bind();
         tex->TexParameter(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -77,8 +88,22 @@ bool syst::DeferredRenderer::UpdateFramebuffer(GLsizei const width, GLsizei cons
     });
     framebuffer->Attach(GL_COLOR_ATTACHMENT2, albedoSpecularTexture->Front());
 
-    GLenum const attachments[3] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
-    framebuffer->SetDrawBuffers(3, attachments);
+    depthTexture = std::make_shared<gl::DoubleBufferedTexture2D>(width, height, GL_R32F, GL_RED, GL_FLOAT);
+    depthTexture->ApplyToBoth([](auto &tex) {
+        tex->Bind();
+        tex->TexParameter(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        tex->TexParameter(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        tex->Unbind();
+    });
+    framebuffer->Attach(GL_COLOR_ATTACHMENT3, depthTexture->Front());
+
+    GLenum const attachments[4] = {
+            GL_COLOR_ATTACHMENT0,
+            GL_COLOR_ATTACHMENT1,
+            GL_COLOR_ATTACHMENT2,
+            GL_COLOR_ATTACHMENT3
+    };
+    framebuffer->SetDrawBuffers(4, attachments);
 
     depthRenderbuffer = std::make_shared<gl::Renderbuffer>(width, height, GL_DEPTH_COMPONENT);
     framebuffer->Attach(GL_DEPTH_ATTACHMENT, depthRenderbuffer);
@@ -103,6 +128,9 @@ void syst::DeferredRenderer::Pingpong() {
     albedoSpecularTexture->Swap();
     framebuffer->Attach(GL_COLOR_ATTACHMENT2, albedoSpecularTexture->Front());
 
+    depthTexture->Swap();
+    framebuffer->Attach(GL_COLOR_ATTACHMENT3, depthTexture->Front());
+
     framebuffer->Unbind();
 }
 
@@ -125,10 +153,16 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
     // hotkeys //
     /////////////
 
+    timeSnowStart = (timeSnowStart == -1) ? Time::CurrentTime() : timeSnowStart;
+    if (input->GetKeyDown(Key::DIGIT_9)) {
+        isSnowing = !isSnowing;
+        timeSnowStart = Time::CurrentTime();
+    }
+
 #define TOGGLE(boolean) (boolean) = !(boolean)
 #define TOGGLE_ON_KEY(key, boolean) if (input->GetKeyDown(key)) { TOGGLE(boolean); }
 
-    TOGGLE_ON_KEY(Key::V, useVoxelConeTracing);
+    TOGGLE_ON_KEY(Key::V,       useVoxelConeTracing);
     TOGGLE_ON_KEY(Key::DIGIT_0, VCT.useDirectVoxelRendering);
     TOGGLE_ON_KEY(Key::DIGIT_1, VCT.useDirectLighting);
     TOGGLE_ON_KEY(Key::DIGIT_2, VCT.useIndirectDiffuseLighting);
@@ -140,6 +174,7 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
     uvec2 size = window->GetSize();
     auto const width = static_cast<GLsizei>(size.x);
     auto const height = static_cast<GLsizei>(size.y);
+    vec2 const ScreenSize(width, height);
 
     if (size != lastWindowSize) {
         DOLLAR("Deferred: Update framebuffer")
@@ -154,17 +189,22 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
 
     renderStats.Reset();
 
+    auto const timeCurrent = static_cast<float>(Time::CurrentTime());
+    auto const timeDelta = static_cast<float>(Time::DeltaTime());
+
     mat4 P;
     geometry::Frustum frustum;
     entityx::ComponentHandle<comp::Transform> cameraTransform;
     float zNear, zFar;
 
     GetCameraInfo(entities, cameraTransform, frustum, P, zNear, zFar);
-    mat4 V = glm::inverse(cameraTransform->GetMatrix());
+    mat4 const V = glm::inverse(cameraTransform->GetMatrix());
     frustum = cameraTransform->GetMatrix() * frustum;
 
+    auto const EyePos = cameraTransform->Position();
+
     {
-        auto shader = input->GetKey(Key::M) ? snowGeometryShader : geometryShader;
+        auto shader = (isSnowing) ? snowGeometryShader : geometryShader;
 
         TIMER(GeometryPass);
         DOLLAR("Deferred: Geometry pass")
@@ -176,9 +216,17 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
         shader->Bind();
         shader->Uniform("V", V);
         shader->Uniform("P", P);
-        shader->Uniform("EyePos", cameraTransform->Position());
-        shader->Uniform("time", static_cast<float>(Time::CurrentTime()));
+        shader->Uniform("EyePos", EyePos);
+        shader->Uniform("time", timeCurrent);
+        shader->Uniform("timeSnowStart", static_cast<float>(timeSnowStart));
+        shader->Uniform("ScreenSize", ScreenSize);
         renderStats.UniformCalls += 4;
+
+        auto scopedState = gl::ScopedState()
+                .Enable(GL_CULL_FACE)
+                .CullFace(GL_BACK)
+                .Enable(GL_DEPTH_TEST)
+                .Build();
 
         OGL(glEnable(GL_CULL_FACE));
         OGL(glCullFace(GL_BACK));
@@ -203,6 +251,13 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
         }
         {
             DOLLAR("Upload DirectionalLight data")
+
+            auto scopedState = gl::ScopedState()
+                    .Enable(GL_CULL_FACE)
+                    .CullFace(GL_BACK)
+                    .Enable(GL_DEPTH_TEST)
+                    .Build();
+
             RenderDirectionalLightShadows(entities, *directionalLightShadowShader, renderStats, cullModelsAndMeshes);
             UploadDirectionalLights<true>(entities, *lightsShader, lightsShaderTextureCount, renderStats, cullModelsAndMeshes);
         }
@@ -285,10 +340,13 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
 
             OGL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
             OGL(glViewport(0, 0, voxelTextureSize, voxelTextureSize));
-            OGL(glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE));
-            OGL(glDisable(GL_CULL_FACE));
-            OGL(glDisable(GL_DEPTH_TEST));
-            OGL(glDisable(GL_BLEND));
+
+            auto scopedState = gl::ScopedState()
+                    .ColorMask(GL_FALSE)
+                    .Disable(GL_CULL_FACE)
+                    .Disable(GL_DEPTH_TEST)
+                    .Disable(GL_BLEND)
+                    .Build();
 
             voxelizeShader->Bind();
 
@@ -312,11 +370,6 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
             }
 
             voxelizeShader->Unbind();
-
-            OGL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
-            OGL(glEnable(GL_CULL_FACE));
-            OGL(glEnable(GL_DEPTH_TEST));
-            OGL(glEnable(GL_BLEND));
         }
 
         if (Time::CurrentTime() - VCT.timeOfLastMipmapGeneration >= VCT.timeBetweenMipmapGeneration) {
@@ -359,7 +412,7 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
             voxelDirectRenderingShader->Bind();
 
             voxelDirectRenderingShader->Uniform("InverseVP", glm::inverse(P * V));
-            voxelDirectRenderingShader->Uniform("EyePos", cameraTransform->Position());
+            voxelDirectRenderingShader->Uniform("EyePos", EyePos);
 
             voxelDirectRenderingShader->Uniform("RenderDistance", VCT.DirectRendering.renderDistance);
             voxelDirectRenderingShader->Texture("VoxelizedScene", 0, *voxelTexture);
@@ -370,39 +423,20 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
 
             renderStats.UniformCalls += 8;
 
+            auto scopedState = gl::ScopedState()
+                    .Enable(GL_CULL_FACE)
+                    .CullFace(GL_BACK)
+                    .Enable(GL_DEPTH_TEST)
+                    .Build();
+
             RenderFullscreenQuad(renderStats);
 
             voxelDirectRenderingShader->Unbind();
+
+            return;
         }
 
         else {
-//            if (input->GetKey(Key::M)) {
-//                // snow pass
-//                Pingpong();
-//
-//                framebuffer->Bind();
-//                OGL(glViewport(0, 0, width, height));
-//                OGL(glClearColor(0.0f, 0.0f, 0.0f, 0.0f));
-//                OGL(glClear(GL_COLOR_BUFFER_BIT));
-//
-//
-//                snowSurfaceShader->Bind();
-//                snowSurfaceShader->Texture("GInPositionRadiance", 0,
-//                                           *positionRadianceTexture->Back());
-//                snowSurfaceShader->Texture("GInNormalShininess", 1,
-//                                           *normalShininessTexture->Back());
-//                snowSurfaceShader->Texture("GInAlbedoSpecular", 2,
-//                                           *albedoSpecularTexture->Back());
-//
-//                OGL(glEnable(GL_CULL_FACE));
-//                OGL(glCullFace(GL_BACK));
-//                OGL(glEnable(GL_DEPTH_TEST));
-//
-//                RenderFullscreenQuad(renderStats);
-//
-//                snowSurfaceShader->Unbind();
-//            }
-
             {
                 TIMER(VctUploadLights);
                 DOLLAR("Deferred (VCT): Upload lights")
@@ -423,14 +457,18 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
 
                 voxelConeTracingShader->Uniform("V", V);
                 voxelConeTracingShader->Uniform("P", P);
-                voxelConeTracingShader->Uniform("EyePos", cameraTransform->Position());
-                voxelConeTracingShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
+                voxelConeTracingShader->Uniform("EyePos", EyePos);
+                voxelConeTracingShader->Uniform("time", timeCurrent);
+                voxelConeTracingShader->Uniform("ScreenSize", ScreenSize);
+
                 voxelConeTracingShader->Texture("GPositionRadiance", voxelConeTracingShaderTextureCount++,
                                                 *positionRadianceTexture->Front());
                 voxelConeTracingShader->Texture("GNormalShininess", voxelConeTracingShaderTextureCount++,
                                                 *normalShininessTexture->Front());
                 voxelConeTracingShader->Texture("GAlbedoSpecular", voxelConeTracingShaderTextureCount++,
                                                 *albedoSpecularTexture->Front());
+                voxelConeTracingShader->Texture("GDepth", voxelConeTracingShaderTextureCount++,
+                                                *depthTexture->Front());
 
                 voxelConeTracingShader->Texture("VoxelizedScene", voxelConeTracingShaderTextureCount++, *voxelTexture);
                 voxelConeTracingShader->Uniform("VoxelHalfDimensions", vec3(VCT.halfDimensions));
@@ -448,11 +486,13 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
 
                 renderStats.UniformCalls += 14;
 
-                OGL(glEnable(GL_CULL_FACE));
-                OGL(glCullFace(GL_BACK));
-                OGL(glEnable(GL_DEPTH_TEST));
+                auto scopedState = gl::ScopedState()
+                        .Enable(GL_CULL_FACE)
+                        .CullFace(GL_BACK)
+                        .Enable(GL_DEPTH_TEST)
+                        .Build();
 
-                RenderFullscreenQuad(renderStats);
+                RenderFullscreenTriangle(renderStats);
 
                 voxelConeTracingShader->Unbind();
             }
@@ -468,28 +508,6 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
                 OGL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 
                 framebuffer->Unbind();
-            }
-
-            {
-                TIMER(VctRenderSkydome);
-                DOLLAR("Deferred (VCT): Render skydome")
-
-                // only use rotational part for skydome
-                auto const skydomeV = glm::inverse(glm::toMat4(cameraTransform->Quaternion()));
-
-                skydomeShader->Bind();
-
-                skydomeShader->Uniform("EyePos", cameraTransform->Position());
-                skydomeShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
-                renderStats.UniformCalls += 2;
-
-                OGL(glEnable(GL_CULL_FACE));
-                OGL(glCullFace(GL_FRONT));
-                OGL(glEnable(GL_DEPTH_TEST));
-
-                RenderSkydomes(entities, *skydomeShader, 0, renderStats, P, skydomeV);
-
-                skydomeShader->Unbind();
             }
         }
     }
@@ -509,18 +527,26 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
 
             lightsShader->Uniform("V", V);
             lightsShader->Uniform("P", P);
-            lightsShader->Uniform("EyePos", cameraTransform->Position());
-            lightsShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
+            lightsShader->Uniform("EyePos", EyePos);
+            lightsShader->Uniform("time", timeCurrent);
+            lightsShader->Uniform("ScreenSize", ScreenSize);
+            lightsShader->Uniform("ZFar", zFar);
+            lightsShader->Uniform("ZNear", zNear);
+
             lightsShader->Texture("GPositionRadiance", lightsShaderTextureCount++, *positionRadianceTexture->Front());
             lightsShader->Texture("GNormalShininess", lightsShaderTextureCount++, *normalShininessTexture->Front());
             lightsShader->Texture("GAlbedoSpecular", lightsShaderTextureCount++, *albedoSpecularTexture->Front());
+            lightsShader->Texture("GDepth", lightsShaderTextureCount++, *depthTexture->Front());
+
             renderStats.UniformCalls += 7;
 
-            OGL(glEnable(GL_CULL_FACE));
-            OGL(glCullFace(GL_BACK));
-            OGL(glEnable(GL_DEPTH_TEST));
+            auto scopedState = gl::ScopedState()
+                    .Enable(GL_CULL_FACE)
+                    .CullFace(GL_BACK)
+                    .Enable(GL_DEPTH_TEST)
+                    .Build();
 
-            RenderFullscreenQuad(renderStats);
+            RenderFullscreenTriangle(renderStats);
 
             lightsShader->Unbind();
         }
@@ -538,55 +564,124 @@ syst::DeferredRenderer::update(entityx::EntityManager &entities, entityx::EventM
             framebuffer->Unbind();
         }
 
-        {
-            TIMER(DeferredRenderSkydome);
-            DOLLAR("Deferred: Render skydome")
-
-            // only use rotational part for skydome
-            auto const skydomeV = glm::inverse(glm::toMat4(cameraTransform->Quaternion()));
-
-            skydomeShader->Bind();
-
-            skydomeShader->Uniform("EyePos", cameraTransform->Position());
-            skydomeShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
-            renderStats.UniformCalls += 2;
-
-            OGL(glEnable(GL_CULL_FACE));
-            OGL(glCullFace(GL_FRONT));
-            OGL(glEnable(GL_DEPTH_TEST));
-
-            RenderSkydomes(entities, *skydomeShader, 0, renderStats, P, skydomeV);
-
-            skydomeShader->Unbind();
-        }
-
-        if (renderBoundingSpheres) {
-            TIMER(DeferredRenderBoundingSpheres);
-            DOLLAR("Bounding spheres")
-
-            wireframeShader->Bind();
-            wireframeShader->Uniform("V", V);
-            wireframeShader->Uniform("P", P);
-            wireframeShader->Uniform("EyePos", cameraTransform->Position());
-            wireframeShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
-            renderStats.UniformCalls += 4;
-
-            OGL(glDisable(GL_CULL_FACE));
-            OGL(glEnable(GL_DEPTH_TEST));
-
-            RenderBoundingSpheres(entities, *wireframeShader, 0, renderStats,
-                                  renderBoundingSpheresAsWireframe);
-            wireframeShader->Unbind();
-        }
-
 #ifdef ENABLE_VOXEL_CONE_TRACING
     }
 #endif // ENABLE_VOXEL_CONE_TRACING
+
+    {
+        TIMER(DeferredRenderSkydome);
+        DOLLAR("Deferred: Render skydome")
+
+        // only use rotational part for skydome
+        auto const skydomeV = glm::inverse(glm::toMat4(cameraTransform->Quaternion()));
+
+        skydomeShader->Bind();
+
+        skydomeShader->Uniform("EyePos", EyePos);
+        skydomeShader->Uniform("time", timeCurrent);
+        skydomeShader->Uniform("ScreenSize", ScreenSize);
+
+        renderStats.UniformCalls += 2;
+
+        auto scopedState = gl::ScopedState()
+                .Enable(GL_CULL_FACE)
+                .CullFace(GL_FRONT)
+                .Enable(GL_DEPTH_TEST)
+                .Build();
+
+        RenderSkydomes(entities, *skydomeShader, 0, renderStats, P, skydomeV);
+
+        skydomeShader->Unbind();
+    }
+
+    if (renderBoundingSpheres) {
+        TIMER(DeferredRenderBoundingSpheres);
+        DOLLAR("Bounding spheres")
+
+        wireframeShader->Bind();
+        wireframeShader->Uniform("V", V);
+        wireframeShader->Uniform("P", P);
+        wireframeShader->Uniform("EyePos", EyePos);
+        wireframeShader->Uniform("time", timeCurrent);
+        wireframeShader->Uniform("ScreenSize", ScreenSize);
+
+        renderStats.UniformCalls += 4;
+
+        auto scopedState = gl::ScopedState()
+                .Disable(GL_CULL_FACE)
+                .Enable(GL_DEPTH_TEST)
+                .Build();
+
+        RenderBoundingSpheres(entities, *wireframeShader, 0, renderStats,
+                              renderBoundingSpheresAsWireframe);
+        wireframeShader->Unbind();
+    }
+
+    if (isSnowing) {
+        GLenum texCount = 0;
+
+        snowfallParticleShader->Bind();
+
+        snowfallParticleShader->Uniform("P", P);
+        snowfallParticleShader->Uniform("V", V);
+        snowfallParticleShader->Uniform("EyePos", EyePos);
+        snowfallParticleShader->Uniform("time", timeCurrent);
+        snowfallParticleShader->Uniform("timeSnowStart", static_cast<float>(timeSnowStart));
+        snowfallParticleShader->Uniform("ScreenSize", ScreenSize);
+
+        snowfallParticleShader->Uniform("timeDelta", timeDelta);
+        snowfallParticleShader->Texture("SceneDepth", texCount++, *depthTexture->Front());
+
+        snowfallParticleShader->Texture("AmbientSceneLight", texCount++, *voxelTexture);
+        snowfallParticleShader->Uniform("VoxelHalfDimensions", vec3(VCT.halfDimensions));
+        snowfallParticleShader->Uniform("VoxelCenter", VCT.center);
+
+        UploadDirectionalLights<true>(entities, *snowfallParticleShader, texCount, renderStats, cullModelsAndMeshes);
+
+        {
+            auto scopedState = gl::ScopedState()
+                    .Enable(GL_BLEND)
+                    .BlendFuncAlpha(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+                    .DepthMask(GL_FALSE)
+                    .Enable(GL_DEPTH_TEST)
+                    .Build();
+
+            entityx::ComponentHandle<comp::SnowEmitter> snow;
+            for (auto e : entities.entities_with_components(snow)) {
+                if (snow->count == 0) {
+                    continue;
+                }
+
+                auto const oldMaxCount = snow->maxCount;
+                snow->maxCount = math::NextPowerOfTwo(snow->count);
+                if (!snow->framebuffer || oldMaxCount != snow->maxCount) {
+                    InitializeComponent(*snow);
+                }
+
+                OGL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+                OGL(glViewport(0, 0, width, height));
+
+                snowfallParticleShader->Uniform("radius", snow->radius);
+
+                snowfallParticleShader->Texture("InPositionsAngles", texCount + 0, *snow->positionsAngles->Front());
+                snowfallParticleShader->Texture("InVelocitiesLifetimes", texCount + 1, *snow->velocitiesLifetimes->Front());
+
+                snowfallParticleShader->Uniform("Count", static_cast<GLint>(snow->count));
+                snowfallParticleShader->Uniform("MaxCount", static_cast<GLint>(snow->maxCount));
+
+                OGL(pointMesh->DrawElementsInstanced(static_cast<GLsizei>(snow->count)));
+            }
+        }
+
+        snowfallParticleShader->Unbind();
+    }
 }
 
 bool
 syst::DeferredRenderer::Serialize(BaseSerializer const &serializer, Json::Value &json, syst::DeferredRenderer &sys)  {
     json["name"] = SystemName;
+
+    SERIALIZE(cfl::syst::DeferredRenderer, json["isSnowing"], sys.isSnowing);
 
 #ifdef ENABLE_VOXEL_CONE_TRACING
     SERIALIZE(cfl::syst::DeferredRenderer, json["useVoxelConeTracing"], sys.useVoxelConeTracing);

@@ -43,7 +43,7 @@ private:
         vec3 const FarForward = zFar * Backward;
         vec3 const NearForward = zNear * Backward;
 
-        float const FarWidth = 0.5f * glm::tan(glm::radians(fov)) * zFar;
+        float const FarWidth = 2.0f * glm::tan(0.5f * glm::radians(fov)) * zFar;
         float const FarHeight = size.y * FarWidth / size.x;
 
         vec3 const FarTopLeft = FarForward + FarHeight * Up + FarWidth * Left;

@@ -1,0 +1,35 @@
+#version 430
+
+#include "common/Definitions.glsl"
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(rgba32f, binding=0) uniform restrict image2D PositionsAngles;
+layout(rgba32f, binding=1) uniform restrict image2D VelocitiesLifetimes;
+uniform int Count;
+
+uniform int GlobalOffset;
+uniform vec3 EyePos;
+
+#define USE_IMAGE
+#include "snow/SnowParticle.glsl"
+
+void main(void) {
+    int aID = GlobalOffset + int(gl_GlobalInvocationID.x);
+    int bID = aID + 1;
+
+    if (!(aID < Count && bID < Count))
+        return;
+
+    Particle a = LoadParticle(aID);
+    Particle b = LoadParticle(bID);
+
+    float aDist = distance(a.position, EyePos);
+    float bDist = distance(b.position, EyePos);
+
+    if (aDist <= bDist)
+        return;
+
+    StoreParticle(bID, a);
+    StoreParticle(aID, b);
+}

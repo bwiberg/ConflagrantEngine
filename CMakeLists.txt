@@ -18,7 +18,7 @@ project(conflagrant)
 ### force C++14 compliant compiler w/o extensions ###
 #####################################################
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -125,6 +125,7 @@ add_definitions(-DBUILTIN_ASSETS_DIR="${CFL_BUILTIN_ASSETS_DIR}")
 
 set(HH_FILES
         src/conflagrant/homedirectory.hh
+        src/conflagrant/args.hh
         src/conflagrant/conflagrant.hh
         src/conflagrant/logging.hh
         src/conflagrant/math.hh
@@ -166,12 +167,14 @@ set(HH_FILES
         src/conflagrant/components/Skydome.hh
         src/conflagrant/components/BoundingSphere.hh
         src/conflagrant/components/VctProperties.hh
+        src/conflagrant/components/SnowEmitter.hh
         src/conflagrant/System.hh
         src/conflagrant/systems/Animator.hh
         src/conflagrant/systems/CameraController.hh
         src/conflagrant/systems/EcsDebugger.hh
         src/conflagrant/systems/DeferredRenderer.hh
         src/conflagrant/systems/ForwardRenderer.hh
+        src/conflagrant/systems/SnowfallAnimator.hh
         src/conflagrant/systems/system_util.hh
         src/conflagrant/assets/Mesh.hh
         src/conflagrant/assets/Model.hh
@@ -187,6 +190,9 @@ set(HH_FILES
         src/conflagrant/gl/Mesh.hh
         src/conflagrant/gl/VertexArray.hh
         src/conflagrant/gl/Shader.hh
+        src/conflagrant/gl/DoubleBufferedTexture1D.hh
+        src/conflagrant/gl/DoubleBufferedTexture2D.hh
+        src/conflagrant/cl/Environment.hh
         src/conflagrant/serialization/serialize.hh
         src/conflagrant/serialization/array.hh
         src/conflagrant/serialization/vector.hh
@@ -198,9 +204,9 @@ set(HH_FILES
         src/conflagrant/glfw/GlfwWindow.hh
         src/conflagrant/glfw/imgui_impl_glfw_gl3.h
         src/conflagrant/DoubleBuffer.hh
-        src/conflagrant/DoubleBufferedTexture2D.hh
         )
 set(CC_FILES
+        src/conflagrant/args.cc
         src/conflagrant/Engine.cc
         src/conflagrant/Time.cc
         src/conflagrant/logging.cc
@@ -220,6 +226,7 @@ set(CC_FILES
         src/conflagrant/systems/EcsDebugger.cc
         src/conflagrant/systems/DeferredRenderer.cc
         src/conflagrant/systems/ForwardRenderer.cc
+        src/conflagrant/systems/SnowfallAnimator.cc
         src/conflagrant/glfw/imgui_impl_glfw_gl3.cpp
         )
 

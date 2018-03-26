@@ -24,12 +24,14 @@
 #include <conflagrant/components/VelocityAnimation.hh>
 #include <conflagrant/components/PeriodicalAnimation.hh>
 #include <conflagrant/components/VctProperties.hh>
+#include <conflagrant/components/SnowEmitter.hh>
 
 #include <conflagrant/systems/Animator.hh>
 #include <conflagrant/systems/CameraController.hh>
 #include <conflagrant/systems/DeferredRenderer.hh>
 #include <conflagrant/systems/EcsDebugger.hh>
 #include <conflagrant/systems/ForwardRenderer.hh>
+#include <conflagrant/systems/SnowfallAnimator.hh>
 
 #include <conflagrant/ShaderSourceManager.hh>
 
@@ -63,6 +65,7 @@ bool InitDefaults() {
     REGISTER_COMPONENT(cfl::comp::BoundingSphere);
     REGISTER_COMPONENT(cfl::comp::VelocityAnimation);
     REGISTER_COMPONENT(cfl::comp::PeriodicalAnimation);
+    REGISTER_COMPONENT(cfl::comp::SnowEmitter);
 
 #ifdef ENABLE_VOXEL_CONE_TRACING
     REGISTER_COMPONENT(cfl::comp::VctProperties);
@@ -73,6 +76,7 @@ bool InitDefaults() {
     REGISTER_SYSTEM(cfl::syst::DeferredRenderer);
     REGISTER_SYSTEM(cfl::syst::EcsDebugger);
     REGISTER_SYSTEM(cfl::syst::ForwardRenderer);
+    REGISTER_SYSTEM(cfl::syst::SnowfallAnimator);
 
     REGISTER_SHADER_FOLDER(BUILTIN_SHADER_DIR);
 

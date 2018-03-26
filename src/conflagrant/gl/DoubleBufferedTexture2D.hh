@@ -5,6 +5,7 @@
 #include <functional>
 
 namespace cfl {
+namespace gl {
 class DoubleBufferedTexture2D : public DoubleBuffer<std::shared_ptr<gl::Texture2D>> {
 public:
     inline DoubleBufferedTexture2D(GLsizei width, GLsizei height,
@@ -18,4 +19,5 @@ public:
 
     }
 };
+} // namespace gl
 } // namespace cfl

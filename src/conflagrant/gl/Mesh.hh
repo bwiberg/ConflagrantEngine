@@ -27,16 +27,35 @@ public:
     inline ~Mesh() = default;
 
     inline void DrawElements() const {
-        if (vertexBuffer.Size() > 0) {
-            vao.Bind();
-            if (indexCount > 0) {
-                indexBuffer.Bind(GL_ELEMENT_ARRAY_BUFFER);
-                OGL(glDrawElements(drawMode, static_cast<GLsizei>(indexCount), indexType, nullptr));
-            } else {
-                OGL(glDrawArrays(drawMode, 0, static_cast<GLsizei>(vertexBuffer.Size() / vertexStride)));
-            }
-            vao.Unbind();
+        if (vertexBuffer.Size() == 0)
+            return;
+
+        vao.Bind();
+
+        if (indexCount > 0) {
+            indexBuffer.Bind(GL_ELEMENT_ARRAY_BUFFER);
+            OGL(glDrawElements(drawMode, static_cast<GLsizei>(indexCount), indexType, nullptr));
+        } else {
+            OGL(glDrawArrays(drawMode, 0, static_cast<GLsizei>(vertexBuffer.Size() / vertexStride)));
         }
+
+        vao.Unbind();
+    }
+
+    inline void DrawElementsInstanced(GLsizei count) const {
+        if (vertexBuffer.Size() == 0)
+            return;
+
+        vao.Bind();
+
+        if (indexCount > 0) {
+            indexBuffer.Bind(GL_ELEMENT_ARRAY_BUFFER);
+            OGL(glDrawElementsInstanced(drawMode, static_cast<GLsizei>(indexCount), indexType, nullptr, count));
+        } else {
+            OGL(glDrawArraysInstanced(drawMode, 0, static_cast<GLsizei>(vertexBuffer.Size() / vertexStride), count));
+        }
+
+        vao.Unbind();
     }
 
     inline void BufferVertexData(GLsizeiptr size, GLvoid const *data, GLenum usage) {
@@ -54,6 +73,10 @@ public:
         drawMode = mode;
         indexType = type;
         indexCount = count;
+    }
+
+    inline void SetDrawMode(GLenum mode) {
+        drawMode = mode;
     }
 
     inline void Attribute(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride,

@@ -79,9 +79,11 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
         forwardShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
         renderStats.UniformCalls += 4;
 
-        OGL(glEnable(GL_CULL_FACE));
-        OGL(glCullFace(GL_BACK));
-        OGL(glEnable(GL_DEPTH_TEST));
+        auto scopedState = gl::ScopedState()
+                .Enable(GL_CULL_FACE)
+                .CullFace(GL_BACK)
+                .Enable(GL_DEPTH_TEST)
+                .Build();
 
         if (cullModelsAndMeshes) {
             RenderModels(entities, *forwardShader, forwardShaderTextureCount, renderStats, &frustum);
@@ -104,9 +106,11 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
         skydomeShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
         renderStats.UniformCalls += 2;
 
-        OGL(glEnable(GL_CULL_FACE));
-        OGL(glCullFace(GL_FRONT));
-        OGL(glEnable(GL_DEPTH_TEST));
+        auto scopedState = gl::ScopedState()
+                .Enable(GL_CULL_FACE)
+                .CullFace(GL_FRONT)
+                .Enable(GL_DEPTH_TEST)
+                .Build();
 
         RenderSkydomes(entities, *skydomeShader, 0, renderStats, P, skydomeV);
 
@@ -123,8 +127,10 @@ void ForwardRenderer::update(entityx::EntityManager &entities, entityx::EventMan
         wireframeShader->Uniform("time", static_cast<float>(Time::CurrentTime()));
         renderStats.UniformCalls += 4;
 
-        OGL(glDisable(GL_CULL_FACE));
-        OGL(glEnable(GL_DEPTH_TEST));
+        auto scopedState = gl::ScopedState()
+                .Disable(GL_CULL_FACE)
+                .Enable(GL_DEPTH_TEST)
+                .Build();
 
         RenderBoundingSpheres(entities, *wireframeShader, forwardShaderTextureCount, renderStats,
                               renderBoundingSpheresAsWireframe);

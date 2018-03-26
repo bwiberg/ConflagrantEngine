@@ -1,11 +1,15 @@
 #version 450
 
 layout (triangles) in;
-layout (triangle_strip, max_vertices = 20) out;
+layout (triangle_strip, max_vertices = 50) out;
+//layout (triangle_strip, max_vertices = 20) out;
 
 in vec3 gIn_WorldPosition[3];
 in mat3 gIn_WorldTBN[3];
 in vec2 gIn_TexCoord[3];
+
+uniform float time;
+uniform float timeSnowStart;
 
 out vec3 fIn_WorldPosition;
 out mat3 fIn_WorldTBN;
@@ -45,9 +49,9 @@ void main(void) {
     }
 
     float offsets[3] = float[3](
-        max(SnowMinHeight, snows[0] * SnowMaxHeight * CalcSnowNoise(gIn_WorldPosition[0])),
-        max(SnowMinHeight, snows[1] * SnowMaxHeight * CalcSnowNoise(gIn_WorldPosition[1])),
-        max(SnowMinHeight, snows[2] * SnowMaxHeight * CalcSnowNoise(gIn_WorldPosition[2]))
+        snows[0] * SnowMaxHeight * CalcSnowNoise(gIn_WorldPosition[0], time - timeSnowStart),
+        snows[1] * SnowMaxHeight * CalcSnowNoise(gIn_WorldPosition[1], time - timeSnowStart),
+        snows[2] * SnowMaxHeight * CalcSnowNoise(gIn_WorldPosition[2], time - timeSnowStart)
     );
 
     ///////////////////

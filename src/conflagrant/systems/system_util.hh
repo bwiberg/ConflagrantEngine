@@ -14,13 +14,14 @@
 #include <conflagrant/components/Model.hh>
 #include <conflagrant/components/Skydome.hh>
 #include <conflagrant/gl/Shader.hh>
+#include <conflagrant/gl/State.hh>
 #include <conflagrant/RenderStats.hh>
 #include <conflagrant/Time.hh>
 #include <conflagrant/components/BoundingSphere.hh>
+#include <conflagrant/components/VctProperties.hh>
 #include <conflagrant/math.hh>
 
 #include <entityx/Entity.h>
-#include <conflagrant/components/VctProperties.hh>
 
 namespace cfl {
 inline entityx::Entity GetActiveCamera(entityx::EntityManager &entities,
@@ -76,9 +77,15 @@ inline void GetCameraInfo(entityx::EntityManager &entities,
     if (perspective) {
         P = perspective->GetProjection();
         frustum = perspective->GetFrustum();
+        zNear = perspective->ZNear();
+        zFar = perspective->ZFar();
+
     } else if (orthographic) {
         P = orthographic->GetProjection();
         frustum = orthographic->GetFrustum();
+        zNear = orthographic->ZNear();
+        zFar = orthographic->ZFar();
+
     } else {
         LOG_ERROR(cfl::ForwardRenderer::SetCameraMatrices)
                 << "No OrthographicCamera or PerspectiveCamera." << std::endl;
@@ -99,6 +106,8 @@ void UploadDirectionalLights(entityx::EntityManager &entities,
                              RenderStats &renderStats, bool cullModelsAndMeshes = false);
 
 void RenderFullscreenQuad(RenderStats &renderStats);
+
+void RenderFullscreenTriangle(RenderStats &renderStats);
 
 void RenderUnitSphere(float radius, RenderStats &renderStats);
 
@@ -197,7 +206,9 @@ inline void RenderDirectionalLightShadows(entityx::EntityManager &entities,
             lightpassShader.Uniform("V", lightV);
             renderStats.UniformCalls += 3;
 
-            OGL(glDisable(GL_CULL_FACE));
+            auto scopedState = gl::ScopedState()
+                    .Disable(GL_CULL_FACE)
+                    .Build();
 
             {
                 DOLLAR("Shadowmap: Render entities with Model")
@@ -274,7 +285,31 @@ inline void RenderFullscreenQuad(RenderStats &renderStats) {
         return;
     }
 
-    OGL(glDisable(GL_CULL_FACE));
+    auto scopedState = gl::ScopedState()
+            .Disable(GL_CULL_FACE)
+            .Build();
+
+    auto &mesh = quadModel->parts[0].first;
+
+    if (mesh->needsUpdate) {
+        mesh->Update();
+        mesh->needsUpdate = false;
+    }
+
+    mesh->glMesh->DrawElements();
+    renderStats.DrawCalls++;
+}
+
+inline void RenderFullscreenTriangle(RenderStats &renderStats) {
+    auto quadModel = assets::AssetManager::LoadAsset<assets::Model>("fullscreen_triangle.obj");
+    if (!quadModel) {
+        LOG_ERROR(cfl::RenderFullscreenQuad) << "fullscreen_triangle.obj failed to load";
+        return;
+    }
+
+    auto scopedState = gl::ScopedState()
+            .Disable(GL_CULL_FACE)
+            .Build();
 
     auto &mesh = quadModel->parts[0].first;
 
@@ -317,9 +352,13 @@ inline void RenderBoundingSpheres(entityx::EntityManager &entities,
                                   gl::Shader &shader, GLenum const nextTextureUnit,
                                   RenderStats &renderStats,
                                   float wireframe, geometry::Frustum const *frustum) {
+    auto scopedStateBuilder = gl::ScopedState();
+
     if (wireframe) {
-        OGL(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
+        scopedStateBuilder.PolygonModeFrontBack(GL_LINE, GL_LINE);
     }
+
+    auto scopedState = scopedStateBuilder.Build();
 
     entityx::ComponentHandle<comp::Transform> transform;
     entityx::ComponentHandle<comp::BoundingSphere> boundingSphere;
@@ -376,10 +415,6 @@ inline void RenderBoundingSpheres(entityx::EntityManager &entities,
 
             RenderUnitSphere(mesh.boundingSphere.radius, renderStats);
         }
-    }
-
-    if (wireframe) {
-        OGL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
     }
 }
 

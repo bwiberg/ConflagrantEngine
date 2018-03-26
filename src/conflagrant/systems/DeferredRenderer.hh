@@ -10,7 +10,8 @@
 #include <conflagrant/RenderStats.hh>
 #include <conflagrant/Time.hh>
 #include <conflagrant/DoubleBuffer.hh>
-#include <conflagrant/DoubleBufferedTexture2D.hh>
+#include <conflagrant/gl/DoubleBufferedTexture2D.hh>
+#include <conflagrant/gl/Mesh.hh>
 
 #ifdef ENABLE_VOXEL_CONE_TRACING
 #include <conflagrant/components/OrthographicCamera.hh>
@@ -22,6 +23,8 @@
 
 namespace cfl {
 namespace syst {
+class SnowfallAnimator;
+
 class DeferredRenderer : public System, public entityx::System<DeferredRenderer> {
 public:
     static constexpr auto SystemName = "DeferredRenderer";
@@ -34,10 +37,15 @@ private:
             lightsShader,
             skydomeShader,
             wireframeShader,
-            snowSurfaceShader;
+            snowfallParticleShader;
+
+    bool isSnowing{false};
+    time_t timeSnowStart;
 
     std::map<string, double> durationsByName;
     std::list<string> durationsOrder;
+
+    std::shared_ptr<gl::Mesh> pointMesh;
 
 #ifdef ENABLE_VOXEL_CONE_TRACING
     std::shared_ptr<gl::Shader>
@@ -73,7 +81,11 @@ private:
 #endif // ENABLE_VOXEL_CONE_TRACING
 
     std::shared_ptr<gl::Framebuffer> framebuffer;
-    std::shared_ptr<DoubleBufferedTexture2D> positionRadianceTexture, normalShininessTexture, albedoSpecularTexture;
+    std::shared_ptr<gl::DoubleBufferedTexture2D>
+            positionRadianceTexture,
+            normalShininessTexture,
+            albedoSpecularTexture,
+            depthTexture;
     std::shared_ptr<gl::Renderbuffer> depthRenderbuffer;
 
     RenderStats renderStats;
@@ -86,6 +98,8 @@ private:
     void LoadShaders();
 
     void Pingpong();
+
+    friend class cfl::syst::SnowfallAnimator;
 
 public:
     DeferredRenderer();

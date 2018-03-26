@@ -12,7 +12,11 @@
 
 #include "common/noise/common.glsl"
 
-float snoise(vec3 v, out vec3 gradient) {
+#ifndef NOISE_FUNCTION_NAME
+#define NOISE_FUNCTION_NAME snoise
+#endif
+
+float NOISE_FUNCTION_NAME(vec3 v, out vec3 gradient) {
     const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
     const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
 
@@ -93,3 +97,5 @@ float snoise(vec3 v, out vec3 gradient) {
 
     return 42.0 * dot(m4, pdotx);
 }
+
+#undef NOISE_FUNCTION_NAME
